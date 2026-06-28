@@ -53,6 +53,7 @@ function generateAll() {
 
   const data = sh.getDataRange().getValues();
   let done = 0, failed = 0;
+  const usePaapi = paapiAvailable_();   // PA-APIキーがあればフル機能、無ければ手入力モード
 
   for (let i = 1; i < data.length; i++) {
     const row = i + 1;
@@ -66,9 +67,17 @@ function generateAll() {
       sh.getRange(row, 7).setValue('処理中…');
       SpreadsheetApp.flush();
 
-      // 1) 商品情報取得
-      const product = fetchProduct_(input);
-      sh.getRange(row, 2, 1, 4).setValues([[product.title, product.price, product.imageUrl, product.url]]);
+      // 1) 商品情報の用意
+      let product;
+      if (usePaapi) {
+        // PA-API：商品名・価格・画像・アフィリンクを自動取得して B〜E を上書き
+        product = fetchProduct_(input);
+        sh.getRange(row, 2, 1, 4).setValues([[product.title, product.price, product.imageUrl, product.url]]);
+      } else {
+        // 手入力モード：シートの値を使い、アフィリンク(E)が空なら自動生成して埋める
+        product = productFromRow_(input, data[i]);
+        if (!String(data[i][4] || '').trim()) sh.getRange(row, 5).setValue(product.url);
+      }
 
       // 2) 文章生成
       const c = generateContents_(product, memo);
@@ -88,9 +97,37 @@ function generateAll() {
     SpreadsheetApp.flush();
   }
 
-  const msg = '生成完了: ' + done + '件' + (failed ? ' / 失敗 ' + failed + '件' : '');
+  const mode = usePaapi ? 'PA-API' : '手入力モード';
+  const msg = '生成完了(' + mode + '): ' + done + '件' + (failed ? ' / 失敗 ' + failed + '件' : '');
   try { ss.toast(msg); } catch (e) {}
   Logger.log(msg);
+}
+
+/** PA-APIのキーが揃っているか（揃っていればフル機能） */
+function paapiAvailable_() {
+  const c = getConfig_();
+  return !!(c.AMAZON_ACCESS_KEY && c.AMAZON_SECRET_KEY && (c.AMAZON_PARTNER_TAG || getTrackingId_()));
+}
+
+/**
+ * PA-APIを使わず、商品マスタの行から商品情報を組み立てる（手入力モード）。
+ *   商品名(B)が空なら A（検索ワード）を商品名として使う。
+ *   アフィリンク(E)が空なら ASIN/検索ワードから自動生成。
+ */
+function productFromRow_(input, rowArr) {
+  const title = String(rowArr[1] || '').trim() || input;   // B → 無ければ A
+  const price = String(rowArr[2] || '').trim();            // C
+  const imageUrl = String(rowArr[3] || '').trim();         // D（後から貼ってもOK）
+  let url = String(rowArr[4] || '').trim();                // E
+  if (!url) url = buildAffiliateUrl_(input);
+  return {
+    asin: /^[A-Z0-9]{10}$/.test(input) ? input : '',
+    title: title,
+    price: price,
+    imageUrl: imageUrl,
+    features: [],
+    url: url
+  };
 }
 
 // ===== 媒体別の書き出し =====

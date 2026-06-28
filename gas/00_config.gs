@@ -71,6 +71,9 @@ function checkConfig() {
       (missing.length ? '（未設定: ' + missing.join(', ') + '）' : '（OK）'));
   });
   lines.push('使用AI: ' + c.AI_PROVIDER);
+  // 現在の動作モード（PA-APIキーの有無で自動切替）
+  const paapiReady = !!(c.AMAZON_ACCESS_KEY && c.AMAZON_SECRET_KEY && (c.AMAZON_PARTNER_TAG || getTrackingId_()));
+  lines.push('動作モード: ' + (paapiReady ? 'PA-API（商品情報を自動取得）' : '手入力モード（商品名はB列に手入力）'));
   const msg = lines.join('\n');
   Logger.log(msg);
   try { SpreadsheetApp.getUi().alert('設定チェック', msg, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) {}
