@@ -30,6 +30,27 @@ function generateContents_(product, myMemo) {
   };
 }
 
+/**
+ * AIキーの動作確認。メニュー「AI接続テスト」から実行。
+ * 簡単な一言生成を試して、成功すれば結果をポップアップ表示します。
+ */
+function testAI() {
+  const c = getConfig_();
+  try {
+    const reply = callAI_('「テスト成功」とだけ日本語で返してください。');
+    const msg = '✅ ' + c.AI_PROVIDER + ' に接続できました。\n\n応答: ' + String(reply).trim().substring(0, 200);
+    Logger.log(msg);
+    try { SpreadsheetApp.getUi().alert('AI接続テスト', msg, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) {}
+    return msg;
+  } catch (e) {
+    const msg = '❌ 接続できませんでした（' + c.AI_PROVIDER + '）\n\n' + e.message +
+      '\n\nスクリプトプロパティの ' + (c.AI_PROVIDER === 'claude' ? 'CLAUDE_API_KEY' : 'GEMINI_API_KEY') + ' を確認してください。';
+    Logger.log(msg);
+    try { SpreadsheetApp.getUi().alert('AI接続テスト', msg, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e2) {}
+    return msg;
+  }
+}
+
 /** 生成プロンプト（日本語・アフィリエイト向け） */
 function buildWriterPrompt_(p, myMemo) {
   const features = (p.features || []).map(function (f) { return '・' + f; }).join('\n');

@@ -15,6 +15,7 @@ function onOpen() {
     .addItem('① シートを準備', 'setupSheets')
     .addItem('② 文章を一括生成（商品マスタ）', 'generateAll')
     .addSeparator()
+    .addItem('AI接続テスト', 'testAI')
     .addItem('Instagram自動投稿トリガー設置', 'installInstagramTrigger')
     .addItem('設定チェック', 'checkConfig')
     .addToUi();
