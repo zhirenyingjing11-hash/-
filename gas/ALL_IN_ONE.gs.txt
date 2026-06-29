@@ -1,0 +1,795 @@
+/**
+ * ============================================================
+ * Amazonアフィリエイト自動投稿キット【貼り付け用ワンファイル版】
+ * ------------------------------------------------------------
+ * このファイル1つを Apps Script の「コード.gs」に丸ごと貼り付ければ動きます。
+ * （個別ファイル版 00_〜50_ をまとめたものです。中身は同じ）
+ * 既存の食レポ運用キット threadsweekprep.gs は使う場合のみ別途追加。
+ * ============================================================
+ */
+
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  00_config.gs
+// ╚══════════════════════════════════════════════════════════╝
+
+/**
+ * 00_config.gs  ── 設定とシークレット管理
+ * --------------------------------------------------
+ * Amazonアフィリエイト自動投稿キット（拡張モジュール）の共通設定。
+ *
+ * APIキー等の秘密情報は「スクリプトプロパティ」に保存します。
+ * 保存場所：Apps Scriptエディタ →（左）プロジェクトの設定 → スクリプトプロパティ
+ *   もしくは下の setSecret('キー名','値') をエディタ上で1回ずつ実行。
+ *
+ * 必要なキー一覧（checkConfig() で過不足を確認できます）:
+ *   AMAZON_ACCESS_KEY      … PA-API アクセスキー
+ *   AMAZON_SECRET_KEY      … PA-API シークレットキー
+ *   AMAZON_PARTNER_TAG     … アソシエイトのトラッキングID（例 yourid-22）
+ *   GEMINI_API_KEY         … Gemini を使う場合
+ *   CLAUDE_API_KEY         … Claude を使う場合
+ *   IG_ACCESS_TOKEN        … Instagram Graph API の長期トークン
+ *   IG_BUSINESS_ID         … Instagram ビジネスアカウントID（数字）
+ *   AI_PROVIDER            … 'gemini'（既定）または 'claude'
+ * --------------------------------------------------
+ */
+
+// ===== シート名（既存プロジェクトに合わせて変更可） =====
+const SHEET_PRODUCTS = '商品マスタ';   // 商品の入力＆PA-API取得結果
+const SHEET_IG       = 'IGポスト';     // Instagram 投稿キュー
+const SHEET_NOTE     = 'noteドラフト'; // note 用の長文（手動コピペ）
+
+// ===== Amazon PA-API（日本マーケットプレイス既定） =====
+const PAAPI_HOST        = 'webservices.amazon.co.jp';
+const PAAPI_REGION      = 'us-west-2';
+const PAAPI_MARKETPLACE = 'www.amazon.co.jp';
+
+// ===== AIモデル（必要に応じて変更） =====
+const GEMINI_MODEL = 'gemini-2.0-flash';
+const CLAUDE_MODEL = 'claude-sonnet-4-6';
+
+/** スクリプトプロパティから設定を読み出す（毎回最新を取得） */
+function getConfig_() {
+  const p = PropertiesService.getScriptProperties().getProperties();
+  return {
+    AMAZON_ACCESS_KEY:  p.AMAZON_ACCESS_KEY  || '',
+    AMAZON_SECRET_KEY:  p.AMAZON_SECRET_KEY  || '',
+    AMAZON_PARTNER_TAG: p.AMAZON_PARTNER_TAG || '',
+    GEMINI_API_KEY:     p.GEMINI_API_KEY     || '',
+    CLAUDE_API_KEY:     p.CLAUDE_API_KEY     || '',
+    IG_ACCESS_TOKEN:    p.IG_ACCESS_TOKEN    || '',
+    IG_BUSINESS_ID:     p.IG_BUSINESS_ID     || '',
+    AI_PROVIDER:        (p.AI_PROVIDER || 'gemini').toLowerCase()
+  };
+}
+
+/** エディタ上で1回だけ実行してシークレットを保存するヘルパー */
+function setSecret(key, value) {
+  if (!key) throw new Error('キー名を指定してください');
+  PropertiesService.getScriptProperties().setProperty(key, String(value));
+  Logger.log('保存しました: ' + key);
+}
+
+/** 設定の過不足をログに出す（メニューからも実行可能） */
+function checkConfig() {
+  const c = getConfig_();
+  const need = {
+    'PA-API': ['AMAZON_ACCESS_KEY', 'AMAZON_SECRET_KEY', 'AMAZON_PARTNER_TAG'],
+    'Instagram自動投稿': ['IG_ACCESS_TOKEN', 'IG_BUSINESS_ID'],
+    'AI(Gemini)': ['GEMINI_API_KEY'],
+    'AI(Claude)': ['CLAUDE_API_KEY']
+  };
+  const lines = [];
+  Object.keys(need).forEach(function (group) {
+    const missing = need[group].filter(function (k) { return !c[k]; });
+    lines.push((missing.length ? '✗ ' : '✓ ') + group +
+      (missing.length ? '（未設定: ' + missing.join(', ') + '）' : '（OK）'));
+  });
+  lines.push('使用AI: ' + c.AI_PROVIDER);
+  // 現在の動作モード（PA-APIキーの有無で自動切替）
+  const paapiReady = !!(c.AMAZON_ACCESS_KEY && c.AMAZON_SECRET_KEY && (c.AMAZON_PARTNER_TAG || getTrackingId_()));
+  lines.push('動作モード: ' + (paapiReady ? 'PA-API（商品情報を自動取得）' : '手入力モード（商品名はB列に手入力）'));
+  const msg = lines.join('\n');
+  Logger.log(msg);
+  try { SpreadsheetApp.getUi().alert('設定チェック', msg, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) {}
+  return msg;
+}
+
+// ===== 既存ファイル（threadsweekprep.gs 等）との橋渡し =====
+// 既存の定数があればそれを使い、無ければここの既定値を使う（ReferenceError回避）。
+
+/** トラッキングID（PartnerTag）を取得 */
+function getTrackingId_() {
+  if (typeof TRACKING_ID !== 'undefined' && TRACKING_ID && TRACKING_ID !== 'あなたのID-22') {
+    return TRACKING_ID;
+  }
+  return getConfig_().AMAZON_PARTNER_TAG;
+}
+
+/** Threads投稿キューのシート名 */
+function getPostSheetName_() {
+  return (typeof POST_SHEET !== 'undefined' && POST_SHEET) ? POST_SHEET : '投稿';
+}
+
+/** 毎日の投稿枠（[時,分,ラベル]の配列） */
+function getDailyTimes_() {
+  if (typeof DAILY_TIMES !== 'undefined' && DAILY_TIMES.length) return DAILY_TIMES;
+  return [[11, 30, 'ランチ前枠'], [18, 0, '夕飯前枠']];
+}
+
+/** ASINかキーワードからアフィリンクを生成（PA-AIのDetailPageURLが無いとき用の保険） */
+function buildAffiliateUrl_(asinOrKeyword) {
+  const v = String(asinOrKeyword || '').trim();
+  if (!v) return '';
+  const isAsin = /^[A-Z0-9]{10}$/.test(v);
+  const base = isAsin
+    ? 'https://www.amazon.co.jp/dp/' + v
+    : 'https://www.amazon.co.jp/s?k=' + encodeURIComponent(v);
+  const join = base.indexOf('?') >= 0 ? '&' : '?';
+  return base + join + 'tag=' + getTrackingId_();
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  10_amazon_paapi.gs
+// ╚══════════════════════════════════════════════════════════╝
+
+/**
+ * 10_amazon_paapi.gs  ── Amazon Product Advertising API v5 連携
+ * --------------------------------------------------
+ * ASIN または検索ワードから、商品名・価格・画像URL・アフィリンクを自動取得。
+ * AWS Signature V4 で署名してPA-APIを呼び出します（外部ライブラリ不要）。
+ *
+ * 使い方（コードから）:
+ *   const item = fetchProduct_('B0XXXXXXXX');         // ASIN直指定
+ *   const item = fetchProduct_('ハイボール グラス');   // 検索（先頭1件）
+ *   → { asin, title, price, imageUrl, features:[...], url }
+ * --------------------------------------------------
+ */
+
+/** ASINらしき文字列ならGetItems、そうでなければSearchItemsで先頭1件を返す */
+function fetchProduct_(asinOrKeyword) {
+  const v = String(asinOrKeyword || '').trim();
+  if (!v) throw new Error('ASINまたは検索ワードが空です');
+
+  const resources = [
+    'ItemInfo.Title',
+    'ItemInfo.Features',
+    'Offers.Listings.Price',
+    'Images.Primary.Large'
+  ];
+
+  let item;
+  if (/^[A-Z0-9]{10}$/.test(v)) {
+    const res = paapiRequest_('GetItems', {
+      ItemIds: [v],
+      ItemIdType: 'ASIN',
+      Resources: resources
+    });
+    item = res.ItemsResult && res.ItemsResult.Items && res.ItemsResult.Items[0];
+  } else {
+    const res = paapiRequest_('SearchItems', {
+      Keywords: v,
+      SearchIndex: 'All',
+      ItemCount: 1,
+      Resources: resources
+    });
+    item = res.SearchResult && res.SearchResult.Items && res.SearchResult.Items[0];
+  }
+  if (!item) throw new Error('商品が見つかりませんでした: ' + v);
+
+  return normalizeItem_(item);
+}
+
+/** PA-APIのItemを使いやすい形に整形 */
+function normalizeItem_(item) {
+  const info = item.ItemInfo || {};
+  const title = info.Title && info.Title.DisplayValue || '';
+  const features = (info.Features && info.Features.DisplayValues) || [];
+  let price = '';
+  try { price = item.Offers.Listings[0].Price.DisplayAmount || ''; } catch (e) {}
+  let imageUrl = '';
+  try { imageUrl = item.Images.Primary.Large.URL || ''; } catch (e) {}
+  // DetailPageURL は既にPartnerTagが付与済みのアフィリンク
+  const url = item.DetailPageURL || buildAffiliateUrl_(item.ASIN);
+  return {
+    asin: item.ASIN || '',
+    title: title,
+    price: price,
+    imageUrl: imageUrl,
+    features: features,
+    url: url
+  };
+}
+
+/** PA-APIへ署名付きPOST。operation は 'GetItems' か 'SearchItems' */
+function paapiRequest_(operation, payloadObj) {
+  const c = getConfig_();
+  if (!c.AMAZON_ACCESS_KEY || !c.AMAZON_SECRET_KEY) {
+    throw new Error('PA-APIのキーが未設定です。checkConfig() で確認してください。');
+  }
+  const partnerTag = c.AMAZON_PARTNER_TAG || getTrackingId_();
+  if (!partnerTag) throw new Error('AMAZON_PARTNER_TAG（トラッキングID）が未設定です。');
+
+  const host = PAAPI_HOST;
+  const region = PAAPI_REGION;
+  const service = 'ProductAdvertisingAPI';
+  const path = operation === 'SearchItems' ? '/paapi5/searchitems' : '/paapi5/getitems';
+  const target = 'com.amazon.paapi5.v1.ProductAdvertisingAPIv1.' + operation;
+
+  payloadObj.PartnerTag = partnerTag;
+  payloadObj.PartnerType = 'Associates';
+  payloadObj.Marketplace = PAAPI_MARKETPLACE;
+  const payload = JSON.stringify(payloadObj);
+
+  const now = new Date();
+  const amzDate = Utilities.formatDate(now, 'UTC', "yyyyMMdd'T'HHmmss'Z'");
+  const dateStamp = amzDate.substring(0, 8);
+  const contentType = 'application/json; charset=utf-8';
+
+  // --- 正規リクエスト（ヘッダはキー昇順・小文字） ---
+  const canonicalHeaders =
+    'content-encoding:amz-1.0\n' +
+    'content-type:' + contentType + '\n' +
+    'host:' + host + '\n' +
+    'x-amz-date:' + amzDate + '\n' +
+    'x-amz-target:' + target + '\n';
+  const signedHeaders = 'content-encoding;content-type;host;x-amz-date;x-amz-target';
+  const payloadHash = hexSha256_(payload);
+  const canonicalRequest = [
+    'POST', path, '', canonicalHeaders, signedHeaders, payloadHash
+  ].join('\n');
+
+  // --- 署名対象文字列 ---
+  const algorithm = 'AWS4-HMAC-SHA256';
+  const credentialScope = [dateStamp, region, service, 'aws4_request'].join('/');
+  const stringToSign = [
+    algorithm, amzDate, credentialScope, hexSha256_(canonicalRequest)
+  ].join('\n');
+
+  // --- 署名 ---
+  const signingKey = getSignatureKey_(c.AMAZON_SECRET_KEY, dateStamp, region, service);
+  const signature = toHex_(hmac_(signingKey, stringToSign));
+  const authorization = algorithm + ' ' +
+    'Credential=' + c.AMAZON_ACCESS_KEY + '/' + credentialScope + ', ' +
+    'SignedHeaders=' + signedHeaders + ', ' +
+    'Signature=' + signature;
+
+  const resp = UrlFetchApp.fetch('https://' + host + path, {
+    method: 'post',
+    contentType: contentType,
+    headers: {
+      'content-encoding': 'amz-1.0',
+      'x-amz-date': amzDate,
+      'x-amz-target': target,
+      'Authorization': authorization
+    },
+    payload: payload,
+    muteHttpExceptions: true
+  });
+
+  const code = resp.getResponseCode();
+  const body = resp.getContentText();
+  if (code < 200 || code >= 300) {
+    throw new Error('PA-APIエラー(' + code + '): ' + body);
+  }
+  return JSON.parse(body);
+}
+
+// ===== 署名ユーティリティ =====
+
+/** HMAC-SHA256（鍵: Byte[]、メッセージ: String）→ Byte[] */
+function hmac_(keyBytes, msg) {
+  return Utilities.computeHmacSha256Signature(Utilities.newBlob(msg).getBytes(), keyBytes);
+}
+
+/** AWS SigV4 の署名鍵を導出 */
+function getSignatureKey_(secret, dateStamp, region, service) {
+  const kDate = hmac_(Utilities.newBlob('AWS4' + secret).getBytes(), dateStamp);
+  const kRegion = hmac_(kDate, region);
+  const kService = hmac_(kRegion, service);
+  return hmac_(kService, 'aws4_request');
+}
+
+/** SHA-256 の16進ダイジェスト */
+function hexSha256_(msg) {
+  return toHex_(Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256, msg, Utilities.Charset.UTF_8));
+}
+
+/** Byte[] → 小文字16進文字列 */
+function toHex_(bytes) {
+  return bytes.map(function (b) {
+    const v = (b < 0 ? b + 256 : b).toString(16);
+    return v.length === 1 ? '0' + v : v;
+  }).join('');
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  20_ai_writer.gs
+// ╚══════════════════════════════════════════════════════════╝
+
+/**
+ * 20_ai_writer.gs  ── AIで3媒体の文章を自動生成
+ * --------------------------------------------------
+ * 商品情報＋あなたのメモから、note / Instagram / Threads の文章を一括生成。
+ * AI_PROVIDER（既定 'gemini'）に応じて Gemini か Claude を呼び出します。
+ *
+ * 出力（JSON）:
+ *   {
+ *     note: "（note用の長文記事）",
+ *     instagram_caption: "（インスタ用キャプション）",
+ *     instagram_hashtags: ["#..", ...],
+ *     threads: "（Threads用ツイート 500字以内）",
+ *     threads_hashtags: ["#..", ...]
+ *   }
+ * --------------------------------------------------
+ */
+
+/** 商品情報とメモから3媒体の文章を生成して返す */
+function generateContents_(product, myMemo) {
+  const prompt = buildWriterPrompt_(product, myMemo);
+  const raw = callAI_(prompt);
+  const data = parseJsonLoose_(raw);
+  // 最低限のフォールバック整形
+  return {
+    note: String(data.note || '').trim(),
+    instagram_caption: String(data.instagram_caption || '').trim(),
+    instagram_hashtags: Array.isArray(data.instagram_hashtags) ? data.instagram_hashtags : [],
+    threads: String(data.threads || '').trim(),
+    threads_hashtags: Array.isArray(data.threads_hashtags) ? data.threads_hashtags : []
+  };
+}
+
+/**
+ * AIキーの動作確認。メニュー「AI接続テスト」から実行。
+ * 簡単な一言生成を試して、成功すれば結果をポップアップ表示します。
+ */
+function testAI() {
+  const c = getConfig_();
+  try {
+    const reply = callAI_('「テスト成功」とだけ日本語で返してください。');
+    const msg = '✅ ' + c.AI_PROVIDER + ' に接続できました。\n\n応答: ' + String(reply).trim().substring(0, 200);
+    Logger.log(msg);
+    try { SpreadsheetApp.getUi().alert('AI接続テスト', msg, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) {}
+    return msg;
+  } catch (e) {
+    const msg = '❌ 接続できませんでした（' + c.AI_PROVIDER + '）\n\n' + e.message +
+      '\n\nスクリプトプロパティの ' + (c.AI_PROVIDER === 'claude' ? 'CLAUDE_API_KEY' : 'GEMINI_API_KEY') + ' を確認してください。';
+    Logger.log(msg);
+    try { SpreadsheetApp.getUi().alert('AI接続テスト', msg, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e2) {}
+    return msg;
+  }
+}
+
+/** 生成プロンプト（日本語・アフィリエイト向け） */
+function buildWriterPrompt_(p, myMemo) {
+  const features = (p.features || []).map(function (f) { return '・' + f; }).join('\n');
+  return [
+    'あなたは日本語のアフィリエイト記事・SNS投稿を書くプロのコピーライターです。',
+    '以下の商品について、note / Instagram / Threads の3媒体向けに文章を作成してください。',
+    '',
+    '# 商品情報',
+    '商品名: ' + (p.title || ''),
+    '価格: ' + (p.price || '不明'),
+    '特徴:\n' + (features || '（記載なし）'),
+    '',
+    '# 投稿者のメモ（実体験・推しポイント。必ず自然に反映）',
+    (myMemo || '（特になし。商品情報から魅力的に）'),
+    '',
+    '# 媒体ごとの要件',
+    '【note】読み物として成立する記事。導入→商品紹介→使ってみた感想→メリット/デメリット→こんな人におすすめ→まとめ、の流れ。1500〜2500字。見出しは「## 」で。リンクは本文には入れない（後で自動付与）。誇大表現・断定的な効能表現は避ける。',
+    '【Instagram】1枚目で手が止まる書き出し→価値→保存したくなる締め。280字程度。絵文字を適度に。リンクは貼らない（インスタは本文リンク不可のため）。ハッシュタグは8〜12個を instagram_hashtags に分けて出す。',
+    '【Threads】口語でテンポよく。500字以内（厳守）。本文中にURLは入れない。ハッシュタグは最大3個を threads_hashtags に分けて出す。',
+    '',
+    '# 出力形式（厳守）',
+    '次のキーを持つ JSON のみを出力。前後に説明やコードフェンスを付けない。',
+    '{"note":"...","instagram_caption":"...","instagram_hashtags":["#.."],"threads":"...","threads_hashtags":["#.."]}'
+  ].join('\n');
+}
+
+/** AI_PROVIDER に応じて生成を実行 */
+function callAI_(prompt) {
+  const c = getConfig_();
+  if (c.AI_PROVIDER === 'claude') return callClaude_(prompt, c.CLAUDE_API_KEY);
+  return callGemini_(prompt, c.GEMINI_API_KEY);
+}
+
+/** Gemini API 呼び出し */
+function callGemini_(prompt, apiKey) {
+  if (!apiKey) throw new Error('GEMINI_API_KEY が未設定です。checkConfig() で確認してください。');
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+    GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(apiKey);
+  const payload = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.8, maxOutputTokens: 4096, responseMimeType: 'application/json' }
+  };
+  const resp = UrlFetchApp.fetch(url, {
+    method: 'post', contentType: 'application/json',
+    payload: JSON.stringify(payload), muteHttpExceptions: true
+  });
+  if (resp.getResponseCode() !== 200) {
+    throw new Error('Geminiエラー(' + resp.getResponseCode() + '): ' + resp.getContentText());
+  }
+  const json = JSON.parse(resp.getContentText());
+  try {
+    return json.candidates[0].content.parts[0].text;
+  } catch (e) {
+    throw new Error('Gemini応答の解析に失敗: ' + resp.getContentText());
+  }
+}
+
+/** Claude API 呼び出し */
+function callClaude_(prompt, apiKey) {
+  if (!apiKey) throw new Error('CLAUDE_API_KEY が未設定です。checkConfig() で確認してください。');
+  const resp = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+    method: 'post', contentType: 'application/json',
+    headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    payload: JSON.stringify({
+      model: CLAUDE_MODEL,
+      max_tokens: 4096,
+      messages: [{ role: 'user', content: prompt }]
+    }),
+    muteHttpExceptions: true
+  });
+  if (resp.getResponseCode() !== 200) {
+    throw new Error('Claudeエラー(' + resp.getResponseCode() + '): ' + resp.getContentText());
+  }
+  const json = JSON.parse(resp.getContentText());
+  try {
+    return json.content[0].text;
+  } catch (e) {
+    throw new Error('Claude応答の解析に失敗: ' + resp.getContentText());
+  }
+}
+
+/** コードフェンスや前後の余分を取り除いてJSONをパース */
+function parseJsonLoose_(text) {
+  let s = String(text || '').trim();
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+  const start = s.indexOf('{');
+  const end = s.lastIndexOf('}');
+  if (start >= 0 && end > start) s = s.substring(start, end + 1);
+  try {
+    return JSON.parse(s);
+  } catch (e) {
+    throw new Error('AI応答をJSONとして解釈できませんでした:\n' + text);
+  }
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  30_instagram.gs
+// ╚══════════════════════════════════════════════════════════╝
+
+/**
+ * 30_instagram.gs  ── Instagram 自動投稿（Graph API）
+ * --------------------------------------------------
+ * 前提:
+ *   ・Instagram は「プロアカウント（ビジネス/クリエイター）」であること
+ *   ・Facebookページと連携済みであること
+ *   ・長期アクセストークン(IG_ACCESS_TOKEN)とビジネスID(IG_BUSINESS_ID)を取得済み
+ *   ・画像は「公開URL」が必要（Amazonの商品画像URLをそのまま使えます）
+ *
+ * 注意: インスタはキャプション内のURLがリンクになりません。
+ *       アフィリンクは「プロフィールのリンク（リンクインバイオ）」へ誘導する文言にしています。
+ *
+ * autoPostInstagram() を時間主導トリガーに設定すると、予約時刻が来た行を投稿します。
+ * --------------------------------------------------
+ */
+
+const IG_GRAPH_VERSION = 'v21.0';
+
+/** IGポストシートの予約投稿を1件ずつ確認して投稿（トリガー用） */
+function autoPostInstagram() {
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_IG);
+  if (!sh) { Logger.log('「' + SHEET_IG + '」シートがありません'); return; }
+  const data = sh.getDataRange().getValues();
+  const now = new Date();
+
+  for (let i = 1; i < data.length; i++) {
+    const row = i + 1;
+    const when = data[i][0];          // A:日時
+    const caption = String(data[i][1] || ''); // B:キャプション
+    const imageUrl = String(data[i][2] || ''); // C:画像URL
+    const status = String(data[i][3] || '').trim(); // D:状態
+
+    if (status === '投稿済み' || status === 'エラー') continue;
+    if (!(when instanceof Date)) continue;
+    if (when.getTime() > now.getTime()) continue; // まだ時刻前
+    if (!imageUrl) { sh.getRange(row, 4).setValue('エラー: 画像URLなし'); continue; }
+
+    try {
+      const id = postToInstagram_(imageUrl, caption);
+      sh.getRange(row, 4).setValue('投稿済み');
+      sh.getRange(row, 6).setValue(id); // F:投稿ID
+    } catch (e) {
+      sh.getRange(row, 4).setValue('エラー: ' + e.message);
+    }
+    SpreadsheetApp.flush();
+  }
+}
+
+/** 画像URL＋キャプションでフィード投稿。成功するとメディアIDを返す */
+function postToInstagram_(imageUrl, caption) {
+  const c = getConfig_();
+  if (!c.IG_ACCESS_TOKEN || !c.IG_BUSINESS_ID) {
+    throw new Error('IG_ACCESS_TOKEN / IG_BUSINESS_ID が未設定です。');
+  }
+  const base = 'https://graph.facebook.com/' + IG_GRAPH_VERSION + '/';
+
+  // ① メディアコンテナ作成
+  const createResp = UrlFetchApp.fetch(base + c.IG_BUSINESS_ID + '/media', {
+    method: 'post',
+    payload: { image_url: imageUrl, caption: caption, access_token: c.IG_ACCESS_TOKEN },
+    muteHttpExceptions: true
+  });
+  if (createResp.getResponseCode() !== 200) {
+    throw new Error('コンテナ作成失敗: ' + createResp.getContentText());
+  }
+  const creationId = JSON.parse(createResp.getContentText()).id;
+
+  // ② 公開
+  const publishResp = UrlFetchApp.fetch(base + c.IG_BUSINESS_ID + '/media_publish', {
+    method: 'post',
+    payload: { creation_id: creationId, access_token: c.IG_ACCESS_TOKEN },
+    muteHttpExceptions: true
+  });
+  if (publishResp.getResponseCode() !== 200) {
+    throw new Error('公開失敗: ' + publishResp.getContentText());
+  }
+  return JSON.parse(publishResp.getContentText()).id;
+}
+
+/** Instagram自動投稿トリガーを15分おきに設置（初回のみ実行） */
+function installInstagramTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'autoPostInstagram') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('autoPostInstagram').timeBased().everyMinutes(15).create();
+  try { SpreadsheetApp.getActive().toast('Instagram自動投稿トリガーを設置しました（15分おき）'); } catch (e) {}
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  40_orchestrator.gs
+// ╚══════════════════════════════════════════════════════════╝
+
+/**
+ * 40_orchestrator.gs  ── 全体の司令塔
+ * --------------------------------------------------
+ * generateAll()  : 「商品マスタ」の各行について
+ *    1. PA-APIで商品情報＋アフィリンクを自動取得
+ *    2. AIで note / Instagram / Threads の文章を生成
+ *    3. Threads → 「投稿」シート、Instagram → 「IGポスト」シート、note → 「noteドラフト」シートへ書き出し
+ *    4. アフィリンクを媒体ごとの作法で付与
+ *
+ * 商品マスタの列:
+ *   A: ASIN/検索ワード（あなたが入力）
+ *   B: 商品名（自動）  C: 価格（自動）  D: 画像URL（自動）  E: アフィリンク（自動）
+ *   F: あなたのメモ（実体験・推しポイントを入力）
+ *   G: 状態（自動）    H: 生成日時（自動）
+ * --------------------------------------------------
+ */
+
+/** 必要なシートが無ければ見出し付きで作成 */
+function setupSheets() {
+  const ss = SpreadsheetApp.getActive();
+
+  ensureSheet_(ss, SHEET_PRODUCTS,
+    ['ASIN/検索ワード', '商品名', '価格', '画像URL', 'アフィリンク', 'あなたのメモ', '状態', '生成日時']);
+  ensureSheet_(ss, SHEET_IG,
+    ['日時', 'キャプション', '画像URL', '状態', 'アフィリンク', '投稿ID']);
+  ensureSheet_(ss, SHEET_NOTE,
+    ['作成日', 'タイトル', '本文', '商品名', 'アフィリンク']);
+
+  // Threads投稿シート（既存が無ければ最低限の見出しで用意）
+  const post = ss.getSheetByName(getPostSheetName_());
+  if (!post) {
+    ensureSheet_(ss, getPostSheetName_(), ['日時', '本文', '画像', '状態', 'ラベル', '備考']);
+  }
+  try { ss.toast('シートを準備しました'); } catch (e) {}
+}
+
+function ensureSheet_(ss, name, headers) {
+  let sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.appendRow(headers);
+    sh.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+/** メイン: 商品マスタの未生成行をまとめて処理 */
+function generateAll() {
+  const ss = SpreadsheetApp.getActive();
+  const sh = ss.getSheetByName(SHEET_PRODUCTS);
+  if (!sh) { setupSheets(); throw new Error('「' + SHEET_PRODUCTS + '」を作成しました。商品を入力して再実行してください。'); }
+
+  const data = sh.getDataRange().getValues();
+  let done = 0, failed = 0;
+  const usePaapi = paapiAvailable_();   // PA-APIキーがあればフル機能、無ければ手入力モード
+
+  for (let i = 1; i < data.length; i++) {
+    const row = i + 1;
+    const input = String(data[i][0] || '').trim();   // A
+    const memo = String(data[i][5] || '').trim();     // F
+    const status = String(data[i][6] || '').trim();   // G
+    if (!input) continue;
+    if (status === '生成済み') continue;              // 再生成したい時はGを空に
+
+    try {
+      sh.getRange(row, 7).setValue('処理中…');
+      SpreadsheetApp.flush();
+
+      // 1) 商品情報の用意
+      let product;
+      if (usePaapi) {
+        // PA-API：商品名・価格・画像・アフィリンクを自動取得して B〜E を上書き
+        product = fetchProduct_(input);
+        sh.getRange(row, 2, 1, 4).setValues([[product.title, product.price, product.imageUrl, product.url]]);
+      } else {
+        // 手入力モード：シートの値を使い、アフィリンク(E)が空なら自動生成して埋める
+        product = productFromRow_(input, data[i]);
+        if (!String(data[i][4] || '').trim()) sh.getRange(row, 5).setValue(product.url);
+      }
+
+      // 2) 文章生成
+      const c = generateContents_(product, memo);
+
+      // 3) 各媒体へ書き出し
+      writeThreads_(ss, c, product);
+      writeInstagram_(ss, c, product);
+      writeNote_(ss, c, product);
+
+      sh.getRange(row, 7).setValue('生成済み');
+      sh.getRange(row, 8).setValue(new Date());
+      done++;
+    } catch (e) {
+      sh.getRange(row, 7).setValue('エラー: ' + e.message);
+      failed++;
+    }
+    SpreadsheetApp.flush();
+  }
+
+  const mode = usePaapi ? 'PA-API' : '手入力モード';
+  const msg = '生成完了(' + mode + '): ' + done + '件' + (failed ? ' / 失敗 ' + failed + '件' : '');
+  try { ss.toast(msg); } catch (e) {}
+  Logger.log(msg);
+}
+
+/** PA-APIのキーが揃っているか（揃っていればフル機能） */
+function paapiAvailable_() {
+  const c = getConfig_();
+  return !!(c.AMAZON_ACCESS_KEY && c.AMAZON_SECRET_KEY && (c.AMAZON_PARTNER_TAG || getTrackingId_()));
+}
+
+/**
+ * PA-APIを使わず、商品マスタの行から商品情報を組み立てる（手入力モード）。
+ *   商品名(B)が空なら A（検索ワード）を商品名として使う。
+ *   アフィリンク(E)が空なら ASIN/検索ワードから自動生成。
+ */
+function productFromRow_(input, rowArr) {
+  const title = String(rowArr[1] || '').trim() || input;   // B → 無ければ A
+  const price = String(rowArr[2] || '').trim();            // C
+  const imageUrl = String(rowArr[3] || '').trim();         // D（後から貼ってもOK）
+  let url = String(rowArr[4] || '').trim();                // E
+  if (!url) url = buildAffiliateUrl_(input);
+  return {
+    asin: /^[A-Z0-9]{10}$/.test(input) ? input : '',
+    title: title,
+    price: price,
+    imageUrl: imageUrl,
+    features: [],
+    url: url
+  };
+}
+
+// ===== 媒体別の書き出し =====
+
+/** Threads → 「投稿」シート（A日時 B本文 C画像 D状態 …） */
+function writeThreads_(ss, c, product) {
+  const sh = ss.getSheetByName(getPostSheetName_());
+  if (!sh) return;
+  const tags = (c.threads_hashtags || []).slice(0, 3).join(' ');
+  // Threadsは本文にURLを入れない作法。末尾に「↓」とアフィリンクを別行で（返信/プロフィール運用に流用しやすい）
+  let body = c.threads;
+  if (tags) body += '\n\n' + tags;
+  body += '\n\n🔗 ' + product.url; // リンクは末尾。会話の最初の返信に貼る運用でもOK
+  const when = nextFreeSlot_(sh, 1);
+  sh.appendRow([when, body, product.imageUrl, '', 'アフィリ', product.title]);
+}
+
+/** Instagram → 「IGポスト」シート */
+function writeInstagram_(ss, c, product) {
+  const sh = ss.getSheetByName(SHEET_IG);
+  if (!sh) return;
+  const tags = (c.instagram_hashtags || []).join(' ');
+  // インスタは本文リンク不可 → プロフィール誘導文 + ハッシュタグ
+  let caption = c.instagram_caption +
+    '\n\n🛒 商品はプロフィールのリンクからチェックできます' +
+    (tags ? '\n\n' + tags : '');
+  const when = nextFreeSlot_(sh, 1);
+  sh.appendRow([when, caption, product.imageUrl, '', product.url, '']);
+}
+
+/** note → 「noteドラフト」シート（手動コピペ用。本文末尾にアフィリンクを埋め込み） */
+function writeNote_(ss, c, product) {
+  const sh = ss.getSheetByName(SHEET_NOTE);
+  if (!sh) return;
+  const body = c.note +
+    '\n\n---\n▼ 今回紹介した商品はこちら\n' + product.title +
+    (product.price ? '（' + product.price + '）' : '') +
+    '\n' + product.url +
+    '\n\n※本記事はアフィリエイトリンクを含みます。';
+  const title = extractNoteTitle_(c.note, product.title);
+  sh.appendRow([new Date(), title, body, product.title, product.url]);
+}
+
+/** note本文の最初の見出し/行からタイトルを推定 */
+function extractNoteTitle_(noteText, fallback) {
+  const lines = String(noteText || '').split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].replace(/^#+\s*/, '').trim();
+    if (t) return t.length > 60 ? t.substring(0, 60) : t;
+  }
+  return fallback;
+}
+
+/** 翌日以降で、まだ使われていない最初の投稿枠(DAILY_TIMES)を返す */
+function nextFreeSlot_(sheet, dateCol) {
+  const used = {};
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    const v = data[i][dateCol - 1];
+    if (v instanceof Date) used[v.getTime()] = true;
+  }
+  const slots = getDailyTimes_();
+  const today = new Date();
+  for (let d = 1; d <= 60; d++) {
+    const base = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
+    for (let s = 0; s < slots.length; s++) {
+      const when = new Date(base.getFullYear(), base.getMonth(), base.getDate(), slots[s][0], slots[s][1]);
+      if (!used[when.getTime()]) { used[when.getTime()] = true; return when; }
+    }
+  }
+  return new Date(today.getTime() + 24 * 3600 * 1000); // 念のためのフォールバック
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  50_menu.gs
+// ╚══════════════════════════════════════════════════════════╝
+
+/**
+ * 50_menu.gs  ── スプレッドシートのメニュー（統合版）
+ * --------------------------------------------------
+ * ⚠ 重要: onOpen は1プロジェクトに1つだけにしてください。
+ *   既存の threadsweekprep.gs にある onOpen() は「関数ごと削除」し、
+ *   この統合版 onOpen を使ってください（食レポ運用の項目もここに含めています）。
+ * --------------------------------------------------
+ */
+
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+
+  // Amazonアフィリ自動投稿
+  ui.createMenu('アフィリ自動投稿')
+    .addItem('① シートを準備', 'setupSheets')
+    .addItem('② 文章を一括生成（商品マスタ）', 'generateAll')
+    .addSeparator()
+    .addItem('AI接続テスト', 'testAI')
+    .addItem('Instagram自動投稿トリガー設置', 'installInstagramTrigger')
+    .addItem('設定チェック', 'checkConfig')
+    .addToUi();
+
+  // 既存の食レポ運用メニュー（threadsweekprep.gs の関数を呼ぶ）
+  const shokurepo = ui.createMenu('食レポ運用');
+  if (typeof prepareWeek === 'function') shokurepo.addItem('① 来週分の投稿枠を作成', 'prepareWeek');
+  if (typeof checkPosts === 'function')  shokurepo.addItem('② 予約中の投稿をチェック', 'checkPosts');
+  if (typeof setupUserId === 'function') {
+    shokurepo.addSeparator()
+      .addItem('ユーザーID取得（初回）', 'setupUserId')
+      .addItem('自動投稿トリガー設置（初回）', 'installTrigger')
+      .addItem('トークン更新', 'refreshToken');
+  }
+  shokurepo.addToUi();
+}
