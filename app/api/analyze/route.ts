@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { analyzeChart, type ImageMediaType } from "@/lib/anthropic";
+import { analyzeChart, type ImageMediaType } from "@/lib/ollama";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;

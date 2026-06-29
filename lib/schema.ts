@@ -120,6 +120,19 @@ export const analysisJsonSchema = {
 } as const;
 
 /**
+ * モデル出力の文字列から JSON オブジェクト部分を抽出する。
+ * ローカルモデルは前後に説明文やコードフェンス(```json)を付けがちなため、
+ * 最初の "{" から対応する最後の "}" までを取り出す簡易抽出を行う。
+ */
+export function extractJson(text: string): string | null {
+  if (!text) return null;
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start === -1 || end === -1 || end < start) return null;
+  return text.slice(start, end + 1);
+}
+
+/**
  * シナリオの probability 合計を 100 に正規化する。
  * モデル出力が合計100からずれても UI が破綻しないようにする。
  */
