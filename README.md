@@ -58,6 +58,32 @@
 5. ブラウザで <http://localhost:3000> を開き、株価チャート画像（PNG/JPEG/GIF/WebP）を
    アップロードして「予想する」を押します。
 
+## iPhone など同じ Wi-Fi の端末から使う
+
+モデルはPCで動かしますが、**iPhone のブラウザから操作・写真アップロードは可能**です
+（計算はPC側、iPhone は画面とカメラの役割）。同じ Wi-Fi 内で次の手順:
+
+1. PC で Ollama を起動しておく（`ollama serve`／既定で常駐）。
+2. PC でアプリを **LAN 公開モード**で起動:
+
+   ```bash
+   npm run dev:lan      # 本番は npm run build && npm run start:lan
+   ```
+
+3. PC の IP アドレスを調べる:
+   - macOS: `ipconfig getifaddr en0`（例: `192.168.1.23`）
+   - Windows: `ipconfig` → 「IPv4 アドレス」
+4. iPhone の Safari で `http://<PCのIP>:3000`（例: `http://192.168.1.23:3000`）を開く。
+5. チャートを**その場で撮影してアップロード**、または写真ライブラリから選択。
+
+補足:
+- 接続できない場合は PC のファイアウォールで 3000 番ポートの受信を許可してください。
+- iPhone の写真は HEIC でも、Web アップロード時に自動で JPEG 変換されるため通常そのまま使えます。
+- `OLLAMA_HOST` は PC 内の Ollama を指すので **`localhost:11434` のままで OK**（変更不要）。
+
+> 外出先（モバイル回線）など Wi-Fi 外から使いたい場合は、クラウドへのデプロイ
+> （GPU サーバー）か、クラウド API への切り替えが必要です。
+
 ## 環境変数
 
 | 変数 | 既定値 | 説明 |
