@@ -17,7 +17,7 @@
 
 /** 必要なシートが無ければ見出し付きで作成 */
 function setupSheets() {
-  const ss = SpreadsheetApp.getActive();
+  const ss = getSS_();
 
   ensureSheet_(ss, SHEET_PRODUCTS,
     ['ASIN/検索ワード', '商品名', '価格', '画像URL', 'アフィリンク', 'あなたのメモ', '状態', '生成日時']);
@@ -47,7 +47,7 @@ function ensureSheet_(ss, name, headers) {
 
 /** メイン: 商品マスタの未生成行をまとめて処理 */
 function generateAll() {
-  const ss = SpreadsheetApp.getActive();
+  const ss = getSS_();
   const sh = ss.getSheetByName(SHEET_PRODUCTS);
   if (!sh) { setupSheets(); throw new Error('「' + SHEET_PRODUCTS + '」を作成しました。商品を入力して再実行してください。'); }
 
@@ -101,6 +101,20 @@ function generateAll() {
   const msg = '生成完了(' + mode + '): ' + done + '件' + (failed ? ' / 失敗 ' + failed + '件' : '');
   try { ss.toast(msg); } catch (e) {}
   Logger.log(msg);
+}
+
+/**
+ * 文章の自動生成トリガーを30分おきに設置（iPhone運用の要）。
+ * これを1回実行しておけば、以後はスプレッドシートに商品を打ち込むだけで
+ * メニュー操作なしに自動で文章が生成されます。
+ */
+function installGenerateTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'generateAll') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('generateAll').timeBased().everyMinutes(30).create();
+  Logger.log('自動生成トリガーを設置しました（30分おき）');
+  try { getSS_().toast('自動生成トリガーを設置しました（30分おき）'); } catch (e) {}
 }
 
 /** PA-APIのキーが揃っているか（揃っていればフル機能） */

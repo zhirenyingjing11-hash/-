@@ -59,8 +59,24 @@ function getConfig_() {
     CLAUDE_API_KEY:     p.CLAUDE_API_KEY     || '',
     IG_ACCESS_TOKEN:    p.IG_ACCESS_TOKEN    || '',
     IG_BUSINESS_ID:     p.IG_BUSINESS_ID     || '',
-    AI_PROVIDER:        (p.AI_PROVIDER || 'gemini').toLowerCase()
+    AI_PROVIDER:        (p.AI_PROVIDER || 'gemini').toLowerCase(),
+    SPREADSHEET_ID:     p.SPREADSHEET_ID     || ''
   };
+}
+
+/**
+ * 操作対象のスプレッドシートを取得。
+ *   ・SPREADSHEET_ID プロパティがあれば openById（standaloneスクリプト/タイマー実行向け＝iPhone対応）
+ *   ・無ければ getActive（スプレッドシートに紐づくバインド型スクリプト向け）
+ */
+function getSS_() {
+  const id = getConfig_().SPREADSHEET_ID;
+  if (id) return SpreadsheetApp.openById(id);
+  const active = SpreadsheetApp.getActive();
+  if (!active) {
+    throw new Error('スプレッドシートが特定できません。スクリプトプロパティ SPREADSHEET_ID にシートのIDを設定してください。');
+  }
+  return active;
 }
 
 /** エディタ上で1回だけ実行してシークレットを保存するヘルパー */
@@ -480,7 +496,7 @@ const IG_GRAPH_VERSION = 'v21.0';
 
 /** IGポストシートの予約投稿を1件ずつ確認して投稿（トリガー用） */
 function autoPostInstagram() {
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_IG);
+  const sh = getSS_().getSheetByName(SHEET_IG);
   if (!sh) { Logger.log('「' + SHEET_IG + '」シートがありません'); return; }
   const data = sh.getDataRange().getValues();
   const now = new Date();
@@ -571,7 +587,7 @@ function installInstagramTrigger() {
 
 /** 必要なシートが無ければ見出し付きで作成 */
 function setupSheets() {
-  const ss = SpreadsheetApp.getActive();
+  const ss = getSS_();
 
   ensureSheet_(ss, SHEET_PRODUCTS,
     ['ASIN/検索ワード', '商品名', '価格', '画像URL', 'アフィリンク', 'あなたのメモ', '状態', '生成日時']);
@@ -601,7 +617,7 @@ function ensureSheet_(ss, name, headers) {
 
 /** メイン: 商品マスタの未生成行をまとめて処理 */
 function generateAll() {
-  const ss = SpreadsheetApp.getActive();
+  const ss = getSS_();
   const sh = ss.getSheetByName(SHEET_PRODUCTS);
   if (!sh) { setupSheets(); throw new Error('「' + SHEET_PRODUCTS + '」を作成しました。商品を入力して再実行してください。'); }
 
@@ -655,6 +671,20 @@ function generateAll() {
   const msg = '生成完了(' + mode + '): ' + done + '件' + (failed ? ' / 失敗 ' + failed + '件' : '');
   try { ss.toast(msg); } catch (e) {}
   Logger.log(msg);
+}
+
+/**
+ * 文章の自動生成トリガーを30分おきに設置（iPhone運用の要）。
+ * これを1回実行しておけば、以後はスプレッドシートに商品を打ち込むだけで
+ * メニュー操作なしに自動で文章が生成されます。
+ */
+function installGenerateTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'generateAll') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('generateAll').timeBased().everyMinutes(30).create();
+  Logger.log('自動生成トリガーを設置しました（30分おき）');
+  try { getSS_().toast('自動生成トリガーを設置しました（30分おき）'); } catch (e) {}
 }
 
 /** PA-APIのキーが揃っているか（揃っていればフル機能） */
@@ -777,6 +807,7 @@ function onOpen() {
     .addItem('② 文章を一括生成（商品マスタ）', 'generateAll')
     .addSeparator()
     .addItem('AI接続テスト', 'testAI')
+    .addItem('自動生成トリガー設置（30分おき）', 'installGenerateTrigger')
     .addItem('Instagram自動投稿トリガー設置', 'installInstagramTrigger')
     .addItem('設定チェック', 'checkConfig')
     .addToUi();

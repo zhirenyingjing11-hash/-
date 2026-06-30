@@ -44,8 +44,24 @@ function getConfig_() {
     CLAUDE_API_KEY:     p.CLAUDE_API_KEY     || '',
     IG_ACCESS_TOKEN:    p.IG_ACCESS_TOKEN    || '',
     IG_BUSINESS_ID:     p.IG_BUSINESS_ID     || '',
-    AI_PROVIDER:        (p.AI_PROVIDER || 'gemini').toLowerCase()
+    AI_PROVIDER:        (p.AI_PROVIDER || 'gemini').toLowerCase(),
+    SPREADSHEET_ID:     p.SPREADSHEET_ID     || ''
   };
+}
+
+/**
+ * 操作対象のスプレッドシートを取得。
+ *   ・SPREADSHEET_ID プロパティがあれば openById（standaloneスクリプト/タイマー実行向け＝iPhone対応）
+ *   ・無ければ getActive（スプレッドシートに紐づくバインド型スクリプト向け）
+ */
+function getSS_() {
+  const id = getConfig_().SPREADSHEET_ID;
+  if (id) return SpreadsheetApp.openById(id);
+  const active = SpreadsheetApp.getActive();
+  if (!active) {
+    throw new Error('スプレッドシートが特定できません。スクリプトプロパティ SPREADSHEET_ID にシートのIDを設定してください。');
+  }
+  return active;
 }
 
 /** エディタ上で1回だけ実行してシークレットを保存するヘルパー */

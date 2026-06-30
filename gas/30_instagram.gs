@@ -18,7 +18,7 @@ const IG_GRAPH_VERSION = 'v21.0';
 
 /** IGポストシートの予約投稿を1件ずつ確認して投稿（トリガー用） */
 function autoPostInstagram() {
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_IG);
+  const sh = getSS_().getSheetByName(SHEET_IG);
   if (!sh) { Logger.log('「' + SHEET_IG + '」シートがありません'); return; }
   const data = sh.getDataRange().getValues();
   const now = new Date();

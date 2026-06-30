@@ -16,6 +16,7 @@ function onOpen() {
     .addItem('② 文章を一括生成（商品マスタ）', 'generateAll')
     .addSeparator()
     .addItem('AI接続テスト', 'testAI')
+    .addItem('自動生成トリガー設置（30分おき）', 'installGenerateTrigger')
     .addItem('Instagram自動投稿トリガー設置', 'installInstagramTrigger')
     .addItem('設定チェック', 'checkConfig')
     .addToUi();
