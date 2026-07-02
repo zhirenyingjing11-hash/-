@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>電力設計 10大計算ツール</title>
+<title>電力設計 11大計算ツール</title>
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#16202a">
@@ -309,7 +309,7 @@ footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--i
       <div class="brand">
         <div class="mark"></div>
         <div>
-          <h1>電力設計 10大計算ツール</h1>
+          <h1>電力設計 11大計算ツール</h1>
           <small>初心者向け・概算検討 ＆ 学習用</small>
         </div>
       </div>
@@ -448,7 +448,10 @@ const GLOSSARY=[
   ["無効電力 kvar","⑨","仕事をしない電力成分の大きさ。進相コンデンサで打ち消して力率を改善する。"],
   ["%インピーダンス %Z","⑩","変圧器内部のインピーダンスを定格基準の百分率で表した値。短絡電流の計算に使う。"],
   ["短絡電流","⑩","短絡事故時に流れる大電流。遮断器はこれを安全に遮断できる必要がある。"],
-  ["遮断容量 Icu","⑩","ブレーカが安全に遮断できる最大の短絡電流[kA]。想定短絡電流以上のものを選ぶ。"]
+  ["遮断容量 Icu","⑩","ブレーカが安全に遮断できる最大の短絡電流[kA]。想定短絡電流以上のものを選ぶ。"],
+  ["B種接地工事","⑪","変圧器の高圧側と低圧側が混触したとき、低圧側の電位上昇を抑えるための接地。変圧器低圧側の中性点等に施す。"],
+  ["1線地絡電流 Ig","⑪","高圧電路で1線が大地に触れたときに流れる電流[A]。B種接地抵抗の上限を決める。確定値は電力会社に照会する。"],
+  ["混触","⑪","変圧器内部などで高圧側と低圧側が接触する事故。低圧側に高電圧がかかる危険があり、B種接地で電位上昇を抑える。"]
 ];
 
 const TOOLS=[
@@ -461,9 +464,10 @@ const TOOLS=[
   {id:7,t:"コンクリートトラフ",sub:"本数・外径→トラフ呼び名",src:"JIS A5372"},
   {id:8,t:"変圧器容量選定",sub:"設備容量×需要率→標準容量",src:"JIS C4304/C4306"},
   {id:9,t:"力率改善コンデンサ",sub:"目標力率までの必要kvar",src:"JIS C4902"},
-  {id:10,t:"短絡電流（%Z法）",sub:"変圧器%Zから短絡電流を概算",src:"%インピーダンス法"}
+  {id:10,t:"短絡電流（%Z法）",sub:"変圧器%Zから短絡電流を概算",src:"%インピーダンス法"},
+  {id:11,t:"B種接地抵抗（簡易）",sub:"1線地絡電流→接地抵抗の上限値",src:"電技解釈17条"}
 ];
-const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"];
+const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪"];
 
 /* =========================================================================
    計算ロジック（§5）— UIから分離した純関数。判定理由も返す。
@@ -579,6 +583,21 @@ function calcShort(i){
   const ok=!!(i.icu&&i.icu>=IskA);
   return {In,Is,IskA,needIcu,ok};
 }
+function calcEarthB(i){
+  let Ig, raw=null;
+  if(i.mode==="直接入力"){
+    Ig=i.Ig;
+    if(!isFinite(Ig)||Ig<=0) return {err:true};
+  }else{
+    if(!i.kv) return {err:true};
+    const Vd=i.kv/1.1; // V' [kV]
+    raw=1+Math.max(0,(Vd/3*(i.L||0)-100)/150)+Math.max(0,(Vd/3*(i.Lc||0)-1)/2);
+    Ig=Math.max(2,Math.ceil(raw)); // 小数切上げ・最小2A
+  }
+  const Vlim=i.cut==="1秒以内"?600:(i.cut==="2秒以内"?300:150);
+  const R=Vlim/Ig;
+  return {Ig,raw,Vlim,R,calc:i.mode!=="直接入力"};
+}
 
 /* =========================================================================
    状態（§6 サンプル相当の初期値 → §10 受入れ値を再現）
@@ -594,7 +613,8 @@ const S={
   trough:{rows:[{od:38,n:3}],fill:0.30,clr:20},
   tfr:{phase:"三相",Pset:150,dem:60,spare:20},
   cap:{volt:"低圧",P:100,cos1:0.8,cos2:0.95},
-  short:{method:"三相",kva:300,z:4,V:210,icu:10}
+  short:{method:"三相",kva:300,z:4,V:210,icu:10},
+  earthB:{mode:"直接入力",Ig:5,kv:6.6,L:0,Lc:0.5,cut:"なし"}
 };
 
 /* 入力値の保存・復元（localStorage）: モバイル/PCそれぞれで前回値を保持 */
@@ -644,7 +664,7 @@ function bindHelp(){
 function renderHome(){
   main.innerHTML=`
    <div class="hero">
-     <div class="eyebrow">10 calculation tools</div>
+     <div class="eyebrow">11 calculation tools</div>
      <h2>どの計算をしますか？</h2>
      <p>使いたい計算をひとつ選んでください。各ツールは「STEP1 入力 → STEP2 自動計算」で結果が出ます。</p>
    </div>
@@ -820,7 +840,17 @@ function inputCard(id){
       <div class="two">
         ${field("二次側電圧 V",numIn("V",c.short.V,1),"V")}
         ${field("ブレーカ遮断容量 Icu",numIn("icu",c.short.icu,0.5),"kA",("遮断容量 Icu"))}
-      </div>`
+      </div>`,
+    11:()=>`
+      <div class="field"><label>1線地絡電流 Ig の求め方${helpBtn("1線地絡電流")}</label>${seg("mode",["直接入力","こう長から概算"],c.earthB.mode)}</div>
+      ${c.earthB.mode==="直接入力"
+        ? field("1線地絡電流 Ig（電力会社照会値）",numIn("Ig",c.earthB.Ig,0.1),"A",("1線地絡電流 Ig"))
+        : `${field("高圧側の公称電圧",selIn("kv",[6.6,3.3],c.earthB.kv),"kV")}
+      <div class="two">
+        ${field("架空電線路の電線延長",numIn("L",c.earthB.L,0.1),"km")}
+        ${field("ケーブルの線路延長",numIn("Lc",c.earthB.Lc,0.1),"km")}
+      </div>`}
+      <div class="field"><label>混触時に低圧電路を自動遮断する装置${helpBtn("混触")}</label>${seg("cut",["なし","2秒以内","1秒以内"],c.earthB.cut)}</div>`
   }[id];
   return `<div class="card"><div class="card-h"><span class="lab">STEP 1</span><span class="t">入力</span></div><div class="card-b" id="inputBody">${body()}</div></div>`;
 }
@@ -865,7 +895,7 @@ function ivRef(){
 
 /* ---- bind input events ---- */
 function bindInputs(id){
-  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short"}[id];
+  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB"}[id];
   main.querySelectorAll("[data-k]").forEach(el=>{
     el.oninput=()=>{
       let v=el.value;
@@ -911,6 +941,7 @@ function recalc(id){
   if(id===8) html=resultTfr(calcTfr(S.tfr));
   if(id===9) html=resultCap(calcCap(S.cap));
   if(id===10) html=resultShort(calcShort(S.short));
+  if(id===11) html=resultEarthB(calcEarthB(S.earthB));
   persist();
   slot.innerHTML=html;
   bindHelp();
@@ -1168,6 +1199,29 @@ function resultShort(r){
      "判定 = ブレーカ遮断容量 Icu ≧ Is"],
     "%インピーダンス法（電源側・ケーブル分を無視した大きめ側の概算）",
     `<p><b>⚠ 注意:</b> 電源系統・ケーブルのインピーダンスを無視した安全側（大きめ）の概算です。分電盤末端の値やカスケード保護協調は個別に検討してください。</p>`);
+  return resultShell(inner,d);
+}
+
+function resultEarthB(r){
+  if(r.err) return resultShell(emptyR("1線地絡電流（または公称電圧・こう長）を入力してください"));
+  const inner=`
+    ${readout(true,f1(r.R),"Ω","B種接地抵抗の上限（この値以下にする）")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${r.calc?r.Ig:f1(r.Ig)}<span style="font-size:10px"> A</span></div><div class="k">採用Ig${r.calc?"(概算)":""}</div></div>
+      <div class="metric"><div class="v">${r.Vlim}<span style="font-size:10px"> V</span></div><div class="k">上限電圧</div></div>
+      ${r.calc&&r.raw!=null?`<div class="metric"><div class="v">${(Math.round(r.raw*100)/100)}</div><div class="k">計算値(切上げ前)</div></div>`:""}
+    </div>
+    <div class="reason">RB = <b>${r.Vlim}V ÷ ${r.calc?r.Ig:f1(r.Ig)}A = ${f1(r.R)}Ω 以下</b>。${r.calc
+      ? "Ig は電技解釈の計算式による<b>概算</b>（小数切上げ・最小2A）です。確定値は電力会社に照会を。"
+      : "自動遮断の条件が良いほど上限電圧が上がり、必要な接地抵抗は緩くなります。"}</div>`;
+  const d=disclose(
+    ["RB ≦ V / Ig",
+     "V = 150V（自動遮断なし）/ 300V（2秒以内）/ 600V（1秒以内）",
+     "概算 Ig = 1 + (V′/3×L −100)/150 + (V′/3×L′ −1)/2",
+     "　V′=公称電圧/1.1[kV]  L=架空 電線延長[km]  L′=ケーブル 線路延長[km]",
+     "　※ 負の項は0とし、合計は小数切上げ・最小2A"],
+    "電技解釈17条（B種接地工事）／ Ig計算式: 中性点非接地式高圧電路（6.6kV配電系）",
+    `<p><b>⚠ 注意:</b> 実際のB種接地抵抗値は<b>電力会社が指定する1線地絡電流値</b>で決まります。必ず所轄の電力会社に照会してください。V=300/600Vの適用には混触時に低圧電路を自動遮断する装置の施設が条件です。</p>`);
   return resultShell(inner,d);
 }
 
