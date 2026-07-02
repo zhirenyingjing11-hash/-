@@ -1,0 +1,16 @@
+{
+  "name": "電力設計 10大計算ツール",
+  "short_name": "電力設計計算",
+  "description": "電気設備設計の概算・学習用計算ツール集（オフライン対応）",
+  "lang": "ja",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#eef1f4",
+  "theme_color": "#16202a",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

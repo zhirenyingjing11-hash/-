@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>電力設計 10大計算ツール</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16202a">
+<meta name="color-scheme" content="light">
+<!-- iOS: ホーム画面に追加で全画面アプリ化 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="電力設計計算">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+:root{
+  --ink:#16202a; --ink-2:#46566a; --ink-3:#9aa6b2;
+  --ink-mut:#7a8694;
+  --paper:#eef1f4;        /* drafting paper, cool near-white */
+  --surface:#ffffff;
+  --line:#d6dde4;
+  --line-strong:#b7c2cd;
+  --copper:#b5651d;       /* signature accent: copper wire */
+  --copper-soft:#f4e9dd;
+  --copper-tint:#fbf3ea;
+  --ok:#1f8a4c; --ok-bg:#e7f4ec; --ok-line:#bfe3cd;
+  --ng:#c5341e; --ng-bg:#fbeae6; --ng-line:#f0c7bd;
+  --neutral-bg:#f1f4f7;
+  --input-bg:#fbf3ea;     /* faint copper tint = "input here" */
+  --input-line:#e0b988;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(22,32,42,.05), 0 8px 24px rgba(22,32,42,.06);
+  --mono:"SFMono-Regular",ui-monospace,"DejaVu Sans Mono","Roboto Mono",Menlo,Consolas,monospace;
+  --sans:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",Meiryo,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans); color:var(--ink); background:var(--paper);
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+  font-size:15px;
+}
+.app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--paper);
+  display:flex;flex-direction:column;position:relative}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:40;background:rgba(238,241,244,.92);
+  backdrop-filter:saturate(1.1) blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 12px calc(16px + env(safe-area-inset-left))}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:30px;height:30px;flex:0 0 auto;border-radius:7px;
+  background:linear-gradient(135deg,#16202a,#2c3e50);position:relative;
+  display:grid;place-items:center}
+.mark::before{content:"";width:14px;height:14px;border:2px solid var(--copper);
+  border-radius:50%;border-left-color:transparent;transform:rotate(-30deg)}
+.brand h1{font-size:15px;font-weight:700;margin:0;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{display:block;font-size:10.5px;color:var(--ink-mut);font-weight:500;letter-spacing:.04em}
+.bar .spacer{flex:1}
+.icon-btn{appearance:none;border:1px solid var(--line-strong);background:var(--surface);
+  color:var(--ink-2);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:600;
+  cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.icon-btn:hover{border-color:var(--copper);color:var(--copper)}
+
+/* ---------- disclaimer banner (always visible) ---------- */
+.disclaimer{background:#16202a;color:#dbe2ea;font-size:11.5px;line-height:1.5;
+  padding:8px 16px;display:flex;gap:9px;align-items:flex-start}
+.disclaimer .dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--copper);margin-top:6px;
+  box-shadow:0 0 0 3px rgba(181,101,29,.25)}
+.disclaimer b{color:#fff}
+.disclaimer .more{color:var(--copper);font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:underline;text-underline-offset:2px}
+.disclaimer-full{display:none;padding:14px 16px;background:#1c2733;color:#cfd8e2;font-size:12px;line-height:1.7;border-bottom:1px solid #2c3a48}
+.disclaimer-full.open{display:block}
+.disclaimer-full b{color:#fff}
+
+/* ---------- scroll area ---------- */
+main{flex:1;padding:16px 16px 28px}
+
+/* ---------- HOME ---------- */
+.hero{margin:4px 2px 18px}
+.hero .eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--copper);text-transform:uppercase}
+.hero h2{font-size:21px;font-weight:800;margin:6px 0 6px;line-height:1.3}
+.hero p{margin:0;color:var(--ink-2);font-size:13.5px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.tool-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px;cursor:pointer;text-align:left;font-family:inherit;color:inherit;
+  display:flex;flex-direction:column;gap:8px;transition:.14s;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.tool-card:hover{border-color:var(--copper);transform:translateY(-2px)}
+.tool-card .num{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--copper);
+  letter-spacing:.05em}
+.tool-card .ttl{font-size:14.5px;font-weight:700;line-height:1.35}
+.tool-card .sub{font-size:11.5px;color:var(--ink-mut);line-height:1.45}
+.tool-card .based{font-size:9.5px;color:var(--ink-mut);font-family:var(--mono);margin-top:auto;
+  border-top:1px dashed var(--line);padding-top:7px}
+.tool-card.glos{grid-column:1 / -1;flex-direction:row;align-items:center;gap:12px;background:#16202a;color:#e7edf3;border-color:#16202a}
+.tool-card.glos .ttl{color:#fff}.tool-card.glos .sub{color:#9fb0c0}
+.tool-card.glos .gicon{font-size:20px}
+
+/* ---------- TOOL VIEW ---------- */
+.tool-head{margin:2px 2px 12px}
+.crumbs{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-mut);margin-bottom:8px}
+.crumbs button{appearance:none;background:none;border:none;color:var(--copper);font-weight:700;
+  cursor:pointer;font-family:inherit;font-size:12px;padding:0;display:inline-flex;align-items:center;gap:4px}
+.tool-head h2{font-size:19px;font-weight:800;margin:0;display:flex;align-items:baseline;gap:9px}
+.tool-head h2 .n{font-family:var(--mono);font-size:14px;color:var(--copper)}
+.tool-head .desc{font-size:12.5px;color:var(--ink-2);margin-top:4px}
+
+.chips{display:flex;gap:7px;overflow-x:auto;padding:4px 2px 10px;margin:0 -2px 6px;
+  scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;appearance:none;border:1px solid var(--line-strong);background:var(--surface);
+  color:var(--ink-2);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--mono)}
+.chip.active{background:var(--copper);border-color:var(--copper);color:#fff}
+
+/* step rail + cards */
+.flow{position:relative;padding-left:30px}
+.flow::before{content:"";position:absolute;left:11px;top:14px;bottom:34px;width:2px;
+  background:repeating-linear-gradient(var(--copper) 0 6px,transparent 6px 11px)}
+.step{position:relative;margin-bottom:14px}
+.step .node{position:absolute;left:-30px;top:0;width:24px;height:24px;border-radius:50%;
+  background:var(--surface);border:2px solid var(--copper);color:var(--copper);
+  font-family:var(--mono);font-size:11px;font-weight:700;display:grid;place-items:center}
+.step.done .node{background:var(--copper);color:#fff}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden}
+.card-h{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.card-h .lab{font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--ink-mut)}
+.card-h .t{font-size:14px;font-weight:700}
+.card-b{padding:14px}
+
+/* fields */
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field > label{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;
+  color:var(--ink);margin-bottom:5px}
+.help{appearance:none;border:none;background:var(--copper-soft);color:var(--copper);
+  width:16px;height:16px;border-radius:50%;font-size:10px;font-weight:800;cursor:pointer;
+  display:inline-grid;place-items:center;flex:0 0 auto;font-family:var(--mono);line-height:1}
+.unit-tag{font-family:var(--mono);font-size:10.5px;color:var(--ink-mut);margin-left:auto;font-weight:600}
+input[type=number],input[type=text],select{width:100%;font-family:inherit;font-size:15px;
+  padding:10px 11px;border:1.5px solid var(--input-line);background:var(--input-bg);
+  border-radius:9px;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--copper);box-shadow:0 0 0 3px rgba(181,101,29,.14)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b5651d' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.seg{display:flex;border:1.5px solid var(--input-line);border-radius:9px;overflow:hidden;background:var(--input-bg)}
+.seg button{flex:1;appearance:none;border:none;background:none;padding:9px 4px;font-family:inherit;
+  font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:var(--copper);color:#fff}
+.field .err{font-size:11px;color:var(--ng);margin-top:5px;display:none;font-weight:600}
+.field.invalid input,.field.invalid select{border-color:var(--ng);background:var(--ng-bg)}
+.field.invalid .err{display:block}
+
+/* rows (③④⑦) */
+.rows{display:flex;flex-direction:column;gap:8px}
+.row-head,.row{display:grid;gap:7px;align-items:center}
+.row-head{font-size:10.5px;color:var(--ink-mut);font-weight:700;letter-spacing:.04em;padding:0 2px}
+.row input{padding:8px 9px;font-size:14px}
+.row .del{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ng);
+  border-radius:8px;width:34px;height:36px;cursor:pointer;font-size:15px;font-weight:700}
+.addrow{appearance:none;border:1.5px dashed var(--input-line);background:var(--input-bg);color:var(--copper);
+  border-radius:9px;padding:9px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;width:100%;margin-top:8px}
+
+/* result instrument */
+.result .card-b{padding:0}
+.readout{padding:18px 16px;text-align:center;background:
+  radial-gradient(120% 80% at 50% 0%,var(--copper-tint),var(--surface) 70%)}
+.readout .lamp{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;
+  font-size:12px;font-weight:800;letter-spacing:.04em}
+.readout .lamp.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
+.readout .lamp.ng{background:var(--ng-bg);color:var(--ng);border:1px solid var(--ng-line)}
+.readout .lamp .b{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+.readout .big{font-family:var(--mono);font-weight:800;font-size:38px;line-height:1.1;margin:10px 0 2px;
+  letter-spacing:-.02em}
+.readout .big small{font-size:16px;font-weight:700;color:var(--ink-2);margin-left:3px}
+.readout .cap{font-size:12px;color:var(--ink-2)}
+.readout.empty .big{color:var(--line-strong)}
+.reason{padding:12px 16px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--ink-2);
+  background:var(--neutral-bg)}
+.reason b{color:var(--ink)}
+.sub-readout{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 14px;background:
+  radial-gradient(120% 80% at 50% 0%,var(--copper-tint),var(--surface) 70%);justify-content:center}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:7px 11px;min-width:84px;text-align:center}
+.metric .v{font-family:var(--mono);font-weight:700;font-size:15px}
+.metric .k{font-size:10px;color:var(--ink-mut);margin-top:1px}
+
+/* basis / source disclosure */
+.disclose{border-top:1px solid var(--line)}
+.disclose summary{list-style:none;cursor:pointer;padding:11px 14px;font-size:12.5px;font-weight:700;
+  color:var(--copper);display:flex;align-items:center;gap:8px}
+.disclose summary::-webkit-details-marker{display:none}
+.disclose summary .chev{margin-left:auto;transition:.2s}
+.disclose[open] summary .chev{transform:rotate(180deg)}
+.disclose .body{padding:0 14px 14px;font-size:12px;color:var(--ink-2);line-height:1.7}
+.stamp{border:1.5px dashed var(--copper);border-radius:9px;padding:10px 12px;margin-top:9px;
+  background:var(--copper-tint)}
+.stamp .h{font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--copper);margin-bottom:4px}
+.formula{font-family:var(--mono);font-size:12px;background:#16202a;color:#e7edf3;border-radius:8px;
+  padding:9px 11px;margin:8px 0;overflow-x:auto;white-space:pre-wrap;line-height:1.6}
+.src{font-family:var(--mono);font-size:11px;color:var(--ink-mut)}
+
+/* candidate table (①) */
+.cand-wrap{padding:12px 14px;border-top:1px dashed var(--line)}
+.cand-wrap .cap{font-size:11.5px;color:var(--ink-mut);margin-bottom:8px;display:flex;gap:6px;align-items:center}
+.cand{display:flex;flex-direction:column;gap:6px}
+.cand-row{display:grid;grid-template-columns:54px 1fr auto;gap:9px;align-items:center;
+  border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:12px;background:var(--surface)}
+.cand-row.pick{border-color:var(--copper);background:var(--copper-tint);box-shadow:0 0 0 1px var(--copper)}
+.cand-row .sz{font-family:var(--mono);font-weight:800;font-size:13px}
+.cand-row .sz .u{font-size:9px;color:var(--ink-mut)}
+.cand-row .det{font-size:10.5px;color:var(--ink-mut);line-height:1.5;font-family:var(--mono)}
+.cand-row .jb{display:flex;gap:5px}
+.pill{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:999px;font-family:var(--sans);white-space:nowrap}
+.pill.y{background:var(--ok-bg);color:var(--ok)} .pill.n{background:var(--ng-bg);color:var(--ng)}
+.pick-tag{font-size:9px;font-weight:800;color:var(--copper);letter-spacing:.08em}
+
+/* part A info block (⑥) */
+.spec-box{background:var(--neutral-bg);border:1px solid var(--line);border-radius:10px;padding:12px 13px;font-size:12.5px;line-height:1.7}
+.spec-box .h{font-weight:700;margin-bottom:4px}
+.spec-box ul{margin:4px 0 0;padding-left:18px}
+
+/* output bar */
+.output-row{display:flex;gap:9px;margin-top:6px}
+.btn{flex:1;appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);
+  border-radius:11px;padding:12px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px}
+.btn.primary{background:var(--copper);border-color:var(--copper);color:#fff}
+.btn:hover{filter:brightness(.97)}
+
+/* glossary */
+.search{width:100%;margin-bottom:12px}
+.gloss{display:flex;flex-direction:column;gap:9px}
+.term{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:12px 13px;box-shadow:var(--shadow)}
+.term .w{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.term .w .tag{font-family:var(--mono);font-size:9px;color:var(--copper);background:var(--copper-tint);
+  padding:2px 6px;border-radius:5px;font-weight:700}
+.term .d{font-size:12.5px;color:var(--ink-2);margin-top:5px}
+
+/* footer */
+footer{padding:18px 16px calc(30px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface);
+  font-size:11px;color:var(--ink-mut);line-height:1.7}
+footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--ink-3)}
+
+/* tooltip popover */
+.pop{position:fixed;z-index:80;max-width:280px;background:#16202a;color:#eef2f6;font-size:12px;
+  line-height:1.6;padding:11px 13px;border-radius:11px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:none}
+.pop.show{display:block}
+.pop b{color:var(--copper)}
+.pop .x{position:absolute;top:6px;right:9px;cursor:pointer;color:#8aa;font-weight:700}
+.scrim{position:fixed;inset:0;background:transparent;z-index:79;display:none}
+.scrim.show{display:block}
+
+@media (max-width:380px){ .three{grid-template-columns:1fr 1fr} .readout .big{font-size:32px} }
+
+/* ---------- reference tables ---------- */
+.ref{margin-top:9px;border:1px dashed var(--line-strong);border-radius:9px;background:var(--neutral-bg)}
+.ref summary{list-style:none;cursor:pointer;padding:8px 11px;font-size:11.5px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.ref summary::-webkit-details-marker{display:none}
+.ref summary .chev{margin-left:auto;transition:.2s}
+.ref[open] summary .chev{transform:rotate(180deg)}
+.ref-b{padding:0 11px 10px;overflow-x:auto}
+.ref-table{border-collapse:collapse;font-family:var(--mono);font-size:10.5px;background:var(--surface)}
+.ref-table th,.ref-table td{border:1px solid var(--line);padding:3px 7px;text-align:right;white-space:nowrap}
+.ref-table th{background:var(--copper-tint);color:var(--ink-2);text-align:center}
+.ref-note{font-size:10px;color:var(--ink-mut);margin-top:6px}
+
+/* ---------- desktop / PC layout ---------- */
+@media (min-width:900px){
+  body{font-size:15.5px}
+  .app{max-width:1120px}
+  .bar{padding-left:calc(24px + env(safe-area-inset-left));padding-right:calc(24px + env(safe-area-inset-right))}
+  main{padding:26px 28px 44px}
+  .hero h2{font-size:26px}
+  .hero p{font-size:14.5px}
+  .grid{grid-template-columns:repeat(3,1fr);gap:14px}
+  .flow{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px;align-items:start}
+  .flow::before{display:none}
+  .step{margin-bottom:0}
+  .readout .big{font-size:44px}
+  .gloss{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .output-row{max-width:560px}
+  footer,.disclaimer{font-size:12px}
+}
+@media (min-width:1200px){
+  .grid{grid-template-columns:repeat(4,1fr)}
+}
+
+/* print */
+@media print{
+  body{background:#fff}
+  header,.chips,.disclaimer .more,.output-row,.disclose summary .chev,.addrow,.row .del{display:none!important}
+  .app{max-width:none}
+  .disclaimer-full{display:block!important;background:#fff;color:#000;border:1px solid #000}
+  .disclose{display:block} .disclose .body{display:block!important;padding-top:0}
+  .card{break-inside:avoid;box-shadow:none}
+  .flow::before{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="bar">
+      <div class="brand">
+        <div class="mark"></div>
+        <div>
+          <h1>電力設計 10大計算ツール</h1>
+          <small>初心者向け・概算検討 ＆ 学習用</small>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="resetBtn" title="すべての入力を初期値に戻す">↺</button>
+      <button class="icon-btn" id="glossBtn">📖 用語集</button>
+    </div>
+    <div class="disclaimer">
+      <span class="dot"></span>
+      <span><b>概算・学習用ツールです。</b>実設計・申請は最新の内線規程・電技解釈・JIS・メーカーカタログ・所轄/電力会社協議で必ず確認を。
+        <span class="more" id="discMore">免責の全文 ▾</span></span>
+    </div>
+    <div class="disclaimer-full" id="discFull">
+      本ツールは初心者の<b>学習・概算検討用</b>です。実際の設計・申請では、最新の
+      <b>内線規程(JEAC8001)・電技解釈・JIS・メーカーカタログ・所轄/電力会社協議</b>で必ず確認してください。
+      電圧降下の簡易式は長距離・大電流の幹線で約20%小さく出るため、重要回路は基本式での再確認を推奨します。
+      電線管内径・IV外径・ちょう架線破断荷重などは<b>代表値</b>であり、最終はカタログ値で確認する前提です。
+    </div>
+  </header>
+
+  <main id="main"><!-- rendered by JS --></main>
+
+  <footer>
+    <div><b>このツールについて</b>　入力は最小限、判定は OK/NG/○ を色＋記号＋文言で即表示、専門用語はインライン解説、根拠データは1か所に集約。すべての結果に式・採用根拠・出典を併記しています。</div>
+    <div class="srcs">出典: JCS 0168-2 ／ 内線規程1310-1・3110・3110-8・3165 ／ JIS C8201相当 ／ JIS Z9110(光束法) ／ 電技解釈・内線規程 ／ JIS A5372 ／ JIS C4304・C4306 ／ JIS C4902 ／ %インピーダンス法</div>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="pop" id="pop"><span class="x" id="popX">✕</span><span id="popBody"></span></div>
+
+<script>
+/* =========================================================================
+   §6 参照データ（出典つき・引き継ぎ書と同一。改変しない）
+   ========================================================================= */
+const DATA = {
+  allowable:{
+    source:"JCS 0168-2 (90C/40C base)",
+    columns:["air_3core_flat","air_3core_tawara","air_2c","air_3c","air_cvd","air_cvt","pipe_2c","pipe_3c","pipe_cvd","pipe_cvt"],
+    rows:{
+      "2":[31,27,28,23,null,null,23,19,null,null],
+      "3.5":[44,38,39,33,null,null,31,26,null,null],
+      "5.5":[58,50,52,44,null,null,41,35,null,null],
+      "8":[72,63,65,54,66,62,51,43,48,45],
+      "14":[100,87,91,76,91,86,70,59,69,63],
+      "22":[130,115,120,100,120,110,93,77,92,82],
+      "38":[190,160,170,140,165,155,135,110,125,110],
+      "60":[255,210,225,190,225,210,175,150,165,150],
+      "100":[355,290,310,260,310,290,245,210,230,215],
+      "150":[455,380,400,340,400,380,320,265,310,275],
+      "200":[545,470,485,410,490,465,390,335,370,340],
+      "250":[620,540,560,470,565,535,455,380,435,395],
+      "325":[725,640,660,555,670,635,540,450,505,475],
+      "400":[815,730,null,null,765,725,null,null,580,535],
+      "500":[920,840,null,null,880,835,null,null,675,615]
+    },
+    tempFactor:{"20":1.18,"25":1.14,"30":1.10,"35":1.05,"40":1.00,"45":0.95,"50":0.89}
+  },
+  sizes:["2","3.5","5.5","8","14","22","38","60","100","150","200","250","325","400","500"],
+  vdropCoef:{"単相2線式":35.6,"単相3線式":17.8,"三相3線式":30.8},
+  cond2col:{
+    "気中 CV3心1条(三相)":"air_3c","気中 CV2心1条(単相)":"air_2c",
+    "気中 CVT 1条(三相)":"air_cvt","気中 CVD 1条(単相)":"air_cvd",
+    "気中 単心3条 平積":"air_3core_flat","気中 単心3条 俵積":"air_3core_tawara",
+    "管内 CV3心1条(三相)":"pipe_3c","管内 CV2心1条(単相)":"pipe_2c",
+    "管内 CVT 1条(三相)":"pipe_cvt","管内 CVD 1条(単相)":"pipe_cvd"
+  },
+  breaker:[15,20,30,40,50,60,75,100,125,150,175,200,225,250,300,350,400,500,600,800],
+  rackW:[100,150,200,300,400,500,600,800,1000,1200],
+  conduit:[
+    {type:"厚鋼G",nom:16,id:15.9},{type:"厚鋼G",nom:22,id:21.0},{type:"厚鋼G",nom:28,id:26.9},
+    {type:"厚鋼G",nom:36,id:35.1},{type:"厚鋼G",nom:42,id:40.9},{type:"厚鋼G",nom:54,id:53.2},
+    {type:"厚鋼G",nom:70,id:67.9},{type:"厚鋼G",nom:82,id:79.8},{type:"厚鋼G",nom:92,id:89.8},{type:"厚鋼G",nom:104,id:101.6},
+    {type:"薄鋼C",nom:19,id:16.9},{type:"薄鋼C",nom:25,id:23.0},{type:"薄鋼C",nom:31,id:29.2},
+    {type:"薄鋼C",nom:39,id:37.4},{type:"薄鋼C",nom:51,id:49.0},{type:"薄鋼C",nom:63,id:61.1},{type:"薄鋼C",nom:75,id:73.2},
+    {type:"PF",nom:16,id:16.0},{type:"PF",nom:22,id:22.0},{type:"PF",nom:28,id:28.0},{type:"PF",nom:36,id:36.0},{type:"PF",nom:42,id:42.0},
+    {type:"CD",nom:16,id:16.0},{type:"CD",nom:22,id:22.0},{type:"CD",nom:28,id:28.0},{type:"CD",nom:36,id:36.0},{type:"CD",nom:42,id:42.0}
+  ],
+  ivWire:[
+    {size:"1.6mm",od:3.0,k:2.0},{size:"2.0mm",od:3.3,k:2.0},{size:"2.6mm",od:4.0,k:1.2},{size:"3.2mm",od:4.6,k:1.2},
+    {size:"5.5sq",od:4.5,k:1.2},{size:"8sq",od:5.3,k:1.2},{size:"14sq",od:6.6,k:1.0},{size:"22sq",od:8.2,k:1.0},
+    {size:"38sq",od:10.5,k:1.0},{size:"60sq",od:13.0,k:1.0},{size:"100sq",od:16.5,k:1.0},{size:"150sq",od:19.5,k:1.0},
+    {size:"200sq",od:22.0,k:1.0},{size:"250sq",od:24.5,k:1.0}
+  ],
+  trough:[
+    {name:"70",w:70,d:65},{name:"120",w:120,d:115},{name:"150",w:150,d:145},
+    {name:"200",w:200,d:190},{name:"250",w:250,d:240},{name:"300",w:300,d:290},{name:"400",w:400,d:390}
+  ],
+  messengerTb:{"22mm2":22.0,"38mm2":37.0,"60mm2":58.0,"100mm2":95.0},
+  tfr:{
+    source:"JIS C4304/C4306 標準容量",
+    single:[10,20,30,50,75,100,150,200,300,500],
+    three:[20,30,50,75,100,150,200,300,500,750,1000,1500,2000]
+  },
+  capacitorLV:[10,15,20,25,30,40,50,75,100],
+  capacitorHV:[10.6,21.3,31.9,42.6,53.2,79.8,106.4,159.7,212.9],
+  icu:[2.5,5,7.5,10,14,18,22,25,35,42,50,65,85,100,125,200],
+  cvOD:{
+    sizes:["2","3.5","5.5","8","14","22","38","60","100","150","200","250","325"],
+    c3:[11,12,13.5,15.5,18.5,21,25.5,31,37.5,44.5,50,56,63],
+    cvt:[null,null,null,17,20,23,28,34,42,50,56,62,70]
+  }
+};
+
+const GLOSSARY=[
+  ["許容電流","①","電線に流し続けても絶縁体が傷まない電流の上限。これを超えると過熱する。"],
+  ["電圧降下","①","電線の抵抗で末端の電圧が下がること。下がりすぎると機器がうまく動かない。"],
+  ["力率 cosφ","①②","流した電力のうち実際に仕事をする割合。1に近いほど効率が良い。"],
+  ["電流減少係数（多条補正）","①","電線を何本も束ねると熱がこもり許容電流が下がる、その割引係数。"],
+  ["温度補正係数","①","周囲が暑いほど許容電流が下がる、その割引係数。基準は40℃。"],
+  ["こう長 L","①","電源から負荷までの電線の長さ[m]。長いほど電圧降下が大きい。"],
+  ["布設条件","①","気中か管内か、単心か3心かなど。放熱の条件が違うので許容電流表の列が変わる。"],
+  ["連続負荷","②","3時間以上ほぼ流れ続ける負荷。電線・ブレーカは1.25倍で見込む。"],
+  ["配線用遮断器（ブレーカ）","②","過電流が流れたとき回路を自動で遮断する保護装置。"],
+  ["占積率","④⑦","管やトラフの断面のうち、電線が占めてよい割合の上限。"],
+  ["充足率（ラック）","③","ラック幅のうちケーブルが占める割合の目安。放熱のため60%程度が一般的。"],
+  ["室指数 K","⑤","部屋の広さと器具の高さの比。照明率を決める指標。"],
+  ["照明率 U","⑤","器具から出た光のうち、作業面に届く割合。配光と反射率で決まる。"],
+  ["保守率 M","⑤","汚れや劣化で光が減るのを見込む割引。きれいな室内ほど高い。"],
+  ["光束 F","⑤","器具1台が出す光の量[lm]。"],
+  ["照度 E","⑤","面が受ける明るさ[lx]。必要照度はJIS Z9110が基準。"],
+  ["ちょう架線","⑥","ケーブルを空中で吊って支える鋼より線。"],
+  ["破断荷重 Tb","⑥","その線が切れる引張力[kN]。カタログ値で確認する。"],
+  ["安全率 SF","⑥","破断荷重に対しどれだけ余裕を持たせるか。既定2.5。"],
+  ["たるみ D","⑥","径間の中央でケーブルが垂れ下がる量[m]。"],
+  ["径間 S","⑥","支持点と支持点の間の距離[m]。"],
+  ["CV / CVT / CVD","①","架橋ポリエチレン絶縁ケーブル。CVT=単心3個より、CVD=単心2個より。"],
+  ["気中 / 管内布設","①","空気中に置くか金属管内に入れるか。放熱条件が異なる。"],
+  ["補正係数（電線管）","④","IV電線の太さに応じた占積計算用の係数（内線規程3110-8）。"],
+  ["D種接地","⑥","低圧機器の標準的な接地方式。ちょう架線にも要求される。"],
+  ["トラフ（呼び名）","⑦","コンクリート製の電線収納溝。呼び名＝内法幅[mm]。"],
+  ["需要率","⑧","設備容量の合計のうち、実際に同時に使われる最大電力の割合。変圧器容量の算定に使う。"],
+  ["変圧器標準容量","⑧","JISで定められた変圧器の定格kVAの系列。必要容量以上の最小を選ぶ。"],
+  ["利用率（変圧器）","⑧","選定した変圧器容量に対する必要容量の割合。高すぎると増設余力がない。"],
+  ["進相コンデンサ","⑨","遅れ力率を改善するため負荷と並列に入れるコンデンサ。入れすぎ（過補償）に注意。"],
+  ["無効電力 kvar","⑨","仕事をしない電力成分の大きさ。進相コンデンサで打ち消して力率を改善する。"],
+  ["%インピーダンス %Z","⑩","変圧器内部のインピーダンスを定格基準の百分率で表した値。短絡電流の計算に使う。"],
+  ["短絡電流","⑩","短絡事故時に流れる大電流。遮断器はこれを安全に遮断できる必要がある。"],
+  ["遮断容量 Icu","⑩","ブレーカが安全に遮断できる最大の短絡電流[kA]。想定短絡電流以上のものを選ぶ。"]
+];
+
+const TOOLS=[
+  {id:1,t:"ケーブル・電線選定",sub:"負荷電流→許容電流＋電圧降下でサイズ決定",src:"JCS 0168-2 / 内線規程1310"},
+  {id:2,t:"ブレーカ選定",sub:"連続負荷×1.25→標準定格を選ぶ",src:"JIS C8201相当 / 内線規程"},
+  {id:3,t:"ケーブルラック幅",sub:"外径合計→必要ラック幅",src:"設計慣行(占有率)"},
+  {id:4,t:"電線管・樹脂管",sub:"電線断面積→占積率→管サイズ",src:"内線規程3110"},
+  {id:5,t:"照度計算（光束法）",sub:"必要器具数・実照度を求める",src:"JIS Z9110 / 光束法"},
+  {id:6,t:"ちょう架（吊架）線",sub:"法令最小仕様＋自重張力チェック",src:"電技解釈 / 内線規程"},
+  {id:7,t:"コンクリートトラフ",sub:"本数・外径→トラフ呼び名",src:"JIS A5372"},
+  {id:8,t:"変圧器容量選定",sub:"設備容量×需要率→標準容量",src:"JIS C4304/C4306"},
+  {id:9,t:"力率改善コンデンサ",sub:"目標力率までの必要kvar",src:"JIS C4902"},
+  {id:10,t:"短絡電流（%Z法）",sub:"変圧器%Zから短絡電流を概算",src:"%インピーダンス法"}
+];
+const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"];
+
+/* =========================================================================
+   計算ロジック（§5）— UIから分離した純関数。判定理由も返す。
+   ========================================================================= */
+const ceil=Math.ceil, PI=Math.PI;
+function loadCurrent(method,unit,P,cos,V){
+  const c = unit==="kW" ? cos : 1;
+  if(!V||!c) return NaN;
+  if(method==="三相3線式") return P*1000/(Math.sqrt(3)*V*c);
+  return P*1000/(V*c);
+}
+function smallestGE(arr,x){ for(const v of arr) if(v>=x) return v; return null; }
+
+function calcCable(i){
+  const I=loadCurrent(i.method,i.unit,i.P,i.cos,i.V);
+  const kt=DATA.allowable.tempFactor[i.temp];
+  const K=DATA.vdropCoef[i.method];
+  const col=DATA.cond2col[i.cond];
+  const ci=DATA.allowable.columns.indexOf(col);
+  if(!isFinite(I)||I<=0) return {err:true};
+  const cands=DATA.sizes.map(sz=>{
+    const Iz0=DATA.allowable.rows[sz][ci];
+    const Iz=Iz0?Iz0*kt*i.k:0;
+    const curOK=Iz0&&Iz>=I;
+    const e=K*i.L*I/(1000*parseFloat(sz));
+    const drop=e/i.V*100;
+    const volOK=drop<=i.vmax;
+    return {sz,Iz0,Iz,curOK,e,drop,volOK,ok:!!(Iz0&&curOK&&volOK)};
+  });
+  const pick=cands.find(c=>c.ok)||null;
+  const need=I/(kt*i.k);
+  return {I,kt,K,need,cands,pick};
+}
+function calcBreaker(i){
+  const I=loadCurrent(i.method,i.unit,i.P,i.cos,i.V);
+  if(!isFinite(I)||I<=0) return {err:true};
+  const Id=i.cont?I*1.25:I;
+  const rating=smallestGE(DATA.breaker,Id);
+  const protect = rating!=null && rating<=i.Iw;
+  return {I,Id,rating,protect};
+}
+function calcRack(i){
+  const occ=i.rows.reduce((s,r)=>s+r.od*r.n,0);
+  if(occ<=0||!i.fill||!i.tiers) return {err:true};
+  const margin=occ*(1+i.spare/100);
+  const need=margin/i.fill/i.tiers;
+  const pick=smallestGE(DATA.rackW,need);
+  return {occ,margin,need,pick};
+}
+function calcConduit(i){
+  const sum=i.rows.reduce((s,r)=>s+(PI/4)*r.od*r.od*r.k*r.n,0);
+  if(sum<=0||!i.fill) return {err:true};
+  const need=sum/i.fill;
+  const list=DATA.conduit.filter(c=>c.type===i.ctype).map(c=>({...c,area:(PI/4)*c.id*c.id}));
+  const pick=list.find(c=>c.area>=need)||null;
+  const fillR=pick?sum/pick.area*100:null;
+  return {sum,need,pick,fillR};
+}
+function calcLux(i){
+  if(!i.X||!i.Y||!i.H||!i.F||!i.U||!i.M) return {err:true};
+  const K=(i.X*i.Y)/(i.H*(i.X+i.Y));
+  const theo=(i.E*i.X*i.Y)/(i.F*i.U*i.M);
+  const n=ceil(theo);
+  const real=(n*i.F*i.U*i.M)/(i.X*i.Y);
+  return {K,theo,n,real};
+}
+function calcMessenger(i){
+  if(!i.D) return {err:true};
+  const w=i.wc*9.8;
+  const T=w*i.S*i.S/(8*i.D);
+  const needTb=T*i.SF/1000;
+  const ok=i.Tb>=needTb;
+  return {w,T,needTb,ok};
+}
+function calcTrough(i){
+  const sum=i.rows.reduce((s,r)=>s+(PI/4)*r.od*r.od*r.n,0);
+  const width=i.rows.reduce((s,r)=>s+r.od*r.n,0);
+  const cnt=i.rows.reduce((s,r)=>s+r.n,0);
+  if(sum<=0||!i.fill) return {err:true};
+  const needArea=sum/i.fill;
+  const layW=width+(cnt+1)*i.clr;
+  const pick=DATA.trough.find(t=>t.w*t.d>=needArea && t.w>=layW)||null;
+  return {sum,needArea,layW,cnt,pick};
+}
+function calcTfr(i){
+  if(!i.Pset||i.Pset<=0||!i.dem||i.dem<=0) return {err:true};
+  const need=i.Pset*(i.dem/100)*(1+(i.spare||0)/100);
+  const series=i.phase==="単相"?DATA.tfr.single:DATA.tfr.three;
+  const pick=smallestGE(series,need);
+  const util=pick?need/pick*100:null;
+  return {need,pick,util};
+}
+function calcCap(i){
+  const c1=i.cos1,c2=i.cos2;
+  if(!i.P||i.P<=0||!c1||!c2||c1<=0||c1>1||c2<=0||c2>1) return {err:true};
+  if(c2<=c1) return {err:true,msg:"目標力率は現在の力率より大きい値にしてください"};
+  const t1=Math.sqrt(1-c1*c1)/c1, t2=Math.sqrt(1-c2*c2)/c2;
+  const Qc=i.P*(t1-t2);
+  const series=i.volt==="高圧"?DATA.capacitorHV:DATA.capacitorLV;
+  const pick=smallestGE(series,Qc);
+  const q1=i.P*t1;
+  const qAfter=pick!=null?q1-pick:null;
+  const cosAfter=pick!=null?i.P/Math.sqrt(i.P*i.P+qAfter*qAfter):null;
+  const lead=qAfter!=null&&qAfter<0;
+  return {Qc,pick,cosAfter,lead};
+}
+function calcShort(i){
+  if(!i.kva||i.kva<=0||!i.z||i.z<=0||!i.V||i.V<=0) return {err:true};
+  const In=i.method==="三相"?i.kva*1000/(Math.sqrt(3)*i.V):i.kva*1000/i.V;
+  const Is=In*100/i.z;
+  const IskA=Is/1000;
+  const needIcu=smallestGE(DATA.icu,IskA);
+  const ok=!!(i.icu&&i.icu>=IskA);
+  return {In,Is,IskA,needIcu,ok};
+}
+
+/* =========================================================================
+   状態（§6 サンプル相当の初期値 → §10 受入れ値を再現）
+   ========================================================================= */
+let view="home";
+const S={
+  cable:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,L:40,temp:"40",k:1.0,cond:"気中 CV3心1条(三相)",vmax:2},
+  breaker:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,cont:false,Iw:100},
+  rack:{rows:[{od:42,n:4}],spare:20,fill:0.6,tiers:1},
+  conduit:{ctype:"厚鋼G",fill:0.32,rows:[{od:6.6,k:1.0,n:5}]},
+  lux:{E:500,X:7,Y:8,H:2.5,F:2800,U:0.7,M:0.8},
+  messenger:{volt:"低圧",wc:1.2,S:30,D:0.5,SF:2.5,Tb:22},
+  trough:{rows:[{od:38,n:3}],fill:0.30,clr:20},
+  tfr:{phase:"三相",Pset:150,dem:60,spare:20},
+  cap:{volt:"低圧",P:100,cos1:0.8,cos2:0.95},
+  short:{method:"三相",kva:300,z:4,V:210,icu:10}
+};
+
+/* 入力値の保存・復元（localStorage）: モバイル/PCそれぞれで前回値を保持 */
+const LS_KEY="denryoku-tools-v2";
+try{
+  const saved=JSON.parse(localStorage.getItem(LS_KEY)||"null");
+  if(saved) for(const k of Object.keys(S)) if(saved[k]) Object.assign(S[k],saved[k]);
+}catch(e){}
+function persist(){try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}}
+
+/* =========================================================================
+   汎用ヘルパ
+   ========================================================================= */
+const $=s=>document.querySelector(s);
+const main=$("#main");
+function f1(x){return (Math.round(x*10)/10).toLocaleString("ja-JP",{minimumFractionDigits:1,maximumFractionDigits:1});}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function helpBtn(term){return `<button class="help" data-help="${esc(term)}">?</button>`;}
+
+/* tooltip popover */
+const pop=$("#pop"),popBody=$("#popBody"),scrim=$("#scrim");
+function showPop(term,el){
+  const g=GLOSSARY.find(x=>x[0].startsWith(term)||term.startsWith(x[0].split(" ")[0]))||["",""," "];
+  popBody.innerHTML=`<b>${esc(g[0]||term)}</b><br>${esc(g[2]||"用語解説")}`;
+  const r=el.getBoundingClientRect();
+  pop.style.left=Math.min(Math.max(10,r.left-20),window.innerWidth-300)+"px";
+  pop.style.top=(r.bottom+8)+"px";
+  pop.classList.add("show");scrim.classList.add("show");
+}
+function hidePop(){pop.classList.remove("show");scrim.classList.remove("show");}
+$("#popX").onclick=hidePop; scrim.onclick=hidePop;
+
+/* =========================================================================
+   レンダリング
+   ========================================================================= */
+function render(){
+  if(view==="home") renderHome();
+  else if(view==="glossary") renderGlossary();
+  else renderTool(view);
+  window.scrollTo(0,0);
+  bindHelp();
+}
+function bindHelp(){
+  document.querySelectorAll("[data-help]").forEach(b=>b.onclick=e=>{e.stopPropagation();showPop(b.dataset.help,b);});
+}
+
+function renderHome(){
+  main.innerHTML=`
+   <div class="hero">
+     <div class="eyebrow">10 calculation tools</div>
+     <h2>どの計算をしますか？</h2>
+     <p>使いたい計算をひとつ選んでください。各ツールは「STEP1 入力 → STEP2 自動計算」で結果が出ます。</p>
+   </div>
+   <div class="grid">
+     ${TOOLS.map(t=>`
+       <button class="tool-card" data-tool="${t.id}">
+         <span class="num">${NUM[t.id]} 計算</span>
+         <span class="ttl">${t.t}</span>
+         <span class="sub">${t.sub}</span>
+         <span class="based">根拠: ${t.src}</span>
+       </button>`).join("")}
+     <button class="tool-card glos" data-go="glossary">
+       <span class="gicon">📖</span>
+       <span><span class="ttl">用語集（${GLOSSARY.length}語）</span><br><span class="sub">専門用語をやさしく解説。各入力の ? からも開けます。</span></span>
+     </button>
+   </div>`;
+  main.querySelectorAll("[data-tool]").forEach(b=>b.onclick=()=>{view=parseInt(b.dataset.tool);render();});
+  main.querySelector("[data-go]").onclick=()=>{view="glossary";render();};
+}
+
+function renderGlossary(){
+  main.innerHTML=`
+    ${crumb("用語集")}
+    <div class="tool-head"><h2>📖 用語集</h2><div class="desc">専門用語を平易に。検索でしぼり込めます。</div></div>
+    <input class="search" id="gsearch" type="text" placeholder="用語を検索（例: 力率, 占積率, たるみ）">
+    <div class="gloss" id="glist"></div>`;
+  const draw=q=>{
+    const list=GLOSSARY.filter(g=>!q||g[0].includes(q)||g[2].includes(q));
+    $("#glist").innerHTML=list.map(g=>`
+      <div class="term"><div class="w">${esc(g[0])}<span class="tag">${g[1]}</span></div>
+      <div class="d">${esc(g[2])}</div></div>`).join("")||`<div class="term"><div class="d">該当する用語がありません。別の言葉でお試しください。</div></div>`;
+  };
+  draw("");
+  $("#gsearch").oninput=e=>draw(e.target.value.trim());
+  bindCrumb();
+}
+
+function crumb(label){
+  return `<div class="crumbs"><button data-home>‹ ホーム</button><span>/</span><span>${label}</span></div>`;
+}
+function bindCrumb(){const b=main.querySelector("[data-home]");if(b)b.onclick=()=>{view="home";render();};}
+
+function chipBar(active){
+  return `<div class="chips">${TOOLS.map(t=>`<button class="chip ${t.id===active?"active":""}" data-chip="${t.id}">${NUM[t.id]}</button>`).join("")}</div>`;
+}
+
+function renderTool(id){
+  const T=TOOLS.find(t=>t.id===id);
+  main.innerHTML=`
+    ${crumb(T.t)}
+    <div class="tool-head">
+      <h2><span class="n">${NUM[id]}</span>${T.t}</h2>
+      <div class="desc">${T.sub}</div>
+    </div>
+    ${chipBar(id)}
+    <div class="flow">
+      <div class="step done"><div class="node">1</div>${inputCard(id)}</div>
+      <div class="step done"><div class="node">2</div><div id="resultSlot"></div></div>
+    </div>
+    <div class="output-row">
+      <button class="btn primary" id="printBtn">🖨 印刷 / PDF</button>
+      <button class="btn" data-home2>← ツール一覧</button>
+    </div>`;
+  bindInputs(id);
+  recalc(id);
+  main.querySelectorAll("[data-chip]").forEach(c=>c.onclick=()=>{view=parseInt(c.dataset.chip);render();});
+  bindCrumb();
+  main.querySelector("[data-home2]").onclick=()=>{view="home";render();};
+  $("#printBtn").onclick=()=>window.print();
+}
+
+/* ---- field builders ---- */
+function field(label,inner,unit,help){
+  return `<div class="field"><label>${label}${help?helpBtn(help):""}${unit?`<span class="unit-tag">${unit}</span>`:""}</label>${inner}<div class="err">数値を確認してください</div></div>`;
+}
+function numIn(key,val,step,attr=""){return `<input type="number" data-k="${key}" value="${val}" step="${step||"any"}" ${attr}>`;}
+function selIn(key,opts,val){return `<select data-k="${key}">${opts.map(o=>`<option ${o===val?"selected":""}>${o}</option>`).join("")}</select>`;}
+function seg(key,opts,val){return `<div class="seg">${opts.map(o=>`<button data-seg="${key}" data-v="${o}" class="${o===val?"on":""}">${o}</button>`).join("")}</div>`;}
+
+function inputCard(id){
+  const c=S, body={
+    1:()=>`
+      ${field("配線方式",selIn("method",["単相2線式","単相3線式","三相3線式"],c.cable.method))}
+      <div class="field"><label>負荷の入力単位</label>${seg("unit",["kW","kVA"],c.cable.unit)}</div>
+      <div class="two">
+        ${field("負荷容量",numIn("P",c.cable.P,0.1),c.cable.unit)}
+        ${field("力率 cosφ",numIn("cos",c.cable.cos,0.01,'max="1"'),"",("力率 cosφ"))}
+      </div>
+      <div class="two">
+        ${field("線間電圧 V",numIn("V",c.cable.V,1),"V")}
+        ${field("こう長 L",numIn("L",c.cable.L,1),"m",("こう長 L"))}
+      </div>
+      <div class="two">
+        ${field("周囲温度",selIn("temp",["20","25","30","35","40","45","50"],c.cable.temp),"℃",("温度補正係数"))}
+        ${field("電流減少係数 k",selIn("k",[1.0,0.9,0.8,0.7,0.5,0.3],c.cable.k),"",("電流減少係数（多条補正）"))}
+      </div>
+      ${field("布設条件",selIn("cond",Object.keys(DATA.cond2col),c.cable.cond),"",("布設条件"))}
+      ${field("許容電圧降下",numIn("vmax",c.cable.vmax,0.1),"%",("電圧降下"))}`,
+    2:()=>`
+      ${field("配線方式",selIn("method",["単相2線式","単相3線式","三相3線式"],c.breaker.method))}
+      <div class="field"><label>負荷の入力単位</label>${seg("unit",["kW","kVA"],c.breaker.unit)}</div>
+      <div class="two">
+        ${field("負荷容量",numIn("P",c.breaker.P,0.1),c.breaker.unit)}
+        ${field("力率 cosφ",numIn("cos",c.breaker.cos,0.01,'max="1"'),"",("力率 cosφ"))}
+      </div>
+      ${field("線間電圧 V",numIn("V",c.breaker.V,1),"V")}
+      <div class="field"><label>連続負荷ですか${helpBtn("連続負荷")}</label>${seg("cont",["いいえ","はい"],c.breaker.cont?"はい":"いいえ")}</div>
+      ${field("電線の補正後許容電流 Iw",numIn("Iw",c.breaker.Iw,1),"A",("許容電流"))}`,
+    3:()=>rowTool("rack")+`
+      <div class="three">
+        ${field("将来余裕",numIn("spare",c.rack.spare,1),"%")}
+        ${field("充足率",numIn("fill",c.rack.fill,0.05),"",("充足率（ラック）"))}
+        ${field("段数",numIn("tiers",c.rack.tiers,1),"段")}
+      </div>`,
+    4:()=>`
+      <div class="two">
+        ${field("管種",selIn("ctype",["厚鋼G","薄鋼C","PF","CD"],c.conduit.ctype))}
+        ${field("占積率上限",selIn("fill",[0.32,0.48],c.conduit.fill),"",("占積率"))}
+      </div>${rowTool("conduit")}`,
+    5:()=>`
+      <div class="two">
+        ${field("必要照度 E",numIn("E",c.lux.E,1),"lx",("照度 E"))}
+        ${field("器具光束 F",numIn("F",c.lux.F,10),"lm",("光束 F"))}
+      </div>
+      <div class="three">
+        ${field("間口 X",numIn("X",c.lux.X,0.1),"m")}
+        ${field("奥行 Y",numIn("Y",c.lux.Y,0.1),"m")}
+        ${field("高さ H",numIn("H",c.lux.H,0.1),"m")}
+      </div>
+      <div class="two">
+        ${field("照明率 U",numIn("U",c.lux.U,0.01),"",("照明率 U"))}
+        ${field("保守率 M",numIn("M",c.lux.M,0.01),"",("保守率 M"))}
+      </div>`,
+    6:()=>`
+      ${field("電圧区分",seg("volt",["低圧","高圧"],c.messenger.volt),"")}
+      <div id="partA"></div>
+      <div class="card-h" style="border-top:1px solid var(--line);margin:6px -14px 10px;padding-left:0">
+        <span class="lab">PART B</span><span class="t">自重張力チェック</span></div>
+      <div class="two">
+        ${field("ケーブル質量 wc",numIn("wc",c.messenger.wc,0.1),"kg/m")}
+        ${field("径間 S",numIn("S",c.messenger.S,1),"m",("径間 S"))}
+      </div>
+      <div class="three">
+        ${field("たるみ D",numIn("D",c.messenger.D,0.1),"m",("たるみ D"))}
+        ${field("安全率 SF",numIn("SF",c.messenger.SF,0.1),"",("安全率 SF"))}
+        ${field("破断荷重 Tb",numIn("Tb",c.messenger.Tb,0.1),"kN",("破断荷重 Tb"))}
+      </div>`,
+    7:()=>rowTool("trough")+`
+      <div class="two">
+        ${field("占積率上限",numIn("fill",c.trough.fill,0.05),"",("占積率"))}
+        ${field("ケーブル間クリアランス",numIn("clr",c.trough.clr,1),"mm")}
+      </div>`,
+    8:()=>`
+      <div class="field"><label>相</label>${seg("phase",["単相","三相"],c.tfr.phase)}</div>
+      <div class="two">
+        ${field("設備容量の合計",numIn("Pset",c.tfr.Pset,1),"kVA")}
+        ${field("需要率",numIn("dem",c.tfr.dem,1),"%",("需要率"))}
+      </div>
+      ${field("将来余裕",numIn("spare",c.tfr.spare,1),"%")}`,
+    9:()=>`
+      <div class="field"><label>電圧区分</label>${seg("volt",["低圧","高圧"],c.cap.volt)}</div>
+      ${field("負荷の有効電力 P",numIn("P",c.cap.P,1),"kW")}
+      <div class="two">
+        ${field("現在の力率 cosφ₁",numIn("cos1",c.cap.cos1,0.01,'max="1"'),"",("力率 cosφ"))}
+        ${field("目標の力率 cosφ₂",numIn("cos2",c.cap.cos2,0.01,'max="1"'),"",("力率 cosφ"))}
+      </div>`,
+    10:()=>`
+      <div class="field"><label>相</label>${seg("method",["単相","三相"],c.short.method)}</div>
+      <div class="two">
+        ${field("変圧器容量",numIn("kva",c.short.kva,1),"kVA")}
+        ${field("%インピーダンス %Z",numIn("z",c.short.z,0.1),"%",("%インピーダンス %Z"))}
+      </div>
+      <div class="two">
+        ${field("二次側電圧 V",numIn("V",c.short.V,1),"V")}
+        ${field("ブレーカ遮断容量 Icu",numIn("icu",c.short.icu,0.5),"kA",("遮断容量 Icu"))}
+      </div>`
+  }[id];
+  return `<div class="card"><div class="card-h"><span class="lab">STEP 1</span><span class="t">入力</span></div><div class="card-b" id="inputBody">${body()}</div></div>`;
+}
+
+/* row-based inputs (③④⑦) */
+function rowTool(key){
+  const withK = key==="conduit";
+  const cols = withK?"54px 50px 1fr 34px":"1fr 1fr 34px";
+  const head = withK?`<div class="row-head" style="grid-template-columns:${cols}"><span>外径OD</span><span>係数</span><span>本数</span><span></span></div>`
+                    :`<div class="row-head" style="grid-template-columns:${cols}"><span>外径OD (mm)</span><span>条数/本数</span><span></span></div>`;
+  const rows=S[key].rows.map((r,idx)=>{
+    return `<div class="row" style="grid-template-columns:${cols}">
+      <input type="number" data-row="${key}" data-idx="${idx}" data-f="od" value="${r.od}" step="0.1">
+      ${withK?`<input type="number" data-row="${key}" data-idx="${idx}" data-f="k" value="${r.k}" step="0.1">`:""}
+      <input type="number" data-row="${key}" data-idx="${idx}" data-f="n" value="${r.n}" step="1">
+      <button class="del" data-delrow="${key}" data-idx="${idx}">−</button>
+    </div>`;
+  }).join("");
+  const max = key==="rack"?8:6;
+  return `<div class="field"><label>ケーブル / 電線の行 ${helpBtn(withK?"補正係数（電線管）":"占積率")}<span class="unit-tag">最大${max}行</span></label>
+    <div class="rows">${head}${rows}</div>
+    ${S[key].rows.length<max?`<button class="addrow" data-addrow="${key}">＋ 行を追加</button>`:""}</div>`+(withK?ivRef():odRef());
+}
+function odRef(){
+  const c=DATA.cvOD;
+  return `<details class="ref"><summary>参考: CVケーブル概算仕上外径（代表値）<span class="chev">▾</span></summary>
+    <div class="ref-b"><table class="ref-table">
+      <tr><th>sq</th>${c.sizes.map(s=>`<th>${s}</th>`).join("")}</tr>
+      <tr><th>3心</th>${c.c3.map(v=>`<td>${v==null?"—":v}</td>`).join("")}</tr>
+      <tr><th>CVT</th>${c.cvt.map(v=>`<td>${v==null?"—":v}</td>`).join("")}</tr>
+    </table>
+    <div class="ref-note">単位: mm。600V CVの代表値です。最終はメーカーカタログで確認してください。</div></div></details>`;
+}
+function ivRef(){
+  return `<details class="ref"><summary>参考: IV電線の外径・補正係数（内線規程3110-8）<span class="chev">▾</span></summary>
+    <div class="ref-b"><table class="ref-table">
+      <tr><th>サイズ</th><th>外径 mm</th><th>係数 k</th></tr>
+      ${DATA.ivWire.map(w=>`<tr><td>${w.size}</td><td>${w.od}</td><td>${w.k}</td></tr>`).join("")}
+    </table>
+    <div class="ref-note">上の行入力（外径OD・係数）はこの表から転記できます。</div></div></details>`;
+}
+
+/* ---- bind input events ---- */
+function bindInputs(id){
+  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short"}[id];
+  main.querySelectorAll("[data-k]").forEach(el=>{
+    el.oninput=()=>{
+      let v=el.value;
+      if(el.tagName==="SELECT"){ v=isNaN(parseFloat(v))?v:(["method","unit","cond","ctype","temp"].includes(el.dataset.k)?v:parseFloat(v)); }
+      else { v=parseFloat(String(v).replace(/[，,　\s]/g,"")); }
+      if(["method","unit","cond","ctype","temp"].includes(el.dataset.k)) v=el.value;
+      S[map][el.dataset.k]=v;
+      recalc(id);
+    };
+  });
+  main.querySelectorAll("[data-seg]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.seg, val=b.dataset.v;
+    if(k==="cont") S[map].cont = (val==="はい");
+    else S[map][k]=val;
+    render(); // re-render to update unit tags / segment state
+  });
+  // rows
+  main.querySelectorAll("[data-row]").forEach(el=>el.oninput=()=>{
+    const k=el.dataset.row, i=+el.dataset.idx, f=el.dataset.f;
+    S[k].rows[i][f]=parseFloat(el.value)||0; recalc(id);
+  });
+  main.querySelectorAll("[data-delrow]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.delrow,i=+b.dataset.idx;
+    if(S[k].rows.length>1){S[k].rows.splice(i,1);render();}
+  });
+  main.querySelectorAll("[data-addrow]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.addrow;
+    S[k].rows.push(k==="conduit"?{od:5.5,k:1.2,n:1}:{od:27,n:1});render();
+  });
+}
+
+/* ---- result rendering ---- */
+function recalc(id){
+  const slot=$("#resultSlot"); if(!slot) return;
+  let html="";
+  if(id===1) html=resultCable(calcCable(S.cable));
+  if(id===2) html=resultBreaker(calcBreaker(S.breaker));
+  if(id===3) html=resultRack(calcRack(S.rack));
+  if(id===4) html=resultConduit(calcConduit(S.conduit));
+  if(id===5) html=resultLux(calcLux(S.lux));
+  if(id===6){ renderPartA(); html=resultMessenger(calcMessenger(S.messenger)); }
+  if(id===7) html=resultTrough(calcTrough(S.trough));
+  if(id===8) html=resultTfr(calcTfr(S.tfr));
+  if(id===9) html=resultCap(calcCap(S.cap));
+  if(id===10) html=resultShort(calcShort(S.short));
+  persist();
+  slot.innerHTML=html;
+  bindHelp();
+  slot.querySelectorAll("details").forEach(()=>{});
+}
+function resultShell(inner,disclose){
+  return `<div class="card result"><div class="card-h"><span class="lab">STEP 2</span><span class="t">自動計算 → 結果</span></div>
+    <div class="card-b">${inner}</div>${disclose||""}</div>`;
+}
+function lamp(ok,label){return `<span class="lamp ${ok?"ok":"ng"}"><span class="b"></span>${ok?"OK":"NG"}${label?" "+label:""}</span>`;}
+function readout(ok,big,unit,cap){
+  return `<div class="readout ${big==null?"empty":""}">${ok!=null?lamp(ok):""}
+    <div class="big">${big==null?"—":big}${unit?`<small>${unit}</small>`:""}</div>
+    <div class="cap">${cap||""}</div></div>`;
+}
+function emptyR(msg){return `<div class="readout empty"><div class="big">—</div><div class="cap">${msg}</div></div>`;}
+
+function disclose(formulaLines,src,extra){
+  return `<details class="disclose"><summary>式・採用根拠・出典をみる<span class="chev">▾</span></summary>
+    <div class="body">${extra||""}
+      <div class="formula">${formulaLines.join("\n")}</div>
+      <div class="stamp"><div class="h">出 典 ／ SOURCE</div><span class="src">${src}</span></div>
+    </div></details>`;
+}
+
+function resultCable(r){
+  if(r.err) return resultShell(emptyR("負荷容量・力率・電圧を入力してください"));
+  if(!r.pick){
+    const inner=emptyR("条件を満たすサイズなし → 条件を見直してください（温度・布設条件・許容降下・こう長など）");
+    return resultShell(inner);
+  }
+  const p=r.pick;
+  const inner=`
+    ${readout(true,p.sz,"sq","推奨ケーブルサイズ")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(p.Iz)}<span style="font-size:10px"> A</span></div><div class="k">補正後許容</div></div>
+      <div class="metric"><div class="v">${f1(p.drop)}<span style="font-size:10px"> %</span></div><div class="k">電圧降下</div></div>
+      <div class="metric"><div class="v">${f1(r.I)}<span style="font-size:10px"> A</span></div><div class="k">負荷電流</div></div>
+    </div>
+    <div class="reason">補正後許容 <b>${f1(p.Iz)}A</b> ≧ 負荷 <b>${f1(r.I)}A</b>、電圧降下 <b>${f1(p.drop)}%</b> ≦ 許容 <b>${f1(S.cable.vmax)}%</b> → 両方を満たす最小サイズ。</div>
+    <div class="cand-wrap">
+      <div class="cap">候補一覧（なぜそのサイズか学べます）${helpBtn("許容電流")}</div>
+      <div class="cand">
+        ${r.cands.filter(c=>c.Iz0).slice(0,9).map(c=>`
+          <div class="cand-row ${c===p?"pick":""}">
+            <div class="sz">${c.sz}<span class="u"> sq</span></div>
+            <div class="det">許容 ${f1(c.Iz)}A / 降下 ${f1(c.drop)}%</div>
+            <div class="jb">
+              ${c===p?'<span class="pick-tag">▶採用</span>':""}
+              <span class="pill ${c.curOK?"y":"n"}">電流${c.curOK?"○":"×"}</span>
+              <span class="pill ${c.volOK?"y":"n"}">電圧${c.volOK?"○":"×"}</span>
+            </div>
+          </div>`).join("")}
+      </div>
+    </div>`;
+  const d=disclose(
+    ["I = P×1000 / (√3×V×cosφ)   ※配線方式で係数",
+     "Iz = 表許容 × 温度補正 × 多条補正",
+     "drop% = (K×L×I)/(1000×size) / V ×100",
+     "推奨 = 電流OK かつ 電圧OK の最小サイズ"],
+    "許容電流: JCS 0168-2 (90℃/40℃基準) ／ 電圧降下: 内線規程1310-1",
+    `<p><b>⚠ 注意:</b> 長距離・大電流の幹線は簡易式の降下が約20%小さく出ます。重要回路は基本式で再確認してください。</p>`);
+  return resultShell(inner,d);
+}
+
+function resultBreaker(r){
+  if(r.err) return resultShell(emptyR("負荷容量・力率・電圧を入力してください"));
+  const inner=`
+    ${readout(r.protect,r.rating??"—","A","推奨ブレーカ定格")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.I)}<span style="font-size:10px"> A</span></div><div class="k">負荷電流</div></div>
+      <div class="metric"><div class="v">${f1(r.Id)}<span style="font-size:10px"> A</span></div><div class="k">設計電流</div></div>
+      <div class="metric"><div class="v">${S.breaker.Iw}<span style="font-size:10px"> A</span></div><div class="k">電線許容</div></div>
+    </div>
+    <div class="reason">${r.protect
+      ? `定格 <b>${r.rating}A</b> ≦ 電線許容 <b>${S.breaker.Iw}A</b> → <b>電線を保護できます</b>。原則「負荷 ≦ 定格 ≦ 電線許容」。`
+      : `定格 <b>${r.rating}A</b> ＞ 電線許容 <b>${S.breaker.Iw}A</b> → <b>電線サイズを上げてください</b>。`}</div>`;
+  const d=disclose(
+    ["Id = 連続負荷? I×1.25 : I",
+     "定格 = 標準定格の中で Id 以上の最小値",
+     "保護判定 = 定格 ≦ 電線許容(Iw)"],
+    "JIS C8201相当（標準定格）／ 内線規程",
+    `<p><b>注:</b> 電動機は別ルール（始動電流を考慮）。本ツールは一般負荷向けです。</p>`);
+  return resultShell(inner,d);
+}
+
+function resultRack(r){
+  if(r.err) return resultShell(emptyR("ケーブル行・充足率・段数を確認してください"));
+  const inner=`
+    ${readout(r.pick!=null,r.pick??"—","mm","推奨ラック幅")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.occ)}</div><div class="k">占有幅 mm</div></div>
+      <div class="metric"><div class="v">${f1(r.need)}</div><div class="k">必要幅 mm</div></div>
+    </div>
+    <div class="reason">${r.pick!=null
+      ? `必要幅 <b>${f1(r.need)}mm</b> 以上の標準幅 → <b>${r.pick}mm</b> を推奨。`
+      : `標準幅の範囲を超えています。段数を増やすか分割を検討してください。`}</div>`;
+  const d=disclose(
+    ["占有幅 = Σ(外径×条数)",
+     "必要幅 = 占有幅×(1+将来余裕%) / 充足率 / 段数"],
+    "設計慣行（占有率）",
+    `<p><b>注:</b> これは設計慣行で法令固定値ではありません。電力ケーブルは放熱のため単段・占有率60%程度が一般的。社内基準があれば優先してください。</p>`);
+  return resultShell(inner,d);
+}
+
+function resultConduit(r){
+  if(r.err) return resultShell(emptyR("電線行・占積率を確認してください"));
+  const inner=`
+    ${readout(r.pick!=null,r.pick?`${S.conduit.ctype}${r.pick.nom}`:"—","","推奨管サイズ（呼び）")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.sum)}</div><div class="k">電線断面積 mm²</div></div>
+      <div class="metric"><div class="v">${r.fillR!=null?f1(r.fillR):"—"}<span style="font-size:10px"> %</span></div><div class="k">実占積率</div></div>
+    </div>
+    <div class="reason">${r.pick!=null
+      ? `必要内断面積 <b>${f1(r.need)}mm²</b> を満たす最小の${S.conduit.ctype} → <b>呼び${r.pick.nom}</b>（実占積率 ${f1(r.fillR)}%）。`
+      : `${S.conduit.ctype}の範囲を超えています。本数や占積率上限を見直してください。`}</div>`;
+  const d=disclose(
+    ["Σ = Σ( π/4×外径²×補正係数×本数 )",
+     "必要内断面積 = Σ / 占積率上限",
+     "推奨管 = 内断面積 ≧ 必要 の最小呼び",
+     "実占積率 = Σ / 採用管内断面積"],
+    "内線規程3110（占積率32/48%・補正係数3110-8）",
+    `<p><b>注:</b> 管内径は代表値です。最終はメーカーカタログで確認を。ケーブル防護管は仕上り外径の1.5倍以上が目安（内線規程3165）。</p>`);
+  return resultShell(inner,d);
+}
+
+function resultLux(r){
+  if(r.err) return resultShell(emptyR("照度・寸法・光束・U・M を入力してください"));
+  const inner=`
+    ${readout(true,r.n,"台","必要器具数")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.real)}<span style="font-size:10px"> lx</span></div><div class="k">実照度</div></div>
+      <div class="metric"><div class="v">${(Math.round(r.K*100)/100)}</div><div class="k">室指数 K</div></div>
+      <div class="metric"><div class="v">${(Math.round(r.theo*10)/10)}</div><div class="k">理論台数</div></div>
+    </div>
+    <div class="reason">理論 <b>${(Math.round(r.theo*10)/10)}台</b> を切り上げて <b>${r.n}台</b>。そのとき実照度は <b>${f1(r.real)}lx</b>（必要 ${S.lux.E}lx 以上）。</div>`;
+  const d=disclose(
+    ["室指数 K = (X×Y) / (H×(X+Y))",
+     "理論台数 = (E×X×Y) / (F×U×M)",
+     "必要台数 = ceil(理論台数)",
+     "実照度 = (台数×F×U×M) / (X×Y)"],
+    "光束法 ／ JIS Z9110（照度基準）",
+    `<p><b>注:</b> 照明率Uは器具メーカーの照明率表（配光・反射率別）で確定するのが正確です。U/Mの目安は用語集・引き継ぎ書§6.9参照。</p>`);
+  return resultShell(inner,d);
+}
+
+function renderPartA(){
+  const el=$("#partA"); if(!el) return;
+  const hi=S.messenger.volt==="高圧";
+  el.innerHTML=`<div class="spec-box">
+    <div class="h">PART A｜法令最小仕様（${S.messenger.volt}）</div>
+    <ul>${hi
+      ? "<li>引張強さ <b>13.93kN 以上</b>、又は <b>22mm² 以上</b>の亜鉛めっき鋼より線</li>"
+      : "<li>引張強さ <b>2.36kN 以上</b>、又は <b>直径3.2mm 以上</b>の亜鉛めっき鉄線</li>"}
+      <li>共通: <b>D種接地</b>、ハンガー支持間隔 <b>50cm 以下</b></li></ul></div>`;
+  bindHelp();
+}
+function resultMessenger(r){
+  if(r.err) return resultShell(emptyR("たるみ D など Part B を入力してください（D=0は不可）"));
+  const inner=`
+    ${readout(r.ok,r.ok?"OK":"NG","","自重張力チェック")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.T)}<span style="font-size:10px"> N</span></div><div class="k">水平張力</div></div>
+      <div class="metric"><div class="v">${f1(r.needTb)}<span style="font-size:10px"> kN</span></div><div class="k">必要破断荷重</div></div>
+      <div class="metric"><div class="v">${S.messenger.Tb}<span style="font-size:10px"> kN</span></div><div class="k">使用Tb</div></div>
+    </div>
+    <div class="reason">${r.ok
+      ? `破断荷重 <b>${S.messenger.Tb}kN</b> ≧ 必要 <b>${f1(r.needTb)}kN</b> → 自重に対し<b>OK</b>。`
+      : `破断荷重 <b>${S.messenger.Tb}kN</b> ＜ 必要 <b>${f1(r.needTb)}kN</b> → <b>より太いちょう架線へ</b>。`}</div>`;
+  const d=disclose(
+    ["w = wc × 9.8  （自重のみ）",
+     "T = w×S² / (8×D)",
+     "必要破断荷重 = T×SF / 1000",
+     "判定 = 使用Tb ≧ 必要破断荷重"],
+    "電技解釈 ／ 内線規程（最小仕様）／ 破断荷重は参考値",
+    `<p><b>⚠ 注意:</b> この張力式は自重のみの簡易式です。実際は氷雪・風圧・温度を加味し、電技解釈の安全率を満たすこと。破断荷重はカタログ値で確認を。</p>`);
+  return resultShell(inner,d);
+}
+
+function resultTrough(r){
+  if(r.err) return resultShell(emptyR("ケーブル行・占積率を確認してください"));
+  const inner=`
+    ${readout(r.pick!=null,r.pick?r.pick.name:"—","","推奨トラフ呼び名")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.needArea)}</div><div class="k">必要内断面 mm²</div></div>
+      <div class="metric"><div class="v">${f1(r.layW)}</div><div class="k">単段並べ幅 mm</div></div>
+    </div>
+    <div class="reason">${r.pick!=null
+      ? `内断面積 ≧ <b>${f1(r.needArea)}mm²</b> かつ 内法幅 ≧ <b>${f1(r.layW)}mm</b> を満たす最小 → <b>呼び${r.pick.name}</b>（内法 ${r.pick.w}×${r.pick.d}）。`
+      : `規格範囲を超えています。段積みや本数の見直しを検討してください。`}</div>`;
+  const d=disclose(
+    ["Σ = Σ(π/4×外径²×条数)",
+     "必要内断面積 = Σ / 占積率上限",
+     "単段並べ幅 = Σ(外径×条数) + (本数+1)×クリアランス",
+     "推奨 = 内断面積・内法幅の両方を満たす最小呼び"],
+    "JIS A5372（直線用 代表寸法）。呼び名＝内法幅[mm]",
+    `<p><b>注:</b> 実際は段積み・離隔・放熱・許容電流低減も考慮。多条・大径は電力会社/設計基準に従ってください。</p>`);
+  return resultShell(inner,d);
+}
+
+function resultTfr(r){
+  if(r.err) return resultShell(emptyR("設備容量・需要率を入力してください"));
+  const inner=`
+    ${readout(r.pick!=null,r.pick??"—","kVA","推奨変圧器容量（標準）")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.need)}<span style="font-size:10px"> kVA</span></div><div class="k">必要容量</div></div>
+      <div class="metric"><div class="v">${r.util!=null?f1(r.util):"—"}<span style="font-size:10px"> %</span></div><div class="k">利用率</div></div>
+    </div>
+    <div class="reason">${r.pick!=null
+      ? `必要容量 <b>${f1(r.need)}kVA</b> 以上の標準容量 → <b>${r.pick}kVA</b>（利用率 ${f1(r.util)}%）。利用率が90%を超える場合は1ランク上も検討。`
+      : `標準容量の範囲を超えています。バンク分割や特注品の検討を。`}</div>`;
+  const d=disclose(
+    ["必要容量 = 設備容量合計 × 需要率 × (1+将来余裕%)",
+     "推奨 = 標準容量系列のうち必要容量以上の最小"],
+    "標準容量: JIS C4304/C4306（配電用変圧器）",
+    `<p><b>注:</b> 需要率は建物用途・負荷種別で大きく変わります（事務所ビル幹線で50〜70%が目安）。電動機の始動・季節負荷は個別に検討してください。</p>`);
+  return resultShell(inner,d);
+}
+
+function resultCap(r){
+  if(r.err) return resultShell(emptyR(r.msg||"有効電力・現在/目標の力率（0〜1）を入力してください"));
+  const inner=`
+    ${readout(r.pick!=null,r.pick??"—","kvar","推奨コンデンサ容量（標準）")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.Qc)}<span style="font-size:10px"> kvar</span></div><div class="k">必要容量</div></div>
+      <div class="metric"><div class="v">${r.cosAfter!=null?(Math.round(r.cosAfter*1000)/1000):"—"}</div><div class="k">設置後力率</div></div>
+    </div>
+    <div class="reason">${r.pick!=null
+      ? `必要 <b>${f1(r.Qc)}kvar</b> 以上の標準容量 → <b>${r.pick}kvar</b>。設置後の力率は約 <b>${Math.round(r.cosAfter*1000)/1000}</b>${r.lead?"（進み側。過補償に注意 → 1ランク下や分割設置も検討）":""}。`
+      : `標準容量の範囲を超えています。複数台の並列設置を検討してください。`}</div>`;
+  const d=disclose(
+    ["tanφ = √(1−cos²φ) / cosφ",
+     "必要kvar Qc = P × (tanφ₁ − tanφ₂)",
+     "設置後 cosφ = P / √(P² + (P·tanφ₁ − 採用kvar)²)"],
+    "高圧: JIS C4902 定格容量 ／ 低圧: 代表系列（参考値）",
+    `<p><b>注:</b> 過補償（進み力率）は受電端の電圧上昇の原因になります。高圧は直列リアクトル（6%）併設が原則。自動力率調整は群分割で計画してください。</p>`);
+  return resultShell(inner,d);
+}
+
+function resultShort(r){
+  if(r.err) return resultShell(emptyR("変圧器容量・%Z・電圧を入力してください"));
+  const inner=`
+    ${readout(r.ok,f1(r.IskA),"kA","短絡電流（概算）")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.In)}<span style="font-size:10px"> A</span></div><div class="k">定格電流</div></div>
+      <div class="metric"><div class="v">${r.needIcu??"—"}<span style="font-size:10px"> kA</span></div><div class="k">必要Icu(標準)</div></div>
+      <div class="metric"><div class="v">${S.short.icu}<span style="font-size:10px"> kA</span></div><div class="k">使用Icu</div></div>
+    </div>
+    <div class="reason">${r.ok
+      ? `遮断容量 <b>${S.short.icu}kA</b> ≧ 想定短絡電流 <b>${f1(r.IskA)}kA</b> → <b>遮断できます</b>。`
+      : `遮断容量 <b>${S.short.icu}kA</b> ＜ 想定短絡電流 <b>${f1(r.IskA)}kA</b> → <b>遮断容量の大きいブレーカへ</b>（標準 ${r.needIcu??"—"}kA 以上）。`}</div>`;
+  const d=disclose(
+    ["定格電流 In = kVA×1000 / (√3×V)　※単相は √3 なし",
+     "短絡電流 Is = In × 100 / %Z",
+     "判定 = ブレーカ遮断容量 Icu ≧ Is"],
+    "%インピーダンス法（電源側・ケーブル分を無視した大きめ側の概算）",
+    `<p><b>⚠ 注意:</b> 電源系統・ケーブルのインピーダンスを無視した安全側（大きめ）の概算です。分電盤末端の値やカスケード保護協調は個別に検討してください。</p>`);
+  return resultShell(inner,d);
+}
+
+/* header buttons */
+$("#glossBtn").onclick=()=>{view="glossary";render();};
+$("#resetBtn").onclick=()=>{
+  if(confirm("すべての入力を初期値に戻しますか？")){
+    try{localStorage.removeItem(LS_KEY);}catch(e){}
+    location.reload();
+  }
+};
+$("#discMore").onclick=()=>{const f=$("#discFull");f.classList.toggle("open");
+  $("#discMore").textContent=f.classList.contains("open")?"免責を閉じる ▴":"免責の全文 ▾";};
+
+render();
+</script>
+<script>
+/* Service Worker 登録（https または localhost で有効。オフライン動作を実現） */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch((err) =>
+      console.warn("SW 登録に失敗:", err)
+    );
+  });
+}
+</script>
+</body>
+</html>
