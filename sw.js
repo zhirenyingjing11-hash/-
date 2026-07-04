@@ -1,5 +1,5 @@
 /* 電力設計 13大計算ツール — Service Worker（オフライン対応） */
-const CACHE = "denryoku-tools-v4";
+const CACHE = "denryoku-tools-v5";
 const ASSETS = [
   "./",
   "./index.html",
