@@ -1,6 +1,6 @@
 /* 電力設計 13大計算ツール — Service Worker（オフライン対応） */
 /* ページ本体はネットワーク優先（更新が即反映）、その他はキャッシュ優先 */
-const CACHE = "denryoku-tools-v7";
+const CACHE = "denryoku-tools-v8";
 const ASSETS = [
   "./",
   "./index.html",

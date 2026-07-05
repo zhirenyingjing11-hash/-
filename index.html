@@ -270,6 +270,8 @@ footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--i
 
 /* row type select */
 .row select{padding:8px 20px 8px 8px;font-size:12px;background-position:right 6px center}
+.kbadge{display:grid;place-items:center;font-family:var(--mono);font-size:12.5px;font-weight:700;
+  background:var(--neutral-bg);border:1px solid var(--line);border-radius:8px;height:36px;color:var(--ink-2)}
 
 /* luminaire preset card */
 .spec-box.lum{display:flex;gap:12px;align-items:center;margin-bottom:13px}
@@ -437,6 +439,11 @@ const DATA = {
     v2:[10,10.5,11.5,12.5,12.5,14,16.5,19.5],
     v3:[10.5,11,12,13.5,13,15,18,21.5]
   },
+  vvfOD:{
+    sizes:["1.6mm-2C","2.0mm-2C","2.6mm-2C","1.6mm-3C","2.0mm-3C","2.6mm-3C"],
+    a:[6.2,6.6,7.8,6.2,6.6,7.8],
+    b:[9.6,10.4,12.4,13.4,14.6,17.0]
+  },
   luminaires:[
     {id:"pid40w69",label:"Panasonic iDシリーズ 40形 6900lm（LEDベースライト）",F:6900,W:40,icon:"base"},
     {id:"pid40w40",label:"Panasonic iDシリーズ 40形 4000lm",F:4000,W:24,icon:"base"},
@@ -510,7 +517,7 @@ const GLOSSARY=[
   ["径間 S","⑥","支持点と支持点の間の距離[m]。"],
   ["CV / CVT / CVD","①","架橋ポリエチレン絶縁ケーブル。CVT=単心3個より、CVD=単心2個より。"],
   ["気中 / 管内布設","①","空気中に置くか金属管内に入れるか。放熱条件が異なる。"],
-  ["補正係数（電線管）","④","IV電線の太さに応じた占積計算用の係数（内線規程3110-8）。"],
+  ["補正係数（電線管）","④","電線は絶縁被覆のぶん実際より場所をとるため、断面積に掛ける水増し倍率（内線規程3110-8）。1.6/2.0mmは2.0、細物は1.2、太物は1.0。ケーブル（CV/VVなど）は1.0で計算する。"],
   ["D種接地","⑥","低圧機器の標準的な接地方式。ちょう架線にも要求される。"],
   ["トラフ（呼び名）","⑦","コンクリート製の電線収納溝。呼び名＝内法幅[mm]。"],
   ["需要率","⑧","設備容量の合計のうち、実際に同時に使われる最大電力の割合。変圧器容量の算定に使う。"],
@@ -1079,8 +1086,16 @@ function inputCard(id){
 }
 
 /* row-based inputs (③④⑦) */
-function odLookup(t,sz){
+function odLookup(t,sz,key){
   if(t==="iv"){const w=DATA.ivWire.find(x=>x.size===sz);return w?{od:w.od,k:w.k}:null;}
+  if(t==="vvf"){
+    const i=DATA.vvfOD.sizes.indexOf(sz);
+    if(i<0) return null;
+    const a=DATA.vvfOD.a[i], b=DATA.vvfOD.b[i];
+    // ラックは幅（長径）、管・トラフは面積が等しくなる等価径 √(a×b)
+    const od=key==="rack"?b:Math.round(Math.sqrt(a*b)*10)/10;
+    return {od};
+  }
   if(t==="vvr2"||t==="vvr3"){
     const i=DATA.vvrOD.sizes.indexOf(sz);
     const a=t==="vvr2"?DATA.vvrOD.v2:DATA.vvrOD.v3;
@@ -1098,7 +1113,9 @@ function rowSelOpts(withK,sel){
   const grp=(arr,lab,pfx)=>`<optgroup label="${lab}（外径を自動入力）">`+cdb.sizes.map((sz,i)=>arr[i]!=null?opt(pfx+"|"+sz,lab+" "+sz+"sq"):"").join("")+`</optgroup>`;
   const v=DATA.vvrOD;
   const grp2=(arr,lab,pfx)=>`<optgroup label="${lab}（外径を自動入力）">`+v.sizes.map((sz,i)=>arr[i]!=null?opt(pfx+"|"+sz,lab+" "+(String(sz).indexOf("mm")>0?sz:sz+"sq")):"").join("")+`</optgroup>`;
-  const cables=grp(cdb.c3,"CV3心","c3")+grp(cdb.cvt,"CVT","cvt")+grp(cdb.c2,"CV2心","c2")+grp(cdb.c1,"CV単心","c1")+grp2(v.v2,"VVR2心","vvr2")+grp2(v.v3,"VVR3心","vvr3");
+  const fdb=DATA.vvfOD;
+  const grp3=`<optgroup label="VVF（扁平・自動換算）">`+fdb.sizes.map(sz=>opt("vvf|"+sz,"VVF "+sz.replace("-2C"," 2心").replace("-3C"," 3心"))).join("")+`</optgroup>`;
+  const cables=grp(cdb.c3,"CV3心","c3")+grp(cdb.cvt,"CVT","cvt")+grp(cdb.c2,"CV2心","c2")+grp(cdb.c1,"CV単心","c1")+grp2(v.v2,"VVR2心","vvr2")+grp2(v.v3,"VVR3心","vvr3")+grp3;
   if(withK){
     o+=`<optgroup label="IV電線（外径・係数を自動入力）">`+DATA.ivWire.map(w=>opt("iv|"+w.size,"IV "+w.size)).join("")+`</optgroup>`+cables;
   }else{
@@ -1109,13 +1126,13 @@ function rowSelOpts(withK,sel){
 function rowTool(key){
   const withK = key==="conduit";
   const cols = withK?"minmax(0,1.15fr) 58px 46px 46px 34px":"minmax(0,1.2fr) 68px 52px 34px";
-  const head = withK?`<div class="row-head" style="grid-template-columns:${cols}"><span>種類（選ぶと自動入力）</span><span>外径</span><span>係数</span><span>本数</span><span></span></div>`
+  const head = withK?`<div class="row-head" style="grid-template-columns:${cols}"><span>種類（選ぶと自動入力）</span><span>外径</span><span>係数k<br>(自動)</span><span>本数</span><span></span></div>`
                     :`<div class="row-head" style="grid-template-columns:${cols}"><span>種類（選ぶと自動入力）</span><span>外径mm</span><span>条数</span><span></span></div>`;
   const rows=S[key].rows.map((r,idx)=>{
     return `<div class="row" style="grid-template-columns:${cols}">
       <select data-rowsel="${key}" data-idx="${idx}">${rowSelOpts(withK,r.sel)}</select>
       <input type="number" data-row="${key}" data-idx="${idx}" data-f="od" value="${r.od}" step="0.1">
-      ${withK?`<input type="number" data-row="${key}" data-idx="${idx}" data-f="k" value="${r.k}" step="0.1">`:""}
+      ${withK?`<span class="kbadge" title="占積補正係数（自動設定）">${r.k}</span>`:""}
       <input type="number" data-row="${key}" data-idx="${idx}" data-f="n" value="${r.n}" step="1">
       <button class="del" data-delrow="${key}" data-idx="${idx}">−</button>
     </div>`;
@@ -1123,7 +1140,10 @@ function rowTool(key){
   const max = key==="rack"?8:6;
   return `<div class="field"><label>ケーブル / 電線の行 ${helpBtn(withK?"補正係数（電線管）":"占積率")}<span class="unit-tag">最大${max}行</span></label>
     <div class="rows">${head}${rows}</div>
-    ${S[key].rows.length<max?`<button class="addrow" data-addrow="${key}">＋ 行を追加</button>`:""}</div>`+(withK?ivRef():odRef());
+    ${S[key].rows.length<max?`<button class="addrow" data-addrow="${key}">＋ 行を追加</button>`:""}</div>`+(withK?kNote()+ivRef():odRef());
+}
+function kNote(){
+  return `<div class="ref-note" style="margin:-4px 0 10px">「係数k」= 電線の被覆ぶん断面積を水増しする倍率（内線規程3110-8）。プルダウンで選ぶと自動設定されます: IV 1.6/2.0mm→2.0、細物→1.2、太物→1.0、<b>ケーブル（CV/VVR/VVF）→1.0</b>。</div>`;
 }
 function odRef(){
   const c=DATA.cvOD;
@@ -1133,7 +1153,7 @@ function odRef(){
       <tr><th>3心</th>${c.c3.map(v=>`<td>${v==null?"—":v}</td>`).join("")}</tr>
       <tr><th>CVT</th>${c.cvt.map(v=>`<td>${v==null?"—":v}</td>`).join("")}</tr>
     </table>
-    <div class="ref-note">単位: mm。600V CVの代表値です。最終はメーカーカタログで確認してください。<br><b>CVT・CVDは複数心のより合わせ全体を1条</b>と数えます（本数欄には条数を入力。CVT 1条=単心3本のより合わせ）。</div></div></details>`;
+    <div class="ref-note">単位: mm。600V CVの代表値です。最終はメーカーカタログで確認してください。<br><b>CVT・CVDは複数心のより合わせ全体を1条</b>と数えます（本数欄には条数を入力。CVT 1条=単心3本のより合わせ）。<br>VVFは扁平（小判形）のため、ラックでは<b>幅（長径）</b>、管・トラフでは<b>面積が等しくなる等価径</b>を自動入力します。</div></div></details>`;
 }
 function ivRef(){
   return `<details class="ref"><summary>参考: IV電線の外径・補正係数（内線規程3110-8）<span class="chev">▾</span></summary>
@@ -1273,7 +1293,7 @@ function bindInputs(id){
     const k=el.dataset.rowsel, i=+el.dataset.idx, v=el.value, row=S[k].rows[i];
     row.sel=v;
     if(v!=="manual"){
-      const parts=v.split("|"), hit=odLookup(parts[0],parts[1]);
+      const parts=v.split("|"), hit=odLookup(parts[0],parts[1],k);
       if(hit){ row.od=hit.od; if(hit.k!=null) row.k=hit.k; else if(row.k!=null) row.k=1.0; }
     }
     render();
@@ -1733,6 +1753,23 @@ function foundSVG(r){
   const FW=r.FW*sc, FD=r.FD*sc, W=f.W*sc, D=f.D*sc;
   const ox=pad, oy=pad;
   const px=ox+(FW-W)/2, py=oy+(FD-D)/2;
+  const tw=Math.max(10,150*sc);
+  let body;
+  if(f.ftype==="ゲタ（2条）"){
+    body=`<rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="none" stroke="#9aa6b2" stroke-width="1" stroke-dasharray="3 3"/>
+      <rect x="${ox}" y="${oy}" width="${tw}" height="${FD}" fill="#e8eef4" stroke="#46566a" stroke-width="2.5"/>
+      <rect x="${ox+FW-tw}" y="${oy}" width="${tw}" height="${FD}" fill="#e8eef4" stroke="#46566a" stroke-width="2.5"/>
+      <text x="${ox+FW/2}" y="${oy+FD-10}" text-anchor="middle" class="dim">ゲタ2条（幅150）</text>`;
+  }else if(f.ftype==="ボイド"){
+    const vx=ox+tw, vy=oy+tw, vw=Math.max(8,FW-2*tw), vh=Math.max(8,FD-2*tw);
+    body=`<rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="#e8eef4" stroke="#46566a" stroke-width="2.5"/>
+      <rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="#fff" stroke="#46566a" stroke-width="1.5"/>
+      <line x1="${vx}" y1="${vy}" x2="${vx+vw}" y2="${vy+vh}" stroke="#9aa6b2" stroke-width="1"/>
+      <line x1="${vx+vw}" y1="${vy}" x2="${vx}" y2="${vy+vh}" stroke="#9aa6b2" stroke-width="1"/>
+      <text x="${vx+vw/2}" y="${vy+vh/2+20}" text-anchor="middle" class="dim">開口（ボイド）</text>`;
+  }else{
+    body=`<rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="#fff" stroke="#46566a" stroke-width="2.5"/>`;
+  }
   const bw=Math.max(20,(f.W-100)*sc), bd=Math.max(20,(f.D-100)*sc);
   const bx=ox+(FW-bw)/2, by=oy+(FD-bd)/2;
   let pts=[[bx,by],[bx+bw,by],[bx,by+bd],[bx+bw,by+bd]];
@@ -1740,12 +1777,12 @@ function foundSVG(r){
   if(f.nb>=8) pts=[[bx,by],[bx+bw/2,by],[bx+bw,by],[bx,by+bd],[bx+bw/2,by+bd],[bx+bw,by+bd],[bx,by+bd/2],[bx+bw,by+bd/2]];
   const bolts=pts.slice(0,f.nb).map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="none" stroke="#b5651d" stroke-width="1.6"/><line x1="${p[0]-7}" y1="${p[1]}" x2="${p[0]+7}" y2="${p[1]}" stroke="#b5651d" stroke-width="1.4"/><line x1="${p[0]}" y1="${p[1]-7}" x2="${p[0]}" y2="${p[1]+7}" stroke="#b5651d" stroke-width="1.4"/>`).join("");
   return `<div class="plan-wrap"><svg viewBox="0 0 ${FW+pad*2} ${FD+pad*2+8}" class="plan" role="img" aria-label="盤基礎の平面図">
-    <rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="#fff" stroke="#46566a" stroke-width="2.5"/>
+    ${body}
     <rect x="${px}" y="${py}" width="${W}" height="${D}" fill="none" stroke="#9aa6b2" stroke-width="1.5" stroke-dasharray="6 4"/>
     ${bolts}
     <text x="${ox+FW/2}" y="${oy+FD+26}" text-anchor="middle" class="dim">${r.FW} mm</text>
     <text x="${ox-18}" y="${oy+FD/2}" text-anchor="middle" class="dim" transform="rotate(-90 ${ox-18} ${oy+FD/2})">${r.FD} mm</text>
-    <text x="${px+W/2}" y="${py+D/2+4}" text-anchor="middle" class="dim">盤</text>
+    <text x="${px+W/2}" y="${py+16}" text-anchor="middle" class="dim">盤</text>
   </svg></div>`;
 }
 function sideSVG(r){
