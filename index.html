@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>電力設計 11大計算ツール</title>
+<title>電力設計 13大計算ツール</title>
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#16202a">
@@ -268,6 +268,19 @@ footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--i
 .ref-table th{background:var(--copper-tint);color:var(--ink-2);text-align:center}
 .ref-note{font-size:10px;color:var(--ink-mut);margin-top:6px}
 
+/* row type select */
+.row select{padding:8px 20px 8px 8px;font-size:12px;background-position:right 6px center}
+
+/* luminaire preset card */
+.spec-box.lum{display:flex;gap:12px;align-items:center;margin-bottom:13px}
+.spec-box.lum .lum-ico svg{width:78px;height:54px;display:block}
+.spec-box.lum .h{font-size:12.5px}
+
+/* simple floor plan */
+.plan-wrap{overflow-x:auto}
+.plan{width:100%;max-width:540px;display:block;margin:0 auto}
+.plan .dim{font-size:11px;fill:#46566a;font-family:var(--mono)}
+
 /* ---------- desktop / PC layout ---------- */
 @media (min-width:900px){
   body{font-size:15.5px}
@@ -309,7 +322,7 @@ footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--i
       <div class="brand">
         <div class="mark"></div>
         <div>
-          <h1>電力設計 11大計算ツール</h1>
+          <h1>電力設計 13大計算ツール</h1>
           <small>初心者向け・概算検討 ＆ 学習用</small>
         </div>
       </div>
@@ -334,7 +347,7 @@ footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--i
 
   <footer>
     <div><b>このツールについて</b>　入力は最小限、判定は OK/NG/○ を色＋記号＋文言で即表示、専門用語はインライン解説、根拠データは1か所に集約。すべての結果に式・採用根拠・出典を併記しています。</div>
-    <div class="srcs">出典: JCS 0168-2 ／ 内線規程1310-1・3110・3110-8・3165 ／ JIS C8201相当 ／ JIS Z9110(光束法) ／ 電技解釈・内線規程 ／ JIS A5372 ／ JIS C4304・C4306 ／ JIS C4902 ／ %インピーダンス法</div>
+    <div class="srcs">出典: JCS 0168-2 ／ 内線規程1310-1・3110・3110-8・3165 ／ JIS C8201相当 ／ JIS Z9110(光束法) ／ 電技解釈・内線規程 ／ JIS A5372 ／ JIS C4304・C4306 ／ JIS C4902 ／ %インピーダンス法 ／ 内線規程1350 ／ 建築設備耐震設計・施工指針(簡易)</div>
   </footer>
 </div>
 
@@ -348,23 +361,23 @@ footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--i
 const DATA = {
   allowable:{
     source:"JCS 0168-2 (90C/40C base)",
-    columns:["air_3core_flat","air_3core_tawara","air_2c","air_3c","air_cvd","air_cvt","pipe_2c","pipe_3c","pipe_cvd","pipe_cvt"],
+    columns:["air_3core_flat","air_3core_tawara","air_2c","air_3c","air_cvd","air_cvt","pipe_2c","pipe_3c","pipe_cvd","pipe_cvt","gnd_bury_3c","gnd_duct_3c","gnd_bury_cvt","gnd_duct_cvt"],
     rows:{
-      "2":[31,27,28,23,null,null,23,19,null,null],
-      "3.5":[44,38,39,33,null,null,31,26,null,null],
-      "5.5":[58,50,52,44,null,null,41,35,null,null],
-      "8":[72,63,65,54,66,62,51,43,48,45],
-      "14":[100,87,91,76,91,86,70,59,69,63],
-      "22":[130,115,120,100,120,110,93,77,92,82],
-      "38":[190,160,170,140,165,155,135,110,125,110],
-      "60":[255,210,225,190,225,210,175,150,165,150],
-      "100":[355,290,310,260,310,290,245,210,230,215],
-      "150":[455,380,400,340,400,380,320,265,310,275],
-      "200":[545,470,485,410,490,465,390,335,370,340],
-      "250":[620,540,560,470,565,535,455,380,435,395],
-      "325":[725,640,660,555,670,635,540,450,505,475],
-      "400":[815,730,null,null,765,725,null,null,580,535],
-      "500":[920,840,null,null,880,835,null,null,675,615]
+      "2":[31,27,28,23,null,null,23,19,null,null,49,39,null,null],
+      "3.5":[44,38,39,33,null,null,31,26,null,null,64,52,null,null],
+      "5.5":[58,50,52,44,null,null,41,35,null,null,80,65,null,null],
+      "8":[72,63,65,54,66,62,51,43,48,45,95,78,105,85],
+      "14":[100,87,91,76,91,86,70,59,69,63,130,105,140,115],
+      "22":[130,115,120,100,120,110,93,77,92,82,165,135,180,145],
+      "38":[190,160,170,140,165,155,135,110,125,110,220,180,235,190],
+      "60":[255,210,225,190,225,210,175,150,165,150,280,225,300,245],
+      "100":[355,290,310,260,310,290,245,210,230,215,370,295,395,320],
+      "150":[455,380,400,340,400,380,320,265,310,275,455,365,485,390],
+      "200":[545,470,485,410,490,465,390,335,370,340,525,420,555,450],
+      "250":[620,540,560,470,565,535,455,380,435,395,590,470,625,505],
+      "325":[725,640,660,555,670,635,540,450,505,475,665,530,705,565],
+      "400":[815,730,null,null,765,725,null,null,580,535,null,null,780,625],
+      "500":[920,840,null,null,880,835,null,null,675,615,null,null,870,695]
     },
     tempFactor:{"20":1.18,"25":1.14,"30":1.10,"35":1.05,"40":1.00,"45":0.95,"50":0.89}
   },
@@ -375,7 +388,9 @@ const DATA = {
     "気中 CVT 1条(三相)":"air_cvt","気中 CVD 1条(単相)":"air_cvd",
     "気中 単心3条 平積":"air_3core_flat","気中 単心3条 俵積":"air_3core_tawara",
     "管内 CV3心1条(三相)":"pipe_3c","管内 CV2心1条(単相)":"pipe_2c",
-    "管内 CVT 1条(三相)":"pipe_cvt","管内 CVD 1条(単相)":"pipe_cvd"
+    "管内 CVT 1条(三相)":"pipe_cvt","管内 CVD 1条(単相)":"pipe_cvd",
+    "地中 直埋 CV3心(三相)":"gnd_bury_3c","地中 管路 CV3心(三相)":"gnd_duct_3c",
+    "地中 直埋 CVT(三相)":"gnd_bury_cvt","地中 管路 CVT(三相)":"gnd_duct_cvt"
   },
   breaker:[15,20,30,40,50,60,75,100,125,150,175,200,225,250,300,350,400,500,600,800],
   rackW:[100,150,200,300,400,500,600,800,1000,1200],
@@ -398,7 +413,10 @@ const DATA = {
     {name:"70",w:70,d:65},{name:"120",w:120,d:115},{name:"150",w:150,d:145},
     {name:"200",w:200,d:190},{name:"250",w:250,d:240},{name:"300",w:300,d:290},{name:"400",w:400,d:390}
   ],
-  messengerTb:{"22mm2":22.0,"38mm2":37.0,"60mm2":58.0,"100mm2":95.0},
+  messenger:{
+    "アルミ覆鋼より線（AC）":[["25mm²",19.6],["40mm²",30.9],["60mm²",44.7],["95mm²",68.4]],
+    "亜鉛めっき鋼より線":[["22mm²",22.0],["38mm²",37.0],["60mm²",58.0],["100mm²",95.0]]
+  },
   tfr:{
     source:"JIS C4304/C4306 標準容量",
     single:[10,20,30,50,75,100,150,200,300,500],
@@ -410,7 +428,52 @@ const DATA = {
   cvOD:{
     sizes:["2","3.5","5.5","8","14","22","38","60","100","150","200","250","325"],
     c3:[11,12,13.5,15.5,18.5,21,25.5,31,37.5,44.5,50,56,63],
-    cvt:[null,null,null,17,20,23,28,34,42,50,56,62,70]
+    cvt:[null,null,null,17,20,23,28,34,42,50,56,62,70],
+    c2:[10,11,12.5,14,17,19.5,23.5,28.5,34.5,41,46,51.5,58],
+    c1:[6.5,7,7.8,8.6,10,11.4,13.6,16.2,19.6,23,25.8,28.6,32]
+  },
+  vvrOD:{
+    sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22"],
+    v2:[10,10.5,11.5,12.5,12.5,14,16.5,19.5],
+    v3:[10.5,11,12,13.5,13,15,18,21.5]
+  },
+  luminaires:[
+    {id:"pid40w69",label:"Panasonic iDシリーズ 40形 6900lm（LEDベースライト）",F:6900,W:40,icon:"base"},
+    {id:"pid40w40",label:"Panasonic iDシリーズ 40形 4000lm",F:4000,W:24,icon:"base"},
+    {id:"pid20w32",label:"Panasonic iDシリーズ 20形 3200lm",F:3200,W:20,icon:"base"},
+    {id:"tq40w69",label:"東芝 TENQOO 40形 6900lm",F:6900,W:40,icon:"base"},
+    {id:"gfuji40",label:"逆富士形 40形 5200lm（一般形）",F:5200,W:32,icon:"fuji"},
+    {id:"dl100",label:"ダウンライト 100形 1500lm（φ125）",F:1500,W:14,icon:"down"},
+    {id:"dl60",label:"ダウンライト 60形 800lm（φ100）",F:800,W:7,icon:"down"},
+    {id:"hi400",label:"高天井用LED 400形 22000lm（水銀灯400W相当）",F:22000,W:160,icon:"high"},
+    {id:"hi250",label:"高天井用LED 250形 12500lm",F:12500,W:95,icon:"high"}
+  ],
+  earthClass:{
+    "A種":{R:10,use:"高圧・特別高圧の機器の外箱、避雷器など",wire:"引張強さ1.04kN以上の金属線 または 直径2.6mm以上の軟銅線"},
+    "C種":{R:10,R05:500,use:"300Vを超える低圧の機器の外箱・鉄台"},
+    "D種":{R:100,R05:500,use:"300V以下の低圧の機器の外箱・鉄台"}
+  },
+  earthWire:[[20,"1.6mm（2sq）"],[30,"1.6mm（2sq）"],[60,"2.0mm（3.5sq）"],[100,"2.6mm（5.5sq）"],[150,"8sq"],[200,"14sq"],[400,"22sq"],[600,"38sq"],[800,"60sq"],[1000,"60sq"],[1200,"100sq"]],
+  anchors:[["M10",5.8],["M12",8.4],["M16",15.7],["M20",24.5]],
+  kindKey:{
+    "CV（架橋ポリエチレン 90℃）":"CV",
+    "VVケーブル（VVF/VVR 60℃）":"VV",
+    "IV電線（がいし引き 60℃）":"IV",
+    "DV引込線（60℃）":"DV",
+    "OW屋外用ビニル電線（60℃）":"OW",
+    "OE屋外用ポリエチレン電線（75℃）":"OE"
+  },
+  wires:{
+    VV:{Tc:60,conds:["2心（VVF/VVR）","3心（VVF/VVR）"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22","38"],
+      rows:{"1.6mm":[19,17],"2.0mm":[24,21],"2.6mm":[33,29],"3.2mm":[43,38],"5.5":[49,43],"8":[61,52],"14":[88,75],"22":[115,98],"38":[162,138]}},
+    IV:{Tc:60,conds:["がいし引き・気中"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22","38","60","100","150","200","250","325"],
+      rows:{"1.6mm":[27],"2.0mm":[35],"2.6mm":[48],"3.2mm":[62],"5.5":[49],"8":[61],"14":[88],"22":[115],"38":[162],"60":[217],"100":[298],"150":[395],"200":[469],"250":[556],"325":[650]}},
+    DV:{Tc:60,conds:["2心","3心"],sizes:["2.0mm","2.6mm","3.2mm"],
+      rows:{"2.0mm":[33,29],"2.6mm":[44,39],"3.2mm":[57,51]}},
+    OW:{Tc:60,conds:["屋外・がいし引き"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","4.0mm","5.0mm"],
+      rows:{"1.6mm":[34],"2.0mm":[45],"2.6mm":[60],"3.2mm":[76],"4.0mm":[98],"5.0mm":[122]}},
+    OE:{Tc:75,conds:["屋外・がいし引き"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","4.0mm","5.0mm"],
+      rows:{"1.6mm":[40],"2.0mm":[52],"2.6mm":[69],"3.2mm":[88],"4.0mm":[113],"5.0mm":[140]}}
   }
 };
 
@@ -451,7 +514,16 @@ const GLOSSARY=[
   ["遮断容量 Icu","⑩","ブレーカが安全に遮断できる最大の短絡電流[kA]。想定短絡電流以上のものを選ぶ。"],
   ["B種接地工事","⑪","変圧器の高圧側と低圧側が混触したとき、低圧側の電位上昇を抑えるための接地。変圧器低圧側の中性点等に施す。"],
   ["1線地絡電流 Ig","⑪","高圧電路で1線が大地に触れたときに流れる電流[A]。B種接地抵抗の上限を決める。確定値は電力会社に照会する。"],
-  ["混触","⑪","変圧器内部などで高圧側と低圧側が接触する事故。低圧側に高電圧がかかる危険があり、B種接地で電位上昇を抑える。"]
+  ["混触","⑪","変圧器内部などで高圧側と低圧側が接触する事故。低圧側に高電圧がかかる危険があり、B種接地で電位上昇を抑える。"],
+  ["接地工事の種別","⑫","A種=高圧機器(10Ω)、B種=変圧器の中性点等、C種=300V超の低圧(10Ω)、D種=300V以下(100Ω)。C/D種は0.5秒以内動作の漏電遮断器があれば500Ωに緩和。"],
+  ["接地線","⑫","接地極と機器を結ぶ電線。太さは回路の過電流遮断器（ブレーカ）の定格で決まる（内線規程1350-3）。"],
+  ["設計水平震度 KH","⑬","地震時の水平力を機器重量の何倍と見込むかの係数。一般機器1.0、重要機器1.5、屋上・上層階は割増しが目安。"],
+  ["転倒モーメント","⑬","地震の水平力が機器を倒そうとする回転力。安定モーメント（自重×腕の長さ）がこれを上回れば転倒しない。"],
+  ["アンカーボルト","⑬","盤を基礎・床に固定するボルト。地震時の引抜き力・せん断力に耐える太さが必要。"],
+  ["直埋設・管路布設","①","地中に直接埋める／地中管路に通す布設方法。基底温度25℃・土壌条件が前提で、気中とは許容電流が異なる。"],
+  ["電線とケーブル","①","絶縁被覆だけのものが電線（IV・OW・OE・DVなど）、絶縁体の上に保護シースを持つものがケーブル（CV・VVなど）。布設できる場所が異なる。"],
+  ["大地抵抗率 ρ","⑫","土の電気の流れにくさ[Ω·m]。粘土質は低く（〜150）、砂・砂利・岩盤は高い（500〜）。接地抵抗を大きく左右する。"],
+  ["接地棒","⑫","地中に打ち込む棒状の接地極（例: φ14×1.5m）。1本で足りないときは2m以上離して並列に増やすか、連結して深く打つ。"]
 ];
 
 const TOOLS=[
@@ -465,9 +537,11 @@ const TOOLS=[
   {id:8,t:"変圧器容量選定",sub:"設備容量×需要率→標準容量",src:"JIS C4304/C4306"},
   {id:9,t:"力率改善コンデンサ",sub:"目標力率までの必要kvar",src:"JIS C4902"},
   {id:10,t:"短絡電流（%Z法）",sub:"変圧器%Zから短絡電流を概算",src:"%インピーダンス法"},
-  {id:11,t:"B種接地抵抗（簡易）",sub:"1線地絡電流→接地抵抗の上限値",src:"電技解釈17条"}
+  {id:11,t:"B種接地抵抗（簡易）",sub:"1線地絡電流→接地抵抗の上限値",src:"電技解釈17条"},
+  {id:12,t:"接地工事（A〜D種）",sub:"種別→抵抗値の上限＋接地線の太さ",src:"電技解釈17・29条 / 内線規程1350"},
+  {id:13,t:"盤基礎（耐震簡易）",sub:"配電盤・変圧器盤の基礎寸法と転倒・アンカー",src:"建築設備耐震設計 簡易法"}
 ];
-const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪"];
+const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬"];
 
 /* =========================================================================
    計算ロジック（§5）— UIから分離した純関数。判定理由も返す。
@@ -481,33 +555,56 @@ function loadCurrent(method,unit,P,cos,V){
 }
 function smallestGE(arr,x){ for(const v of arr) if(v>=x) return v; return null; }
 
+function wireArea(sz){ return String(sz).indexOf("mm")>0?Math.PI/4*Math.pow(parseFloat(sz),2):parseFloat(sz); }
 function calcCable(i){
   const I=loadCurrent(i.method,i.unit,i.P,i.cos,i.V);
-  const kt=DATA.allowable.tempFactor[i.temp];
   const K=DATA.vdropCoef[i.method];
-  const col=DATA.cond2col[i.cond];
-  const ci=DATA.allowable.columns.indexOf(col);
   if(!isFinite(I)||I<=0) return {err:true};
-  const cands=DATA.sizes.map(sz=>{
-    const Iz0=DATA.allowable.rows[sz][ci];
+  const kk=DATA.kindKey[i.kind]||"CV";
+  let sizes,getIz0,kt,gnd=false;
+  if(kk==="CV"){
+    const col=DATA.cond2col[i.cond];
+    gnd=!!(col&&col.indexOf("gnd")===0);
+    kt=gnd?1.0:DATA.allowable.tempFactor[i.temp]; // 地中は基底25℃の表値
+    const ci=DATA.allowable.columns.indexOf(col);
+    sizes=DATA.sizes; getIz0=sz=>DATA.allowable.rows[sz][ci];
+  }else{
+    const w=DATA.wires[kk];
+    const ci=Math.max(0,w.conds.indexOf(i.wcond));
+    const th=parseFloat(i.temp);
+    kt=th>=w.Tc?0:Math.sqrt((w.Tc-th)/(w.Tc-30)); // 電線・VVは基準周囲温度30℃
+    sizes=w.sizes; getIz0=sz=>w.rows[sz][ci];
+  }
+  const cands=sizes.map(sz=>{
+    const Iz0=getIz0(sz);
     const Iz=Iz0?Iz0*kt*i.k:0;
     const curOK=Iz0&&Iz>=I;
-    const e=K*i.L*I/(1000*parseFloat(sz));
+    const e=K*i.L*I/(1000*wireArea(sz));
     const drop=e/i.V*100;
     const volOK=drop<=i.vmax;
     return {sz,Iz0,Iz,curOK,e,drop,volOK,ok:!!(Iz0&&curOK&&volOK)};
   });
   const pick=cands.find(c=>c.ok)||null;
-  const need=I/(kt*i.k);
-  return {I,kt,K,need,cands,pick};
+  const need=kt>0?I/(kt*i.k):null;
+  return {I,kt,K,need,cands,pick,gnd,kk};
 }
 function calcBreaker(i){
   const I=loadCurrent(i.method,i.unit,i.P,i.cos,i.V);
   if(!isFinite(I)||I<=0) return {err:true};
   const Id=i.cont?I*1.25:I;
   const rating=smallestGE(DATA.breaker,Id);
-  const protect = rating!=null && rating<=i.Iw;
-  return {I,Id,rating,protect};
+  let Iw=i.Iw, auto=null;
+  if(i.iwMode==="自動計算"){
+    const col=DATA.cond2col[i.iwCond];
+    const ci=DATA.allowable.columns.indexOf(col);
+    const base=DATA.allowable.rows[i.iwSize]?DATA.allowable.rows[i.iwSize][ci]:null;
+    const kt=(col&&col.indexOf("gnd")===0)?1.0:(DATA.allowable.tempFactor[i.iwTemp]||1);
+    if(!base) return {err:true,msg:"選んだ布設条件×サイズの許容電流データがありません。条件を変えてください"};
+    Iw=base*kt*i.iwK; auto={base,kt,k:i.iwK};
+  }
+  if(!Iw||Iw<=0) return {err:true};
+  const protect = rating!=null && rating<=Iw;
+  return {I,Id,rating,protect,Iw,auto};
 }
 function calcRack(i){
   const occ=i.rows.reduce((s,r)=>s+r.od*r.n,0);
@@ -539,8 +636,9 @@ function calcMessenger(i){
   const w=i.wc*9.8;
   const T=w*i.S*i.S/(8*i.D);
   const needTb=T*i.SF/1000;
-  const ok=i.Tb>=needTb;
-  return {w,T,needTb,ok};
+  const list=DATA.messenger[i.mat]||DATA.messenger["アルミ覆鋼より線（AC）"];
+  const pick=list.find(e=>e[1]>=needTb)||null;
+  return {w,T,needTb,pick};
 }
 function calcTrough(i){
   const sum=i.rows.reduce((s,r)=>s+(PI/4)*r.od*r.od*r.n,0);
@@ -598,23 +696,58 @@ function calcEarthB(i){
   const R=Vlim/Ig;
   return {Ig,raw,Vlim,R,calc:i.mode!=="直接入力"};
 }
+function calcEarth(i){
+  if(i.cls==="B種") return {b:true};
+  let R,use,wireFixed=null,wire=null;
+  if(i.cls==="A種"){ const e=DATA.earthClass["A種"]; R=e.R; use=e.use; wireFixed=e.wire; }
+  else{
+    const e=DATA.earthClass[i.cls];
+    R=(i.cut==="0.5秒以内")?e.R05:e.R;
+    use=e.use;
+    const w=DATA.earthWire.find(x=>x[0]>=i.brk);
+    wire=w?w[1]:"100sq以上（個別検討）";
+  }
+  const Lr={"1.5m（1本）":1.5,"3.0m（連結2本）":3.0,"4.5m（連結3本）":4.5}[i.rod]||1.5;
+  const R1=i.rho/(2*Math.PI*Lr)*Math.log(4*Lr/0.014); // 接地棒1本の理論値
+  const n=Math.max(1,Math.ceil(1.2*R1/R));            // 集合係数1.2
+  return {R,use,wireFixed,wire,brk:i.brk,R1,n,rho:i.rho,Lr};
+}
+function calcFound(i){
+  if(!i.W||!i.D||!i.H||!i.M||!i.FH) return {err:true};
+  const g=9.8;
+  const FW=i.W+2*i.margin, FD=i.D+2*i.margin, FH=i.FH;
+  const Wf=FW*FD*FH*1e-9*2300;              // 基礎重量 kg（無筋2.3t/m³）
+  const hg=(i.H/2+FH)/1000;                  // 基礎底からの盤重心高さ m（重心=H/2仮定）
+  const Mo=i.KH*i.M*g*hg;                    // 転倒モーメント N·m
+  const Ms=(i.M+Wf)*g*(FD/2000);             // 安定モーメント N·m（置き基礎）
+  const okT=Ms>=Mo;
+  const L=Math.max(0.05,(i.D-100)/1000);     // アンカースパン m（盤奥行-100mm）
+  const nt=Math.max(1,i.nb/2);               // 引張側本数
+  const T=(i.KH*i.M*g*(i.H/2000)-i.M*g*(i.D/2000))/(L*nt);
+  const TkN=Math.max(0,T/1000);
+  const pick=TkN===0?null:(DATA.anchors.find(a=>a[1]>=TkN)||null);
+  const okA=TkN===0||pick!=null;
+  return {FW,FD,FH,Wf,Mo,Ms,okT,TkN,pick,okA,ratio:Mo>0?Ms/Mo:null};
+}
 
 /* =========================================================================
    状態（§6 サンプル相当の初期値 → §10 受入れ値を再現）
    ========================================================================= */
 let view="home";
 const S={
-  cable:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,L:40,temp:"40",k:1.0,cond:"気中 CV3心1条(三相)",vmax:2},
-  breaker:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,cont:false,Iw:100},
+  cable:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,Vsel:200,L:40,temp:"40",k:1.0,cond:"気中 CV3心1条(三相)",kind:"CV（架橋ポリエチレン 90℃）",wcond:"2心（VVF/VVR）",vmax:2},
+  breaker:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,Vsel:200,cont:false,Iw:100,iwMode:"自動計算",iwSize:"14",iwCond:"気中 CV3心1条(三相)",iwTemp:"40",iwK:1.0},
   rack:{rows:[{od:42,n:4}],spare:20,fill:0.6,tiers:1},
   conduit:{ctype:"厚鋼G",fill:0.32,rows:[{od:6.6,k:1.0,n:5}]},
-  lux:{E:500,X:7,Y:8,H:2.5,F:2800,U:0.7,M:0.8},
-  messenger:{volt:"低圧",wc:1.2,S:30,D:0.5,SF:2.5,Tb:22},
+  lux:{E:500,X:7,Y:8,H:2.5,F:2800,U:0.7,M:0.8,preset:"custom"},
+  messenger:{volt:"低圧",mat:"アルミ覆鋼より線（AC）",wc:1.2,S:30,D:0.5,SF:2.5},
   trough:{rows:[{od:38,n:3}],fill:0.30,clr:20},
   tfr:{phase:"三相",Pset:150,dem:60,spare:20},
   cap:{volt:"低圧",P:100,cos1:0.8,cos2:0.95},
-  short:{method:"三相",kva:300,z:4,V:210,icu:10},
-  earthB:{mode:"直接入力",Ig:5,kv:6.6,L:0,Lc:0.5,cut:"なし"}
+  short:{method:"三相",kva:300,z:4,V:210,Vsel:210,icu:10},
+  earthB:{mode:"直接入力",Ig:5,kv:6.6,L:0,Lc:0.5,cut:"なし"},
+  earth:{cls:"D種",cut:"なし",brk:100,rho:300,rod:"1.5m（1本）"},
+  found:{W:800,D:600,H:1900,M:300,KH:1.0,margin:100,FH:150,nb:4}
 };
 
 /* 入力値の保存・復元（localStorage）: モバイル/PCそれぞれで前回値を保持 */
@@ -664,7 +797,7 @@ function bindHelp(){
 function renderHome(){
   main.innerHTML=`
    <div class="hero">
-     <div class="eyebrow">11 calculation tools</div>
+     <div class="eyebrow">13 calculation tools</div>
      <h2>どの計算をしますか？</h2>
      <p>使いたい計算をひとつ選んでください。各ツールは「STEP1 入力 → STEP2 自動計算」で結果が出ます。</p>
    </div>
@@ -743,26 +876,36 @@ function field(label,inner,unit,help){
 function numIn(key,val,step,attr=""){return `<input type="number" data-k="${key}" value="${val}" step="${step||"any"}" ${attr}>`;}
 function selIn(key,opts,val){return `<select data-k="${key}">${opts.map(o=>`<option ${o===val?"selected":""}>${o}</option>`).join("")}</select>`;}
 function seg(key,opts,val){return `<div class="seg">${opts.map(o=>`<button data-seg="${key}" data-v="${o}" class="${o===val?"on":""}">${o}</button>`).join("")}</div>`;}
+function voltRow(mapKey,label){
+  const st=S[mapKey];
+  return `<div class="two">
+    ${field(label||"線間電圧 V",selIn("Vsel",[100,200,210,220,240,400,415,440,"その他"],st.Vsel),"V")}
+    ${st.Vsel==="その他"?field("電圧を入力",numIn("V",st.V,1),"V"):""}
+  </div>`;
+}
 
 function inputCard(id){
   const c=S, body={
-    1:()=>`
+    1:()=>{
+      const kk=DATA.kindKey[c.cable.kind]||"CV";
+      return `
+      ${field("ケーブル / 電線の種別",selIn("kind",Object.keys(DATA.kindKey),c.cable.kind),"",("電線とケーブル"))}
       ${field("配線方式",selIn("method",["単相2線式","単相3線式","三相3線式"],c.cable.method))}
       <div class="field"><label>負荷の入力単位</label>${seg("unit",["kW","kVA"],c.cable.unit)}</div>
       <div class="two">
         ${field("負荷容量",numIn("P",c.cable.P,0.1),c.cable.unit)}
         ${field("力率 cosφ",numIn("cos",c.cable.cos,0.01,'max="1"'),"",("力率 cosφ"))}
       </div>
-      <div class="two">
-        ${field("線間電圧 V",numIn("V",c.cable.V,1),"V")}
-        ${field("こう長 L",numIn("L",c.cable.L,1),"m",("こう長 L"))}
-      </div>
+      ${voltRow("cable")}
+      ${field("こう長 L",numIn("L",c.cable.L,1),"m",("こう長 L"))}
       <div class="two">
         ${field("周囲温度",selIn("temp",["20","25","30","35","40","45","50"],c.cable.temp),"℃",("温度補正係数"))}
         ${field("電流減少係数 k",selIn("k",[1.0,0.9,0.8,0.7,0.5,0.3],c.cable.k),"",("電流減少係数（多条補正）"))}
       </div>
-      ${field("布設条件",selIn("cond",Object.keys(DATA.cond2col),c.cable.cond),"",("布設条件"))}
-      ${field("許容電圧降下",numIn("vmax",c.cable.vmax,0.1),"%",("電圧降下"))}`,
+      ${kk==="CV"
+        ? field("布設条件",selIn("cond",Object.keys(DATA.cond2col),c.cable.cond),"",("布設条件"))
+        : field("布設条件・心数",selIn("wcond",DATA.wires[kk].conds,c.cable.wcond),"",("布設条件"))}
+      ${field("許容電圧降下",numIn("vmax",c.cable.vmax,0.1),"%",("電圧降下"))}`;},
     2:()=>`
       ${field("配線方式",selIn("method",["単相2線式","単相3線式","三相3線式"],c.breaker.method))}
       <div class="field"><label>負荷の入力単位</label>${seg("unit",["kW","kVA"],c.breaker.unit)}</div>
@@ -770,9 +913,17 @@ function inputCard(id){
         ${field("負荷容量",numIn("P",c.breaker.P,0.1),c.breaker.unit)}
         ${field("力率 cosφ",numIn("cos",c.breaker.cos,0.01,'max="1"'),"",("力率 cosφ"))}
       </div>
-      ${field("線間電圧 V",numIn("V",c.breaker.V,1),"V")}
+      ${voltRow("breaker")}
       <div class="field"><label>連続負荷ですか${helpBtn("連続負荷")}</label>${seg("cont",["いいえ","はい"],c.breaker.cont?"はい":"いいえ")}</div>
-      ${field("電線の補正後許容電流 Iw",numIn("Iw",c.breaker.Iw,1),"A",("許容電流"))}`,
+      <div class="field"><label>電線許容電流 Iw の求め方${helpBtn("許容電流")}</label>${seg("iwMode",["自動計算","手入力"],c.breaker.iwMode)}</div>
+      ${c.breaker.iwMode==="自動計算"?`
+      <div class="two">
+        ${field("電線サイズ",selIn("iwSize",DATA.sizes,c.breaker.iwSize),"sq")}
+        ${field("電流減少係数 k",selIn("iwK",[1.0,0.9,0.8,0.7,0.5,0.3],c.breaker.iwK),"",("電流減少係数（多条補正）"))}
+      </div>
+      ${field("布設条件",selIn("iwCond",Object.keys(DATA.cond2col),c.breaker.iwCond),"",("布設条件"))}
+      ${field("周囲温度",selIn("iwTemp",["20","25","30","35","40","45","50"],c.breaker.iwTemp),"℃",("温度補正係数"))}`
+      :field("電線の補正後許容電流 Iw",numIn("Iw",c.breaker.Iw,1),"A",("許容電流"))}`,
     3:()=>rowTool("rack")+`
       <div class="three">
         ${field("将来余裕",numIn("spare",c.rack.spare,1),"%")}
@@ -784,7 +935,15 @@ function inputCard(id){
         ${field("管種",selIn("ctype",["厚鋼G","薄鋼C","PF","CD"],c.conduit.ctype))}
         ${field("占積率上限",selIn("fill",[0.32,0.48],c.conduit.fill),"",("占積率"))}
       </div>${rowTool("conduit")}`,
-    5:()=>`
+    5:()=>{
+      const cur=DATA.luminaires.find(p=>p.id===c.lux.preset);
+      return `
+      <div class="field"><label>器具プリセット（代表機種から選ぶと光束を自動入力）${helpBtn("光束 F")}</label>
+        <select data-k="preset">
+          <option value="custom" ${!cur?"selected":""}>手入力（自由設定）</option>
+          ${DATA.luminaires.map(p=>`<option value="${p.id}" ${c.lux.preset===p.id?"selected":""}>${p.label}</option>`).join("")}
+        </select></div>
+      ${cur?lumCard(cur):""}
       <div class="two">
         ${field("必要照度 E",numIn("E",c.lux.E,1),"lx",("照度 E"))}
         ${field("器具光束 F",numIn("F",c.lux.F,10),"lm",("光束 F"))}
@@ -797,9 +956,10 @@ function inputCard(id){
       <div class="two">
         ${field("照明率 U",numIn("U",c.lux.U,0.01),"",("照明率 U"))}
         ${field("保守率 M",numIn("M",c.lux.M,0.01),"",("保守率 M"))}
-      </div>`,
+      </div>`;},
     6:()=>`
       ${field("電圧区分",seg("volt",["低圧","高圧"],c.messenger.volt),"")}
+      <div class="field"><label>ちょう架線の材質</label>${seg("mat",["アルミ覆鋼より線（AC）","亜鉛めっき鋼より線"],c.messenger.mat)}</div>
       <div id="partA"></div>
       <div class="card-h" style="border-top:1px solid var(--line);margin:6px -14px 10px;padding-left:0">
         <span class="lab">PART B</span><span class="t">自重張力チェック</span></div>
@@ -807,10 +967,9 @@ function inputCard(id){
         ${field("ケーブル質量 wc",numIn("wc",c.messenger.wc,0.1),"kg/m")}
         ${field("径間 S",numIn("S",c.messenger.S,1),"m",("径間 S"))}
       </div>
-      <div class="three">
+      <div class="two">
         ${field("たるみ D",numIn("D",c.messenger.D,0.1),"m",("たるみ D"))}
         ${field("安全率 SF",numIn("SF",c.messenger.SF,0.1),"",("安全率 SF"))}
-        ${field("破断荷重 Tb",numIn("Tb",c.messenger.Tb,0.1),"kN",("破断荷重 Tb"))}
       </div>`,
     7:()=>rowTool("trough")+`
       <div class="two">
@@ -837,10 +996,8 @@ function inputCard(id){
         ${field("変圧器容量",numIn("kva",c.short.kva,1),"kVA")}
         ${field("%インピーダンス %Z",numIn("z",c.short.z,0.1),"%",("%インピーダンス %Z"))}
       </div>
-      <div class="two">
-        ${field("二次側電圧 V",numIn("V",c.short.V,1),"V")}
-        ${field("ブレーカ遮断容量 Icu",numIn("icu",c.short.icu,0.5),"kA",("遮断容量 Icu"))}
-      </div>`,
+      ${voltRow("short","二次側電圧 V")}
+      ${field("ブレーカ遮断容量 Icu",numIn("icu",c.short.icu,0.5),"kA",("遮断容量 Icu"))}`,
     11:()=>`
       <div class="field"><label>1線地絡電流 Ig の求め方${helpBtn("1線地絡電流")}</label>${seg("mode",["直接入力","こう長から概算"],c.earthB.mode)}</div>
       ${c.earthB.mode==="直接入力"
@@ -850,19 +1007,72 @@ function inputCard(id){
         ${field("架空電線路の電線延長",numIn("L",c.earthB.L,0.1),"km")}
         ${field("ケーブルの線路延長",numIn("Lc",c.earthB.Lc,0.1),"km")}
       </div>`}
-      <div class="field"><label>混触時に低圧電路を自動遮断する装置${helpBtn("混触")}</label>${seg("cut",["なし","2秒以内","1秒以内"],c.earthB.cut)}</div>`
+      <div class="field"><label>混触時に低圧電路を自動遮断する装置${helpBtn("混触")}</label>${seg("cut",["なし","2秒以内","1秒以内"],c.earthB.cut)}</div>`,
+    12:()=>`
+      <div class="field"><label>接地工事の種別${helpBtn("接地工事の種別")}</label>${seg("cls",["A種","B種","C種","D種"],c.earth.cls)}</div>
+      ${c.earth.cls==="B種"?`<div class="spec-box">B種は変圧器の<b>1線地絡電流</b>から求めます。専用の <b>⑪ B種接地抵抗（簡易）</b> をご利用ください（STEP2にボタンがあります）。</div>`:`
+      ${(c.earth.cls==="C種"||c.earth.cls==="D種")?`
+      <div class="field"><label>0.5秒以内に動作する漏電遮断器${helpBtn("接地工事の種別")}</label>${seg("cut",["なし","0.5秒以内"],c.earth.cut)}</div>
+      ${field("回路のブレーカ定格（接地線の太さ用）",selIn("brk",DATA.breaker,c.earth.brk),"A",("接地線"))}`:""}
+      <div class="two">
+        ${field("大地抵抗率 ρ",selIn("rho",[50,100,150,300,500,1000],c.earth.rho),"Ω·m",("大地抵抗率 ρ"))}
+        ${field("接地棒（φ14）",selIn("rod",["1.5m（1本）","3.0m（連結2本）","4.5m（連結3本）"],c.earth.rod),"",("接地棒"))}
+      </div>`}`,
+    13:()=>`
+      <div class="three">
+        ${field("盤の幅 W",numIn("W",c.found.W,10),"mm")}
+        ${field("奥行 D",numIn("D",c.found.D,10),"mm")}
+        ${field("高さ H",numIn("H",c.found.H,10),"mm")}
+      </div>
+      <div class="two">
+        ${field("盤の質量",numIn("M",c.found.M,10),"kg")}
+        ${field("設計水平震度 KH",selIn("KH",[0.6,1.0,1.5,2.0],c.found.KH),"",("設計水平震度 KH"))}
+      </div>
+      <div class="three">
+        ${field("基礎の出代（片側）",numIn("margin",c.found.margin,10),"mm")}
+        ${field("基礎高さ",numIn("FH",c.found.FH,10),"mm")}
+        ${field("アンカー本数",selIn("nb",[4,6,8],c.found.nb),"本",("アンカーボルト"))}
+      </div>`
   }[id];
   return `<div class="card"><div class="card-h"><span class="lab">STEP 1</span><span class="t">入力</span></div><div class="card-b" id="inputBody">${body()}</div></div>`;
 }
 
 /* row-based inputs (③④⑦) */
+function odLookup(t,sz){
+  if(t==="iv"){const w=DATA.ivWire.find(x=>x.size===sz);return w?{od:w.od,k:w.k}:null;}
+  if(t==="vvr2"||t==="vvr3"){
+    const i=DATA.vvrOD.sizes.indexOf(sz);
+    const a=t==="vvr2"?DATA.vvrOD.v2:DATA.vvrOD.v3;
+    return i>=0&&a[i]!=null?{od:a[i]}:null;
+  }
+  const i=DATA.cvOD.sizes.indexOf(sz);
+  const a={c3:DATA.cvOD.c3,cvt:DATA.cvOD.cvt,c2:DATA.cvOD.c2,c1:DATA.cvOD.c1}[t];
+  return a&&i>=0&&a[i]!=null?{od:a[i]}:null;
+}
+function rowSelOpts(withK,sel){
+  const cur=sel||"manual";
+  const opt=(val,lab)=>`<option value="${val}" ${cur===val?"selected":""}>${lab}</option>`;
+  let o=opt("manual","手入力");
+  if(withK){
+    o+=`<optgroup label="IV電線（外径・係数を自動入力）">`+DATA.ivWire.map(w=>opt("iv|"+w.size,"IV "+w.size)).join("")+`</optgroup>`;
+  }else{
+    const cdb=DATA.cvOD;
+    const grp=(arr,lab,pfx)=>`<optgroup label="${lab}（外径を自動入力）">`+cdb.sizes.map((sz,i)=>arr[i]!=null?opt(pfx+"|"+sz,lab+" "+sz+"sq"):"").join("")+`</optgroup>`;
+    o+=grp(cdb.c3,"CV3心","c3")+grp(cdb.cvt,"CVT","cvt")+grp(cdb.c2,"CV2心","c2")+grp(cdb.c1,"CV単心","c1");
+    const v=DATA.vvrOD;
+    const grp2=(arr,lab,pfx)=>`<optgroup label="${lab}（外径を自動入力）">`+v.sizes.map((sz,i)=>arr[i]!=null?opt(pfx+"|"+sz,lab+" "+(String(sz).indexOf("mm")>0?sz:sz+"sq")):"").join("")+`</optgroup>`;
+    o+=grp2(v.v2,"VVR2心","vvr2")+grp2(v.v3,"VVR3心","vvr3");
+  }
+  return o;
+}
 function rowTool(key){
   const withK = key==="conduit";
-  const cols = withK?"54px 50px 1fr 34px":"1fr 1fr 34px";
-  const head = withK?`<div class="row-head" style="grid-template-columns:${cols}"><span>外径OD</span><span>係数</span><span>本数</span><span></span></div>`
-                    :`<div class="row-head" style="grid-template-columns:${cols}"><span>外径OD (mm)</span><span>条数/本数</span><span></span></div>`;
+  const cols = withK?"minmax(0,1.15fr) 58px 46px 46px 34px":"minmax(0,1.2fr) 68px 52px 34px";
+  const head = withK?`<div class="row-head" style="grid-template-columns:${cols}"><span>種類（選ぶと自動入力）</span><span>外径</span><span>係数</span><span>本数</span><span></span></div>`
+                    :`<div class="row-head" style="grid-template-columns:${cols}"><span>種類（選ぶと自動入力）</span><span>外径mm</span><span>本数</span><span></span></div>`;
   const rows=S[key].rows.map((r,idx)=>{
     return `<div class="row" style="grid-template-columns:${cols}">
+      <select data-rowsel="${key}" data-idx="${idx}">${rowSelOpts(withK,r.sel)}</select>
       <input type="number" data-row="${key}" data-idx="${idx}" data-f="od" value="${r.od}" step="0.1">
       ${withK?`<input type="number" data-row="${key}" data-idx="${idx}" data-f="k" value="${r.k}" step="0.1">`:""}
       <input type="number" data-row="${key}" data-idx="${idx}" data-f="n" value="${r.n}" step="1">
@@ -895,13 +1105,35 @@ function ivRef(){
 
 /* ---- bind input events ---- */
 function bindInputs(id){
-  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB"}[id];
+  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB",12:"earth",13:"found"}[id];
   main.querySelectorAll("[data-k]").forEach(el=>{
     el.oninput=()=>{
       let v=el.value;
-      if(el.tagName==="SELECT"){ v=isNaN(parseFloat(v))?v:(["method","unit","cond","ctype","temp"].includes(el.dataset.k)?v:parseFloat(v)); }
+      const STR=["method","unit","cond","ctype","temp","preset","iwCond","iwSize","iwTemp","kind","wcond","rod"];
+      if(el.dataset.k==="preset"){
+        S.lux.preset=el.value;
+        const p=DATA.luminaires.find(x=>x.id===el.value);
+        if(p) S.lux.F=p.F;
+        render();
+        return;
+      }
+      if(el.dataset.k==="kind"){
+        S.cable.kind=el.value;
+        const kk=DATA.kindKey[el.value];
+        if(kk&&kk!=="CV"){ const w=DATA.wires[kk]; if(w.conds.indexOf(S.cable.wcond)<0) S.cable.wcond=w.conds[0]; }
+        render();
+        return;
+      }
+      if(el.dataset.k==="Vsel"){
+        const val=el.value;
+        if(val==="その他"){ S[map].Vsel="その他"; }
+        else { S[map].Vsel=parseFloat(val); S[map].V=parseFloat(val); }
+        render();
+        return;
+      }
+      if(el.tagName==="SELECT"){ v=isNaN(parseFloat(v))?v:(STR.includes(el.dataset.k)?v:parseFloat(v)); }
       else { v=parseFloat(String(v).replace(/[，,　\s]/g,"")); }
-      if(["method","unit","cond","ctype","temp"].includes(el.dataset.k)) v=el.value;
+      if(STR.includes(el.dataset.k)) v=el.value;
       S[map][el.dataset.k]=v;
       recalc(id);
     };
@@ -915,7 +1147,18 @@ function bindInputs(id){
   // rows
   main.querySelectorAll("[data-row]").forEach(el=>el.oninput=()=>{
     const k=el.dataset.row, i=+el.dataset.idx, f=el.dataset.f;
-    S[k].rows[i][f]=parseFloat(el.value)||0; recalc(id);
+    S[k].rows[i][f]=parseFloat(el.value)||0;
+    if(f==="od"||f==="k") S[k].rows[i].sel="manual";
+    recalc(id);
+  });
+  main.querySelectorAll("[data-rowsel]").forEach(el=>el.onchange=()=>{
+    const k=el.dataset.rowsel, i=+el.dataset.idx, v=el.value, row=S[k].rows[i];
+    row.sel=v;
+    if(v!=="manual"){
+      const parts=v.split("|"), hit=odLookup(parts[0],parts[1]);
+      if(hit){ row.od=hit.od; if(hit.k!=null) row.k=hit.k; }
+    }
+    render();
   });
   main.querySelectorAll("[data-delrow]").forEach(b=>b.onclick=()=>{
     const k=b.dataset.delrow,i=+b.dataset.idx;
@@ -923,7 +1166,7 @@ function bindInputs(id){
   });
   main.querySelectorAll("[data-addrow]").forEach(b=>b.onclick=()=>{
     const k=b.dataset.addrow;
-    S[k].rows.push(k==="conduit"?{od:5.5,k:1.2,n:1}:{od:27,n:1});render();
+    S[k].rows.push(k==="conduit"?{sel:"manual",od:5.5,k:1.2,n:1}:{sel:"manual",od:27,n:1});render();
   });
 }
 
@@ -942,10 +1185,12 @@ function recalc(id){
   if(id===9) html=resultCap(calcCap(S.cap));
   if(id===10) html=resultShort(calcShort(S.short));
   if(id===11) html=resultEarthB(calcEarthB(S.earthB));
+  if(id===12) html=resultEarth(calcEarth(S.earth));
+  if(id===13) html=resultFound(calcFound(S.found));
   persist();
   slot.innerHTML=html;
   bindHelp();
-  slot.querySelectorAll("details").forEach(()=>{});
+  slot.querySelectorAll("[data-goto]").forEach(b=>b.onclick=()=>{view=parseInt(b.dataset.goto);render();});
 }
 function resultShell(inner,disclose){
   return `<div class="card result"><div class="card-h"><span class="lab">STEP 2</span><span class="t">自動計算 → 結果</span></div>
@@ -975,7 +1220,7 @@ function resultCable(r){
   }
   const p=r.pick;
   const inner=`
-    ${readout(true,p.sz,"sq","推奨ケーブルサイズ")}
+    ${readout(true,String(p.sz).replace("mm",""),String(p.sz).indexOf("mm")>0?"mm":"sq","推奨サイズ")}
     <div class="sub-readout">
       <div class="metric"><div class="v">${f1(p.Iz)}<span style="font-size:10px"> A</span></div><div class="k">補正後許容</div></div>
       <div class="metric"><div class="v">${f1(p.drop)}<span style="font-size:10px"> %</span></div><div class="k">電圧降下</div></div>
@@ -985,9 +1230,9 @@ function resultCable(r){
     <div class="cand-wrap">
       <div class="cap">候補一覧（なぜそのサイズか学べます）${helpBtn("許容電流")}</div>
       <div class="cand">
-        ${r.cands.filter(c=>c.Iz0).slice(0,9).map(c=>`
+        ${r.cands.filter(c=>c.Iz0).slice(0,12).map(c=>`
           <div class="cand-row ${c===p?"pick":""}">
-            <div class="sz">${c.sz}<span class="u"> sq</span></div>
+            <div class="sz">${String(c.sz).indexOf("mm")>0?c.sz:`${c.sz}<span class="u"> sq</span>`}</div>
             <div class="det">許容 ${f1(c.Iz)}A / 降下 ${f1(c.drop)}%</div>
             <div class="jb">
               ${c===p?'<span class="pick-tag">▶採用</span>':""}
@@ -1000,30 +1245,35 @@ function resultCable(r){
   const d=disclose(
     ["I = P×1000 / (√3×V×cosφ)   ※配線方式で係数",
      "Iz = 表許容 × 温度補正 × 多条補正",
-     "drop% = (K×L×I)/(1000×size) / V ×100",
+     "drop% = (K×L×I)/(1000×A) / V ×100",
+     "電線(mm径)は断面積 A=π/4×d² に換算して計算",
      "推奨 = 電流OK かつ 電圧OK の最小サイズ"],
-    "許容電流: JCS 0168-2 (90℃/40℃基準) ／ 電圧降下: 内線規程1310-1",
-    `<p><b>⚠ 注意:</b> 長距離・大電流の幹線は簡易式の降下が約20%小さく出ます。重要回路は基本式で再確認してください。</p>`);
+    "許容電流: JCS 0168-2（CV 90℃/40℃基準）・内線規程1340相当（IV/VV/DV/OW/OE 代表値・30℃基準）／ 電圧降下: 内線規程1310-1",
+    `<p><b>⚠ 注意:</b> 長距離・大電流の幹線は簡易式の降下が約20%小さく出ます。重要回路は基本式で再確認してください。</p>
+     <p><b>注:</b> 地中（直埋・管路）は基底温度25℃・代表的な土壌条件の値で、周囲温度補正は気中・管内のみに適用しています。地中条件（深さ・土壌熱抵抗・離隔）で大きく変わるため最終はカタログ・電力会社基準で確認を。</p>
+     <p><b>注:</b> IV/VV/DV/OW/OE は許容温度60℃（OEは75℃）・周囲30℃基準の代表値で、温度補正は √((Tc−θ)/(Tc−30)) によります。</p>`);
   return resultShell(inner,d);
 }
 
 function resultBreaker(r){
-  if(r.err) return resultShell(emptyR("負荷容量・力率・電圧を入力してください"));
+  if(r.err) return resultShell(emptyR(r.msg||"負荷容量・力率・電圧を入力してください"));
   const inner=`
     ${readout(r.protect,r.rating??"—","A","推奨ブレーカ定格")}
     <div class="sub-readout">
       <div class="metric"><div class="v">${f1(r.I)}<span style="font-size:10px"> A</span></div><div class="k">負荷電流</div></div>
       <div class="metric"><div class="v">${f1(r.Id)}<span style="font-size:10px"> A</span></div><div class="k">設計電流</div></div>
-      <div class="metric"><div class="v">${S.breaker.Iw}<span style="font-size:10px"> A</span></div><div class="k">電線許容</div></div>
+      <div class="metric"><div class="v">${f1(r.Iw)}<span style="font-size:10px"> A</span></div><div class="k">電線許容${r.auto?"(自動)":""}</div></div>
     </div>
     <div class="reason">${r.protect
-      ? `定格 <b>${r.rating}A</b> ≦ 電線許容 <b>${S.breaker.Iw}A</b> → <b>電線を保護できます</b>。原則「負荷 ≦ 定格 ≦ 電線許容」。`
-      : `定格 <b>${r.rating}A</b> ＞ 電線許容 <b>${S.breaker.Iw}A</b> → <b>電線サイズを上げてください</b>。`}</div>`;
+      ? `定格 <b>${r.rating}A</b> ≦ 電線許容 <b>${f1(r.Iw)}A</b> → <b>電線を保護できます</b>。原則「負荷 ≦ 定格 ≦ 電線許容」。`
+      : `定格 <b>${r.rating}A</b> ＞ 電線許容 <b>${f1(r.Iw)}A</b> → <b>電線サイズを上げてください</b>。`}
+      ${r.auto?`（Iw = 表許容 ${r.auto.base}A × 温度補正 ${r.auto.kt} × 減少係数 ${r.auto.k}）`:""}</div>`;
   const d=disclose(
     ["Id = 連続負荷? I×1.25 : I",
      "定格 = 標準定格の中で Id 以上の最小値",
+     "Iw = 表許容 × 温度補正 × 多条補正（自動計算時）",
      "保護判定 = 定格 ≦ 電線許容(Iw)"],
-    "JIS C8201相当（標準定格）／ 内線規程",
+    "JIS C8201相当（標準定格）／ 許容電流: JCS 0168-2 ／ 内線規程",
     `<p><b>注:</b> 電動機は別ルール（始動電流を考慮）。本ツールは一般負荷向けです。</p>`);
   return resultShell(inner,d);
 }
@@ -1070,22 +1320,70 @@ function resultConduit(r){
 
 function resultLux(r){
   if(r.err) return resultShell(emptyR("照度・寸法・光束・U・M を入力してください"));
+  const p=DATA.luminaires.find(x=>x.id===S.lux.preset);
+  let cols=Math.max(1,Math.round(Math.sqrt(r.n*S.lux.X/S.lux.Y)));
+  while(cols*Math.ceil(r.n/cols)<r.n) cols++;
+  const rows=Math.ceil(r.n/cols);
   const inner=`
     ${readout(true,r.n,"台","必要器具数")}
     <div class="sub-readout">
       <div class="metric"><div class="v">${f1(r.real)}<span style="font-size:10px"> lx</span></div><div class="k">実照度</div></div>
       <div class="metric"><div class="v">${(Math.round(r.K*100)/100)}</div><div class="k">室指数 K</div></div>
-      <div class="metric"><div class="v">${(Math.round(r.theo*10)/10)}</div><div class="k">理論台数</div></div>
+      <div class="metric"><div class="v">${rows}×${cols}</div><div class="k">配置(行×列)</div></div>
+      ${p?`<div class="metric"><div class="v">${Math.round(r.n*p.W)}<span style="font-size:10px"> W</span></div><div class="k">消費電力計</div></div>`:""}
     </div>
-    <div class="reason">理論 <b>${(Math.round(r.theo*10)/10)}台</b> を切り上げて <b>${r.n}台</b>。そのとき実照度は <b>${f1(r.real)}lx</b>（必要 ${S.lux.E}lx 以上）。</div>`;
+    <div class="reason">理論 <b>${(Math.round(r.theo*10)/10)}台</b> を切り上げて <b>${r.n}台</b>。実照度は <b>${f1(r.real)}lx</b>（必要 ${S.lux.E}lx 以上）。${p?`採用器具: <b>${esc(p.label)}</b>。`:""}</div>
+    <div class="cand-wrap">
+      <div class="cap">簡易配置図（等間隔配置の例）</div>
+      ${r.n<=400?planSVG(S.lux.X,S.lux.Y,r.n,p?p.icon:"base",cols,rows):`<div class="ref-note">器具数が多いため配置図は省略します。</div>`}
+      <div class="ref-note">ピッチ 約${f1(S.lux.X/cols)}m × ${f1(S.lux.Y/rows)}m（壁際は約1/2ピッチ）。実配置は梁・空調・非常照明との取合いで調整してください。</div>
+    </div>`;
   const d=disclose(
     ["室指数 K = (X×Y) / (H×(X+Y))",
      "理論台数 = (E×X×Y) / (F×U×M)",
      "必要台数 = ceil(理論台数)",
-     "実照度 = (台数×F×U×M) / (X×Y)"],
-    "光束法 ／ JIS Z9110（照度基準）",
-    `<p><b>注:</b> 照明率Uは器具メーカーの照明率表（配光・反射率別）で確定するのが正確です。U/Mの目安は用語集・引き継ぎ書§6.9参照。</p>`);
+     "実照度 = (台数×F×U×M) / (X×Y)",
+     "配置 = 部屋の縦横比に合わせて 行×列 に等間隔割付"],
+    "光束法 ／ JIS Z9110（照度基準）／ 器具光束は代表値",
+    `<p><b>注:</b> 照明率Uは器具メーカーの照明率表（配光・反射率別）で確定するのが正確です。プリセットの光束・消費電力は代表値であり、実際の品番はカタログで確認してください。</p>`);
   return resultShell(inner,d);
+}
+function planSVG(X,Y,n,icon,cols,rows){
+  const sc=Math.min(420/X,320/Y);
+  const W=X*sc,H=Y*sc,pad=34;
+  let items="";
+  for(let idx=0;idx<n;idx++){
+    const rI=Math.floor(idx/cols);
+    const inRow=(rI===rows-1)?(n-cols*(rows-1)):cols;
+    const cI=idx-rI*cols;
+    const off=(cols-inRow)/2;
+    const cx=pad+((cI+off+0.5)*X/cols)*sc;
+    const cy=pad+((rI+0.5)*Y/rows)*sc;
+    if(icon==="down") items+=`<circle cx="${cx}" cy="${cy}" r="${Math.max(3,0.09*sc)}" fill="none" stroke="#b5651d" stroke-width="1.5"/>`;
+    else if(icon==="high") items+=`<circle cx="${cx}" cy="${cy}" r="${Math.max(4,0.2*sc)}" fill="none" stroke="#b5651d" stroke-width="1.5"/><circle cx="${cx}" cy="${cy}" r="1.6" fill="#b5651d"/>`;
+    else{
+      const L=Math.min(1.25*sc,X/cols*sc*0.72), hh=Math.max(3,0.14*sc);
+      items+=`<rect x="${cx-L/2}" y="${cy-hh/2}" width="${L}" height="${hh}" fill="#fbf3ea" stroke="#b5651d" stroke-width="1.4"/>`;
+    }
+  }
+  return `<div class="plan-wrap"><svg viewBox="0 0 ${W+pad*2} ${H+pad*2}" class="plan" role="img" aria-label="照明配置の簡易平面図">
+    <rect x="${pad}" y="${pad}" width="${W}" height="${H}" fill="#fff" stroke="#46566a" stroke-width="2"/>
+    ${items}
+    <text x="${pad+W/2}" y="${pad+H+24}" text-anchor="middle" class="dim">${X} m</text>
+    <text x="${pad-14}" y="${pad+H/2}" text-anchor="middle" class="dim" transform="rotate(-90 ${pad-14} ${pad+H/2})">${Y} m</text>
+  </svg></div>`;
+}
+function lumIcon(t){
+  if(t==="down") return `<svg viewBox="0 0 76 52"><line x1="4" y1="10" x2="72" y2="10" stroke="#46566a" stroke-width="2"/><rect x="30" y="10" width="16" height="7" fill="#e8eef4" stroke="#46566a"/><circle cx="38" cy="30" r="9" fill="#fff7dd" stroke="#b5651d" stroke-width="2"/><path d="M30 44 l16 0 M33 48 l10 0" stroke="#e0b988" stroke-width="1.5"/></svg>`;
+  if(t==="high") return `<svg viewBox="0 0 76 52"><line x1="38" y1="4" x2="38" y2="12" stroke="#46566a" stroke-width="2"/><path d="M22 26 a16 16 0 0 1 32 0 z" fill="#e8eef4" stroke="#46566a" stroke-width="2"/><ellipse cx="38" cy="27.5" rx="12" ry="3.5" fill="#fff7dd" stroke="#b5651d" stroke-width="1.5"/><path d="M28 36 l20 0 M31 41 l14 0 M34 46 l8 0" stroke="#e0b988" stroke-width="1.5"/></svg>`;
+  if(t==="fuji") return `<svg viewBox="0 0 76 52"><line x1="4" y1="10" x2="72" y2="10" stroke="#46566a" stroke-width="2"/><path d="M20 10 l6 12 h24 l6 -12 z" fill="#e8eef4" stroke="#46566a" stroke-width="1.5"/><rect x="26" y="22" width="24" height="5" rx="2.5" fill="#fff7dd" stroke="#b5651d" stroke-width="1.5"/><path d="M26 34 l24 0 M29 39 l18 0" stroke="#e0b988" stroke-width="1.5"/></svg>`;
+  return `<svg viewBox="0 0 76 52"><line x1="4" y1="10" x2="72" y2="10" stroke="#46566a" stroke-width="2"/><rect x="14" y="14" width="48" height="10" rx="2" fill="#e8eef4" stroke="#46566a" stroke-width="1.5"/><rect x="18" y="17" width="40" height="4" rx="2" fill="#fff7dd" stroke="#b5651d" stroke-width="1.5"/><path d="M22 32 l32 0 M26 37 l24 0 M30 42 l16 0" stroke="#e0b988" stroke-width="1.5"/></svg>`;
+}
+function lumCard(p){
+  return `<div class="spec-box lum"><div class="lum-ico">${lumIcon(p.icon)}</div>
+    <div><div class="h">${esc(p.label)}</div>
+    <div>定格光束 <b>${p.F.toLocaleString("ja-JP")}lm</b> ／ 消費電力 約<b>${p.W}W</b></div>
+    <div style="font-size:11px;color:var(--ink-mut)">※代表値です。品番・光束はメーカーカタログで最終確認してください。</div></div></div>`;
 }
 
 function renderPartA(){
@@ -1102,22 +1400,22 @@ function renderPartA(){
 function resultMessenger(r){
   if(r.err) return resultShell(emptyR("たるみ D など Part B を入力してください（D=0は不可）"));
   const inner=`
-    ${readout(r.ok,r.ok?"OK":"NG","","自重張力チェック")}
+    ${readout(r.pick!=null,r.pick?r.pick[0].replace("mm²",""):"—","mm²","推奨ちょう架線サイズ（"+S.messenger.mat+"）")}
     <div class="sub-readout">
       <div class="metric"><div class="v">${f1(r.T)}<span style="font-size:10px"> N</span></div><div class="k">水平張力</div></div>
       <div class="metric"><div class="v">${f1(r.needTb)}<span style="font-size:10px"> kN</span></div><div class="k">必要破断荷重</div></div>
-      <div class="metric"><div class="v">${S.messenger.Tb}<span style="font-size:10px"> kN</span></div><div class="k">使用Tb</div></div>
+      <div class="metric"><div class="v">${r.pick?r.pick[1]:"—"}<span style="font-size:10px"> kN</span></div><div class="k">採用線のTb</div></div>
     </div>
-    <div class="reason">${r.ok
-      ? `破断荷重 <b>${S.messenger.Tb}kN</b> ≧ 必要 <b>${f1(r.needTb)}kN</b> → 自重に対し<b>OK</b>。`
-      : `破断荷重 <b>${S.messenger.Tb}kN</b> ＜ 必要 <b>${f1(r.needTb)}kN</b> → <b>より太いちょう架線へ</b>。`}</div>`;
+    <div class="reason">${r.pick
+      ? `破断荷重 <b>${r.pick[1]}kN</b>（${S.messenger.mat} ${r.pick[0]}）≧ 必要 <b>${f1(r.needTb)}kN</b> → 自重に対し<b>OK</b>。PART Aの法令最小仕様と比べて<b>大きい方</b>を採用してください。`
+      : `必要破断荷重 <b>${f1(r.needTb)}kN</b> が標準サイズの範囲を超えています。<b>径間を短く</b>するか<b>たるみを大きく</b>してください。`}</div>`;
   const d=disclose(
     ["w = wc × 9.8  （自重のみ）",
      "T = w×S² / (8×D)",
      "必要破断荷重 = T×SF / 1000",
-     "判定 = 使用Tb ≧ 必要破断荷重"],
-    "電技解釈 ／ 内線規程（最小仕様）／ 破断荷重は参考値",
-    `<p><b>⚠ 注意:</b> この張力式は自重のみの簡易式です。実際は氷雪・風圧・温度を加味し、電技解釈の安全率を満たすこと。破断荷重はカタログ値で確認を。</p>`);
+     "推奨 = 破断荷重 ≧ 必要 となる最小の標準サイズ（材質別）"],
+    "電技解釈 ／ 内線規程（最小仕様）／ 破断荷重は材質別の代表値",
+    `<p><b>⚠ 注意:</b> この張力式は自重のみの簡易式です。実際は氷雪・風圧・温度を加味し、電技解釈の安全率を満たすこと。アルミ覆鋼・亜鉛めっき鋼とも破断荷重は<b>メーカーカタログ値</b>で最終確認してください。</p>`);
   return resultShell(inner,d);
 }
 
@@ -1223,6 +1521,112 @@ function resultEarthB(r){
     "電技解釈17条（B種接地工事）／ Ig計算式: 中性点非接地式高圧電路（6.6kV配電系）",
     `<p><b>⚠ 注意:</b> 実際のB種接地抵抗値は<b>電力会社が指定する1線地絡電流値</b>で決まります。必ず所轄の電力会社に照会してください。V=300/600Vの適用には混触時に低圧電路を自動遮断する装置の施設が条件です。</p>`);
   return resultShell(inner,d);
+}
+
+function resultEarth(r){
+  if(r.b){
+    return resultShell(`<div class="readout empty"><div class="big">⑪へ</div><div class="cap">B種は変圧器の1線地絡電流から計算します</div></div>
+      <div style="padding:0 16px 16px"><button class="btn primary" data-goto="11">⑪ B種接地抵抗（簡易）を開く</button></div>`);
+  }
+  const inner=`
+    ${readout(true,r.R,"Ω","接地抵抗の上限（この値以下にする）")}
+    <div class="sub-readout">
+      <div class="metric" style="min-width:150px"><div class="v" style="font-size:12.5px">${r.wireFixed?r.wireFixed:"銅 "+r.wire+" 以上"}</div><div class="k">接地線の最小太さ</div></div>
+      <div class="metric"><div class="v">${Math.round(r.R1)}<span style="font-size:10px"> Ω</span></div><div class="k">接地棒1本の概算</div></div>
+      <div class="metric"><div class="v">${r.n}<span style="font-size:10px"> 本</span></div><div class="k">概算本数</div></div>
+    </div>
+    <div class="reason"><b>${S.earth.cls}接地工事</b>: ${r.use}。${S.earth.cls!=="A種"
+      ? (S.earth.cut==="0.5秒以内"
+        ? "0.5秒以内に動作する漏電遮断器があるため、上限は<b>500Ω</b>に緩和されています。"
+        : "0.5秒以内動作の漏電遮断器を施設すれば<b>500Ω</b>まで緩和できます。")
+      : "接地線・抵抗値とも法令固定値です。"}
+      接地棒 φ14×${r.Lr}m（ρ=${r.rho}Ω·m）は1本あたり約 <b>${Math.round(r.R1)}Ω</b> → <b>約${r.n}本</b>で目標達成の見込み。${r.n>10?"本数が多いため<b>接地抵抗低減剤・連結深打ち・メッシュ接地</b>の検討を。":""}</div>
+    <div class="cand-wrap">
+      <div class="cap">接地極の簡易平面図（概算 ${r.n}本）</div>
+      ${rodsSVG(r.n,r.Lr)}
+      <div class="ref-note">接地棒は<b>間隔2m以上</b>で並列接続。実際は接地抵抗計で測定しながら本数を調整します。</div>
+    </div>`;
+  const d=disclose(
+    ["A種: 10Ω以下（高圧・特別高圧機器）",
+     "C種: 10Ω以下（300V超の低圧）→ 0.5秒以内遮断で500Ω",
+     "D種: 100Ω以下（300V以下）→ 0.5秒以内遮断で500Ω",
+     "接地線太さ = 回路のブレーカ定格から表引き（C/D種）",
+     "接地棒1本 R1 = ρ/(2πL) × ln(4L/d)　(d=φ14mm)",
+     "概算本数 n = ceil(1.2 × R1 / 目標R)　※集合係数1.2・間隔2m以上"],
+    "電技解釈17・29条 ／ 内線規程1350-3 ／ 接地棒: 理論式による概算",
+    `<p><b>注:</b> 大地抵抗率は場所・深さ・季節で大きく変わります。実測（Wenner法等）が確実です。接地極の施工・測定は別途。B種は⑪、避雷設備の接地はJIS A4201によります。</p>`);
+  return resultShell(inner,d);
+}
+function rodsSVG(n,Lr){
+  const m=Math.min(n,8), gap=56, pad=34;
+  const w=pad*2+gap*(m-1)+40;
+  let items="";
+  for(let i0=0;i0<m;i0++){
+    const x=pad+i0*gap;
+    items+=`<line x1="${x-8}" y1="30" x2="${x+8}" y2="30" stroke="#46566a" stroke-width="2"/>
+      <line x1="${x}" y1="30" x2="${x}" y2="62" stroke="#b5651d" stroke-width="3.5"/>
+      <path d="M${x-4} 62 L${x+4} 62 L${x} 70 z" fill="#b5651d"/>`;
+  }
+  return `<div class="plan-wrap"><svg viewBox="0 0 ${w} 100" class="plan" role="img" aria-label="接地棒の配置図">
+    <line x1="${pad-16}" y1="30" x2="${pad+gap*(m-1)+16}" y2="30" stroke="#46566a" stroke-width="2"/>
+    <text x="${pad-16}" y="20" class="dim">接地線 → 盤・機器へ</text>
+    ${items}
+    <line x1="6" y1="44" x2="${w-6}" y2="44" stroke="#9aa6b2" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="${w-8}" y="56" text-anchor="end" class="dim">GL-0.75m以深に埋設</text>
+    ${m>1?`<text x="${pad+gap/2}" y="88" text-anchor="middle" class="dim">間隔2m以上</text>`:""}
+    ${n>m?`<text x="${w-8}" y="88" text-anchor="end" class="dim">…計${n}本</text>`:""}
+  </svg></div>`;
+}
+
+function resultFound(r){
+  if(r.err) return resultShell(emptyR("盤の寸法・質量・基礎高さを入力してください"));
+  const ok=r.okA;
+  const inner=`
+    ${readout(ok,r.TkN===0?"OK":(r.pick?r.pick[0]:"—"),"",r.TkN===0?"アンカー引抜きは発生しません":"推奨アンカーボルト（引抜き "+f1(r.TkN)+"kN/本）")}
+    <div class="sub-readout">
+      <div class="metric" style="min-width:130px"><div class="v" style="font-size:13px">${r.FW}×${r.FD}×${r.FH}</div><div class="k">基礎寸法 mm</div></div>
+      <div class="metric"><div class="v">${Math.round(r.Wf)}<span style="font-size:10px"> kg</span></div><div class="k">基礎重量</div></div>
+      <div class="metric"><div class="v">${r.okT?"OK":"NG"}</div><div class="k">置き基礎の転倒</div></div>
+    </div>
+    <div class="reason">
+      アンカー固定時: 1本あたり引抜き <b>${f1(r.TkN)}kN</b>${r.TkN===0?"（自重で打ち消し）":` → <b>${r.pick?r.pick[0]:"M20超・個別検討"}</b>`}。
+      置き基礎（固定なし）の場合: 安定 <b>${f1(r.Ms)}N·m</b> ${r.okT?"≧":"＜"} 転倒 <b>${f1(r.Mo)}N·m</b>${r.okT?" → 転倒しません。":" → <b>転倒NG</b>。出代・基礎高さを増やすか、床スラブへのアンカー固定としてください。"}
+    </div>
+    <div class="cand-wrap">
+      <div class="cap">基礎平面図（簡易）</div>
+      ${foundSVG(r)}
+      <div class="ref-note">実線: 基礎 ${r.FW}×${r.FD}mm ／ 破線: 盤 ${S.found.W}×${S.found.D}mm ／ ⊕: アンカーボルト ${S.found.nb}本（盤外形−100mmの目安位置）</div>
+    </div>`;
+  const d=disclose(
+    ["基礎寸法 = 盤寸法 + 出代×2（高さは入力値）／ 基礎重量 = 体積×2.3t/m³",
+     "転倒モーメント Mo = KH × 盤質量 × g × 重心高さ（H/2+基礎高さ）",
+     "安定モーメント Ms = (盤+基礎質量) × g × 基礎奥行/2",
+     "引抜力 T = (KH×W×g×H/2 − W×g×D/2) / (スパン(D−100mm) × 引張側本数)",
+     "推奨アンカー = 短期許容引張（M10:5.8 / M12:8.4 / M16:15.7 / M20:24.5 kN）"],
+    "建築設備耐震設計・施工指針の簡易法（重心=H/2仮定・鉛直震度無視）",
+    `<p><b>⚠ 注意:</b> 概算用の簡易法です。設計水平震度は地域・設置階・機器重要度で異なります（一般1.0、重要機器1.5、屋上等は割増し）。アンカーの埋込み長・コーン破壊・せん断、基礎配筋は構造担当と個別に検討してください。</p>`);
+  return resultShell(inner,d);
+}
+function foundSVG(r){
+  const f=S.found;
+  const sc=Math.min(250/r.FW,220/r.FD), pad=42;
+  const FW=r.FW*sc, FD=r.FD*sc, W=f.W*sc, D=f.D*sc;
+  const ox=pad, oy=pad;
+  const px=ox+(FW-W)/2, py=oy+(FD-D)/2;
+  const bw=Math.max(20,(f.W-100)*sc), bd=Math.max(20,(f.D-100)*sc);
+  const bx=ox+(FW-bw)/2, by=oy+(FD-bd)/2;
+  let pts=[[bx,by],[bx+bw,by],[bx,by+bd],[bx+bw,by+bd]];
+  if(f.nb>=6) pts.push([bx+bw/2,by],[bx+bw/2,by+bd]);
+  if(f.nb>=8) pts=[[bx,by],[bx+bw/2,by],[bx+bw,by],[bx,by+bd],[bx+bw/2,by+bd],[bx+bw,by+bd],[bx,by+bd/2],[bx+bw,by+bd/2]];
+  const bolts=pts.slice(0,f.nb).map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="none" stroke="#b5651d" stroke-width="1.6"/><line x1="${p[0]-7}" y1="${p[1]}" x2="${p[0]+7}" y2="${p[1]}" stroke="#b5651d" stroke-width="1.4"/><line x1="${p[0]}" y1="${p[1]-7}" x2="${p[0]}" y2="${p[1]+7}" stroke="#b5651d" stroke-width="1.4"/>`).join("");
+  return `<div class="plan-wrap"><svg viewBox="0 0 ${FW+pad*2} ${FD+pad*2+8}" class="plan" role="img" aria-label="盤基礎の平面図">
+    <rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="#fff" stroke="#46566a" stroke-width="2.5"/>
+    <rect x="${px}" y="${py}" width="${W}" height="${D}" fill="none" stroke="#9aa6b2" stroke-width="1.5" stroke-dasharray="6 4"/>
+    ${bolts}
+    <text x="${ox+FW/2}" y="${oy+FD+26}" text-anchor="middle" class="dim">${r.FW} mm</text>
+    <text x="${ox-18}" y="${oy+FD/2}" text-anchor="middle" class="dim" transform="rotate(-90 ${ox-18} ${oy+FD/2})">${r.FD} mm</text>
+    <text x="${px+W/2}" y="${py+D/2+4}" text-anchor="middle" class="dim">盤</text>
+  </svg></div>`;
 }
 
 /* header buttons */
