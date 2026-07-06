@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>電力設計 13大計算ツール</title>
+<title>電力設計 15大計算ツール</title>
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#16202a">
@@ -324,7 +324,7 @@ footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--i
       <div class="brand">
         <div class="mark"></div>
         <div>
-          <h1>電力設計 13大計算ツール</h1>
+          <h1>電力設計 15大計算ツール</h1>
           <small>初心者向け・概算検討 ＆ 学習用</small>
         </div>
       </div>
@@ -349,7 +349,7 @@ footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--i
 
   <footer>
     <div><b>このツールについて</b>　入力は最小限、判定は OK/NG/○ を色＋記号＋文言で即表示、専門用語はインライン解説、根拠データは1か所に集約。すべての結果に式・採用根拠・出典を併記しています。</div>
-    <div class="srcs">出典: JCS 0168-2 ／ 内線規程1310-1・3110・3110-8・3165 ／ JIS C8201相当 ／ JIS Z9110(光束法) ／ 電技解釈・内線規程 ／ JIS A5372 ／ JIS C4304・C4306 ／ JIS C4902 ／ %インピーダンス法 ／ 内線規程1350 ／ 建築設備耐震設計・施工指針(簡易)</div>
+    <div class="srcs">出典: JCS 0168-2 ／ 内線規程1310-1・3110・3110-8・3165 ／ JIS C8201相当 ／ JIS Z9110(光束法) ／ 電技解釈・内線規程 ／ JIS A5372 ／ JIS C4304・C4306 ／ JIS C4902 ／ %インピーダンス法 ／ 内線規程1350 ／ 建築設備耐震設計・施工指針(簡易) ／ あと施工アンカー設計指針(簡易) ／ 電技解釈61条(支線)</div>
   </footer>
 </div>
 
@@ -443,6 +443,10 @@ const DATA = {
     sizes:["1.6mm-2C","2.0mm-2C","2.6mm-2C","1.6mm-3C","2.0mm-3C","2.6mm-3C"],
     a:[6.2,6.6,7.8,6.2,6.6,7.8],
     b:[9.6,10.4,12.4,13.4,14.6,17.0]
+  },
+  anchorCalc:{
+    "M8":{A:36.6,le:40},"M10":{A:58.0,le:40},"M12":{A:84.3,le:50},
+    "M16":{A:157,le:60},"M20":{A:245,le:80}
   },
   luminaires:[
     {id:"pid40w69",label:"Panasonic iDシリーズ 40形 6900lm（LEDベースライト）",F:6900,W:40,icon:"base"},
@@ -540,7 +544,11 @@ const GLOSSARY=[
   ["電線とケーブル","①","絶縁被覆だけのものが電線（IV・OW・OE・DVなど）、絶縁体の上に保護シースを持つものがケーブル（CV・VVなど）。布設できる場所が異なる。"],
   ["大地抵抗率 ρ","⑫","土の電気の流れにくさ[Ω·m]。粘土質は低く（〜150）、砂・砂利・岩盤は高い（500〜）。接地抵抗を大きく左右する。"],
   ["接地棒","⑫","地中に打ち込む棒状の接地極（例: φ14×1.5m）。1本で足りないときは2m以上離して並列に増やすか、連結して深く打つ。"],
-  ["基礎の形式","⑬","ベタ=全面コンクリート、ボイド=中央を抜いた枠状（配線孔・軽量化）、ゲタ=2条の帯状基礎。重量と配線ルートが変わる。"]
+  ["基礎の形式","⑬","ベタ=全面コンクリート、ボイド=中央を抜いた枠状（配線孔・軽量化）、ゲタ=2条の帯状基礎。重量と配線ルートが変わる。"],
+  ["あと施工アンカー","⑭","硬化したコンクリートに後から打ち込むアンカー。金属拡張式（打込み・締付け式）と接着系（ケミカルアンカー）がある。"],
+  ["コーン状破壊","⑭","アンカーを引き抜くときコンクリートが円すい状に欠け飛ぶ壊れ方。埋込みが浅いほど起きやすく、許容引張荷重を決めることが多い。"],
+  ["支線","⑮","柱が電線張力で倒れないように斜めに張るワイヤ。張力の水平分力を支える。安全率は原則2.5以上（電技解釈61条）。"],
+  ["根開き","⑮","支線が地面に達する点と柱の距離。大きいほど支線が寝て（角度が浅く）張力が小さくなる。取付高さの1/2以上が目安。"]
 ];
 
 const TOOLS=[
@@ -556,9 +564,11 @@ const TOOLS=[
   {id:10,t:"短絡電流（%Z法）",sub:"変圧器%Zから短絡電流を概算",src:"%インピーダンス法"},
   {id:11,t:"B種接地抵抗（簡易）",sub:"1線地絡電流→接地抵抗の上限値",src:"電技解釈17条"},
   {id:12,t:"接地工事（A〜D種）",sub:"種別→抵抗値の上限＋接地線の太さ",src:"電技解釈17・29条 / 内線規程1350"},
-  {id:13,t:"盤基礎（耐震簡易）",sub:"配電盤・変圧器盤の基礎寸法と転倒・アンカー",src:"建築設備耐震設計 簡易法"}
+  {id:13,t:"盤基礎（耐震簡易）",sub:"配電盤・変圧器盤の基礎寸法と転倒・アンカー",src:"建築設備耐震設計 簡易法"},
+  {id:14,t:"アンカー耐荷重",sub:"あと施工アンカーの許容引張・せん断と判定",src:"あと施工アンカー設計指針(簡易)"},
+  {id:15,t:"支線の張力・サイズ",sub:"電線張力→支線張力と必要より線サイズ",src:"電技解釈61条(安全率2.5)"}
 ];
-const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬"];
+const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮"];
 
 /* =========================================================================
    計算ロジック（§5）— UIから分離した純関数。判定理由も返す。
@@ -767,6 +777,39 @@ function calcFound(i){
   const okA=TkN===0||pick!=null;
   return {FW,FD,FH,Wf,Mo,Ms,okT,TkN,pick,okA,ratio:Mo>0?Ms/Mo:null};
 }
+function calcAncr(i){
+  const d=DATA.anchorCalc[i.dia];
+  if(!d||!i.le||i.le<=0||!i.fc) return {err:true};
+  const dn=parseFloat(String(i.dia).replace("M",""));
+  const A=d.A;
+  const Na1=235*A/1000;                                   // 鋼材（短期）kN
+  const Ac=Math.PI*i.le*(i.le+dn);                        // コーン有効投影面積
+  const Na2=0.23*Math.sqrt(i.fc)*Ac/1000;                 // コーン状破壊 kN
+  const Na3=(i.typ==="接着系")?10*Math.sqrt(i.fc/21)*Math.PI*dn*i.le/1000:null; // 付着 kN
+  const list=[["鋼材",Na1],["コーン",Na2]];
+  if(Na3!=null) list.push(["付着",Na3]);
+  const gov=list.reduce((m,x)=>x[1]<m[1]?x:m);
+  const Na=gov[1];
+  const Ec=20500*Math.sqrt(i.fc/21);
+  const Qa1=0.7*235*A/1000;                               // せん断: 鋼材
+  const Qa2=0.4*Math.sqrt(Ec*i.fc)*A/1000;                // せん断: 支圧
+  const qgov=Qa1<=Qa2?["鋼材",Qa1]:["支圧",Qa2];
+  const Qa=qgov[1];
+  const Nd=i.Nd||0, Qd=i.Qd||0;
+  const ratio=(Na>0?Nd/Na:0)+(Qa>0?Qd/Qa:0);
+  const ok=ratio<=1.0;
+  return {Na1,Na2,Na3,Na,gov:gov[0],Qa1,Qa2,Qa,qgov:qgov[0],Nd,Qd,ratio,ok};
+}
+function calcGuy(i){
+  if(!i.P||i.P<=0||!i.h1||!i.h2||!i.L) return {err:true};
+  const sin=i.L/Math.sqrt(i.L*i.L+i.h2*i.h2);
+  const Ts=i.P*i.h1/(i.h2*sin);           // 支線張力 kN
+  const need=Ts*i.SF;                      // 必要引張強さ kN
+  const list=DATA.messenger[i.mat]||DATA.messenger["亜鉛めっき鋼より線（ST）"];
+  const pick=list.find(e=>e[1]>=need)||null;
+  const deg=Math.round(Math.atan(i.L/i.h2)*180/Math.PI);
+  return {sin,deg,Ts,need,pick};
+}
 
 /* =========================================================================
    状態（§6 サンプル相当の初期値 → §10 受入れ値を再現）
@@ -785,7 +828,9 @@ const S={
   short:{method:"三相",kva:300,z:4,V:210,Vsel:210,icu:10},
   earthB:{mode:"直接入力",Ig:5,kv:6.6,L:0,Lc:0.5,cut:"なし"},
   earth:{cls:"D種",cut:"なし",brk:100,rho:300,rod:"1.5m（1本）"},
-  found:{W:800,D:600,H:1900,M:300,KH:1.0,margin:100,FH:150,nb:4,ftype:"ベタ"}
+  found:{W:800,D:600,H:1900,M:300,KH:1.0,margin:100,FH:150,nb:4,ftype:"ベタ"},
+  ancr:{typ:"金属拡張",dia:"M12",le:50,fc:21,Nd:1.9,Qd:1.0},
+  guy:{P:5,h1:8,h2:8,L:4,SF:2.5,mat:"亜鉛めっき鋼より線（ST）"}
 };
 
 /* 入力値の保存・復元（localStorage）: モバイル/PCそれぞれで前回値を保持 */
@@ -835,7 +880,7 @@ function bindHelp(){
 function renderHome(){
   main.innerHTML=`
    <div class="hero">
-     <div class="eyebrow">13 calculation tools</div>
+     <div class="eyebrow">15 calculation tools</div>
      <h2>どの計算をしますか？</h2>
      <p>使いたい計算をひとつ選んでください。各ツールは「STEP1 入力 → STEP2 自動計算」で結果が出ます。</p>
    </div>
@@ -1080,7 +1125,31 @@ function inputCard(id){
         ${field("基礎の出代（片側）",numIn("margin",c.found.margin,10),"mm")}
         ${field("基礎高さ",numIn("FH",c.found.FH,10),"mm")}
         ${field("アンカー本数",selIn("nb",[4,6,8],c.found.nb),"本",("アンカーボルト"))}
-      </div>`
+      </div>`,
+    14:()=>`
+      <div class="field"><label>アンカーの種類${helpBtn("あと施工アンカー")}</label>${seg("typ",["金属拡張","接着系"],c.ancr.typ)}</div>
+      <div class="two">
+        ${field("呼び径",selIn("dia",Object.keys(DATA.anchorCalc),c.ancr.dia),"",("アンカーボルト"))}
+        ${field("有効埋込み長 le",numIn("le",c.ancr.le,5),"mm",("コーン状破壊"))}
+      </div>
+      <div class="two">
+        ${field("コンクリート強度 Fc",selIn("fc",[18,21,24,30],c.ancr.fc),"N/mm²")}
+        ${field("引張荷重 Nd（1本あたり）",numIn("Nd",c.ancr.Nd,0.1),"kN")}
+      </div>
+      ${field("せん断荷重 Qd（1本あたり）",numIn("Qd",c.ancr.Qd,0.1),"kN")}
+      <div class="ref-note" style="margin-top:-4px">引張荷重には<b>⑬盤基礎の「引抜き kN/本」</b>をそのまま入れられます。せん断の目安 = KH×盤質量×9.8 ÷ 本数 ÷1000 [kN]。呼び径を変えると埋込み長の目安が自動で入ります。</div>`,
+    15:()=>`
+      ${field("電線の水平張力 P（引張り合計）",numIn("P",c.guy.P,0.1),"kN",("支線"))}
+      <div class="two">
+        ${field("電線の取付高さ h1",numIn("h1",c.guy.h1,0.1),"m")}
+        ${field("支線の取付高さ h2",numIn("h2",c.guy.h2,0.1),"m")}
+      </div>
+      <div class="two">
+        ${field("根開き L",numIn("L",c.guy.L,0.1),"m",("根開き"))}
+        ${field("安全率 SF",numIn("SF",c.guy.SF,0.1),"",("安全率 SF"))}
+      </div>
+      <div class="field"><label>支線の材質</label>${seg("mat",["亜鉛めっき鋼より線（ST）","アルミ覆鋼より線（AC）"],c.guy.mat)}</div>
+      <div class="ref-note" style="margin-top:-4px">安全率は電技解釈61条により原則<b>2.5以上</b>（一時的な支線は1.5）。根開きLは取付高さの<b>1/2以上</b>が目安です。</div>`
   }[id];
   return `<div class="card"><div class="card-h"><span class="lab">STEP 1</span><span class="t">入力</span></div><div class="card-b" id="inputBody">${body()}</div></div>`;
 }
@@ -1198,7 +1267,7 @@ function wcOpts(cur){
 
 /* ---- bind input events ---- */
 function bindInputs(id){
-  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB",12:"earth",13:"found"}[id];
+  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB",12:"earth",13:"found",14:"ancr",15:"guy"}[id];
   main.querySelectorAll("[data-k]").forEach(el=>{
     el.oninput=()=>{
       let v=el.value;
@@ -1265,6 +1334,12 @@ function bindInputs(id){
         render();
         return;
       }
+      if(el.dataset.k==="dia"){
+        S.ancr.dia=el.value;
+        if(DATA.anchorCalc[el.value]) S.ancr.le=DATA.anchorCalc[el.value].le;
+        render();
+        return;
+      }
       if(el.tagName==="SELECT"){ v=isNaN(parseFloat(v))?v:(STR.includes(el.dataset.k)?v:parseFloat(v)); }
       else { v=parseFloat(String(v).replace(/[，,　\s]/g,"")); }
       if(STR.includes(el.dataset.k)) v=el.value;
@@ -1325,6 +1400,8 @@ function recalc(id){
   if(id===11) html=resultEarthB(calcEarthB(S.earthB));
   if(id===12) html=resultEarth(calcEarth(S.earth));
   if(id===13) html=resultFound(calcFound(S.found));
+  if(id===14) html=resultAncr(calcAncr(S.ancr));
+  if(id===15) html=resultGuy(calcGuy(S.guy));
   persist();
   slot.innerHTML=html;
   bindHelp();
@@ -1729,6 +1806,7 @@ function resultFound(r){
     <div class="reason">
       アンカー固定時: 1本あたり引抜き <b>${f1(r.TkN)}kN</b>${r.TkN===0?"（自重で打ち消し）":` → <b>${r.pick?r.pick[0]:"M20超・個別検討"}</b>`}。
       置き基礎（固定なし）の場合: 安定 <b>${f1(r.Ms)}N·m</b> ${r.okT?"≧":"＜"} 転倒 <b>${f1(r.Mo)}N·m</b>${r.okT?" → 転倒しません。":" → <b>転倒NG</b>。出代・基礎高さを増やすか、床スラブへのアンカー固定としてください。"}
+      <div style="margin-top:9px"><button class="btn" data-goto="14">⑭ アンカー耐荷重でくわしく検算 →</button></div>
     </div>
     <div class="cand-wrap">
       <div class="cap">基礎平面図・側面図（簡易・形式: ${S.found.ftype}）</div>
@@ -1811,6 +1889,77 @@ function sideSVG(r){
     <text x="${ox+FW+22}" y="${gl+4}" class="dim">FL</text>
     <text x="${ox+FW/2}" y="${gl+22}" text-anchor="middle" class="dim">${r.FW} mm</text>
     <text x="${ox-8}" y="${fTop+FH/2+3}" text-anchor="end" class="dim">${r.FH}</text>
+  </svg></div>`;
+}
+
+function resultAncr(r){
+  if(r.err) return resultShell(emptyR("呼び径・埋込み長・コンクリート強度を確認してください"));
+  const inner=`
+    ${readout(r.ok,Math.round(r.ratio*100),"%","組合せ判定（引張比＋せん断比 ≦ 100%でOK）")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.Na)}<span style="font-size:10px"> kN</span></div><div class="k">許容引張(${r.gov})</div></div>
+      <div class="metric"><div class="v">${f1(r.Qa)}<span style="font-size:10px"> kN</span></div><div class="k">許容せん断(${r.qgov})</div></div>
+      <div class="metric"><div class="v">${f1(r.Nd)}/${f1(r.Qd)}<span style="font-size:10px"> kN</span></div><div class="k">作用 引張/せん断</div></div>
+    </div>
+    <div class="reason">
+      許容引張 Na = <b>${f1(r.Na)}kN</b>（鋼材 ${f1(r.Na1)} ／ コーン状破壊 ${f1(r.Na2)}${r.Na3!=null?` ／ 付着 ${f1(r.Na3)}`:""} の最小 → <b>${r.gov}が支配</b>）、
+      許容せん断 Qa = <b>${f1(r.Qa)}kN</b>。
+      判定: ${f1(r.Nd)}/${f1(r.Na)} + ${f1(r.Qd)}/${f1(r.Qa)} = <b>${Math.round(r.ratio*100)}%</b> → ${r.ok?"<b>OK</b>":"<b>NG</b>。1ランク太いアンカー・埋込みを深く・本数を増やす等を検討してください"}。
+    </div>`;
+  const d=disclose(
+    ["鋼材: Na1 = 235 × ネジ有効断面積 A",
+     "コーン状破壊: Na2 = 0.23×√Fc × π×le×(le+d)",
+     "付着（接着系のみ）: Na3 = 10×√(Fc/21) × π×d×le",
+     "許容引張 Na = 上記の最小値",
+     "許容せん断 Qa = min( 0.7×235×A ,  0.4×√(Ec×Fc)×A )",
+     "判定: Nd/Na + Qd/Qa ≦ 1.0"],
+    "あと施工アンカー設計指針（短期許容・簡易式）／ 鋼材SS400級",
+    `<p><b>⚠ 注意:</b> へりあき（縁端距離）・アンカー間隔（群効果）・上向き施工・ひび割れコンクリートでは大きく低減されます。実施工は<b>メーカーの認定（評定）値</b>と施工要領で必ず確認してください。</p>`);
+  return resultShell(inner,d);
+}
+
+function resultGuy(r){
+  if(r.err) return resultShell(emptyR("張力・高さ・根開きを入力してください"));
+  const inner=`
+    ${readout(r.pick!=null,r.pick?r.pick[0].replace("mm²",""):"—","mm²","推奨支線サイズ（"+S.guy.mat+"）")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.Ts)}<span style="font-size:10px"> kN</span></div><div class="k">支線張力</div></div>
+      <div class="metric"><div class="v">${f1(r.need)}<span style="font-size:10px"> kN</span></div><div class="k">必要引張強さ(×SF)</div></div>
+      <div class="metric"><div class="v">${r.deg}<span style="font-size:10px"> °</span></div><div class="k">支線角度(柱から)</div></div>
+    </div>
+    <div class="reason">${r.pick
+      ? `支線張力 <b>${f1(r.Ts)}kN</b> × 安全率${S.guy.SF} = 必要 <b>${f1(r.need)}kN</b> ≦ ${r.pick[0]}（引張強さ ${r.pick[1]}kN）→ <b>OK</b>。素線はφ2.6mm以上×3条以上のより線とすること。`
+      : `必要引張強さ <b>${f1(r.need)}kN</b> が標準サイズを超えています。<b>根開きを大きく</b>する・支線を2条にする・支柱の併用を検討してください。`}</div>
+    <div class="cand-wrap">
+      <div class="cap">支線の配置イメージ</div>
+      ${guySVG(S.guy)}
+      <div class="ref-note">支線には玉がいし（低圧線をまたぐ場合等）、地際の支線棒・アンカーブロックが必要です。詳細は電技解釈61・62条によります。</div>
+    </div>`;
+  const d=disclose(
+    ["sinθ = L / √(L² + h2²)",
+     "支線張力 Ts = P × h1 / (h2 × sinθ)",
+     "必要引張強さ = Ts × 安全率SF（原則2.5以上）",
+     "推奨 = 引張強さ ≧ 必要 となる最小の標準サイズ（材質別）"],
+    "電技解釈61条（支線の安全率2.5・素線φ2.6mm×3条以上）／ 引張強さは材質別の代表値",
+    `<p><b>⚠ 注意:</b> 複数方向の電線張力・風圧・不平衡張力は別途合成してPに入れてください。支線アンカー（地中部）の引抜き抵抗、支線棒のサイズはメーカー資料・土質により選定を。</p>`);
+  return resultShell(inner,d);
+}
+function guySVG(g){
+  const H=Math.max(g.h1,g.h2), sc=Math.min(150/H,150/Math.max(1,g.L));
+  const pad=40, poleX=pad+20, gl=pad+H*sc;
+  const gx=poleX+g.L*sc;
+  const y1=gl-g.h1*sc, y2=gl-g.h2*sc;
+  return `<div class="plan-wrap"><svg viewBox="0 0 ${gx+pad+40} ${gl+pad}" class="plan" role="img" aria-label="支線の配置図">
+    <line x1="${poleX-30}" y1="${gl}" x2="${gx+34}" y2="${gl}" stroke="#46566a" stroke-width="2.5"/>
+    <rect x="${poleX-3.5}" y="${pad-8}" width="7" height="${gl-pad+8}" fill="#e8eef4" stroke="#46566a" stroke-width="1.8"/>
+    <line x1="${poleX-34}" y1="${y1}" x2="${poleX}" y2="${y1}" stroke="#b5651d" stroke-width="2.5"/>
+    <path d="M${poleX-34} ${y1} l8 -4 v8 z" fill="#b5651d"/>
+    <text x="${poleX-38}" y="${y1-6}" text-anchor="start" class="dim">←電線張力P (h1=${g.h1}m)</text>
+    <line x1="${poleX}" y1="${y2}" x2="${gx}" y2="${gl}" stroke="#b5651d" stroke-width="2.5" stroke-dasharray="7 4"/>
+    <text x="${(poleX+gx)/2+8}" y="${(y2+gl)/2-6}" class="dim">支線</text>
+    <text x="${(poleX+gx)/2}" y="${gl+18}" text-anchor="middle" class="dim">L=${g.L}m</text>
+    <text x="${poleX+8}" y="${y2+2}" class="dim">h2=${g.h2}m</text>
+    <path d="M${gx-3} ${gl} l-5 -8 h10 z" fill="#46566a"/>
   </svg></div>`;
 }
 
