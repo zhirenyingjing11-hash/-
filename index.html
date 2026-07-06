@@ -778,27 +778,35 @@ function calcFound(i){
   return {FW,FD,FH,Wf,Mo,Ms,okT,TkN,pick,okA,ratio:Mo>0?Ms/Mo:null};
 }
 function calcAncr(i){
-  const d=DATA.anchorCalc[i.dia];
-  if(!d||!i.le||i.le<=0||!i.fc) return {err:true};
-  const dn=parseFloat(String(i.dia).replace("M",""));
-  const A=d.A;
-  const Na1=235*A/1000;                                   // 鋼材（短期）kN
-  const Ac=Math.PI*i.le*(i.le+dn);                        // コーン有効投影面積
-  const Na2=0.23*Math.sqrt(i.fc)*Ac/1000;                 // コーン状破壊 kN
-  const Na3=(i.typ==="接着系")?10*Math.sqrt(i.fc/21)*Math.PI*dn*i.le/1000:null; // 付着 kN
-  const list=[["鋼材",Na1],["コーン",Na2]];
-  if(Na3!=null) list.push(["付着",Na3]);
-  const gov=list.reduce((m,x)=>x[1]<m[1]?x:m);
-  const Na=gov[1];
+  if(!i.fc) return {err:true};
+  let Nd,Qd;
+  if(i.lmode==="機器の重さから自動"){
+    if(!i.M||i.M<=0||!i.H||!i.D) return {err:true};
+    const g=9.8, Lb=Math.max(0.05,(i.D-100)/1000), nt=Math.max(1,i.nb/2);
+    Nd=Math.max(0,(i.KH*i.M*g*(i.H/2000)-i.M*g*(i.D/2000))/(Lb*nt))/1000; // 引張 kN/本
+    Qd=i.KH*i.M*g/i.nb/1000;                                              // せん断 kN/本
+  }else{
+    Nd=i.Nd||0; Qd=i.Qd||0;
+  }
   const Ec=20500*Math.sqrt(i.fc/21);
-  const Qa1=0.7*235*A/1000;                               // せん断: 鋼材
-  const Qa2=0.4*Math.sqrt(Ec*i.fc)*A/1000;                // せん断: 支圧
-  const qgov=Qa1<=Qa2?["鋼材",Qa1]:["支圧",Qa2];
-  const Qa=qgov[1];
-  const Nd=i.Nd||0, Qd=i.Qd||0;
-  const ratio=(Na>0?Nd/Na:0)+(Qa>0?Qd/Qa:0);
-  const ok=ratio<=1.0;
-  return {Na1,Na2,Na3,Na,gov:gov[0],Qa1,Qa2,Qa,qgov:qgov[0],Nd,Qd,ratio,ok};
+  const cands=Object.keys(DATA.anchorCalc).map(dia=>{
+    const d=DATA.anchorCalc[dia];
+    const le=(i.leMode==="手入力"&&i.le>0)?i.le:d.le;
+    const dn=parseFloat(dia.replace("M",""));
+    const A=d.A;
+    const Na1=235*A/1000;
+    const Na2=0.23*Math.sqrt(i.fc)*Math.PI*le*(le+dn)/1000;
+    const Na3=(i.typ==="接着系")?10*Math.sqrt(i.fc/21)*Math.PI*dn*le/1000:null;
+    const list=[["鋼材",Na1],["コーン",Na2]];
+    if(Na3!=null) list.push(["付着",Na3]);
+    const gov=list.reduce((m,x)=>x[1]<m[1]?x:m);
+    const Na=gov[1];
+    const Qa=Math.min(0.7*235*A/1000, 0.4*Math.sqrt(Ec*i.fc)*A/1000);
+    const ratio=(Na>0?Nd/Na:9)+(Qa>0?Qd/Qa:9);
+    return {dia,le,Na,gov:gov[0],Qa,ratio,ok:ratio<=1.0};
+  });
+  const pick=cands.find(x=>x.ok)||null;
+  return {Nd,Qd,cands,pick,auto:i.lmode==="機器の重さから自動"};
 }
 function calcGuy(i){
   if(!i.P||i.P<=0||!i.h1||!i.h2||!i.L) return {err:true};
@@ -829,7 +837,7 @@ const S={
   earthB:{mode:"直接入力",Ig:5,kv:6.6,L:0,Lc:0.5,cut:"なし"},
   earth:{cls:"D種",cut:"なし",brk:100,rho:300,rod:"1.5m（1本）"},
   found:{W:800,D:600,H:1900,M:300,KH:1.0,margin:100,FH:150,nb:4,ftype:"ベタ"},
-  ancr:{typ:"金属拡張",dia:"M12",le:50,fc:21,Nd:1.9,Qd:1.0},
+  ancr:{typ:"金属拡張",lmode:"機器の重さから自動",M:300,H:1900,D:600,KH:1.0,nb:4,leMode:"目安を使う（自動）",le:50,fc:21,Nd:1.9,Qd:1.0},
   guy:{P:5,h1:8,h2:8,L:4,SF:2.5,mat:"亜鉛めっき鋼より線（ST）"}
 };
 
@@ -1128,16 +1136,33 @@ function inputCard(id){
       </div>`,
     14:()=>`
       <div class="field"><label>アンカーの種類${helpBtn("あと施工アンカー")}</label>${seg("typ",["金属拡張","接着系"],c.ancr.typ)}</div>
-      <div class="two">
-        ${field("呼び径",selIn("dia",Object.keys(DATA.anchorCalc),c.ancr.dia),"",("アンカーボルト"))}
-        ${field("有効埋込み長 le",numIn("le",c.ancr.le,5),"mm",("コーン状破壊"))}
+      <div class="field"><label>コンクリート強度 Fc（用途の目安から選択）${helpBtn("コーン状破壊")}<span class="unit-tag">N/mm²</span></label>
+        <select data-k="fc">
+          <option value="18" ${c.ancr.fc==18?"selected":""}>18 — 古い建物・強度不明で低めに見る場合</option>
+          <option value="21" ${c.ancr.fc==21?"selected":""}>21 — 一般的な床・基礎（迷ったらこれ）</option>
+          <option value="24" ${c.ancr.fc==24?"selected":""}>24 — 比較的新しい構造体</option>
+          <option value="30" ${c.ancr.fc==30?"selected":""}>30 — 高強度コンクリート</option>
+        </select></div>
+      <div class="field"><label>荷重の求め方</label>${seg("lmode",["機器の重さから自動","直接入力"],c.ancr.lmode)}</div>
+      ${c.ancr.lmode==="機器の重さから自動"?`
+      <div class="three">
+        ${field("機器の質量",numIn("M",c.ancr.M,10),"kg")}
+        ${field("高さ H",numIn("H",c.ancr.H,10),"mm")}
+        ${field("奥行 D",numIn("D",c.ancr.D,10),"mm")}
       </div>
       <div class="two">
-        ${field("コンクリート強度 Fc",selIn("fc",[18,21,24,30],c.ancr.fc),"N/mm²")}
+        ${field("設計水平震度 KH",selIn("KH",[0.6,1.0,1.5,2.0],c.ancr.KH),"",("設計水平震度 KH"))}
+        ${field("アンカー本数",selIn("nb",[4,6,8],c.ancr.nb),"本",("アンカーボルト"))}
+      </div>`:`
+      <div class="two">
         ${field("引張荷重 Nd（1本あたり）",numIn("Nd",c.ancr.Nd,0.1),"kN")}
-      </div>
-      ${field("せん断荷重 Qd（1本あたり）",numIn("Qd",c.ancr.Qd,0.1),"kN")}
-      <div class="ref-note" style="margin-top:-4px">引張荷重には<b>⑬盤基礎の「引抜き kN/本」</b>をそのまま入れられます。せん断の目安 = KH×盤質量×9.8 ÷ 本数 ÷1000 [kN]。呼び径を変えると埋込み長の目安が自動で入ります。</div>`,
+        ${field("せん断荷重 Qd（1本あたり）",numIn("Qd",c.ancr.Qd,0.1),"kN")}
+      </div>`}
+      <div class="field"><label>有効埋込み長 le${helpBtn("コーン状破壊")}</label>${seg("leMode",["目安を使う（自動）","手入力"],c.ancr.leMode)}</div>
+      ${c.ancr.leMode==="手入力"
+        ? field("有効埋込み長 le（全サイズ共通で判定）",numIn("le",c.ancr.le,5),"mm")
+        : `<div class="ref-note" style="margin-top:-4px">埋込み長の目安（カタログ標準）: M8=40 / M10=40 / M12=50 / M16=60 / M20=80 mm をサイズごとに自動適用します。</div>`}
+      <div class="ref-note">「機器の重さから自動」は⑬盤基礎と同じ簡易式（重心=H/2・ボルトスパン=D−100mm）で1本あたりの引張・せん断を自動算出します。</div>`,
     15:()=>`
       ${field("電線の水平張力 P（引張り合計）",numIn("P",c.guy.P,0.1),"kN",("支線"))}
       <div class="two">
@@ -1893,26 +1918,40 @@ function sideSVG(r){
 }
 
 function resultAncr(r){
-  if(r.err) return resultShell(emptyR("呼び径・埋込み長・コンクリート強度を確認してください"));
+  if(r.err) return resultShell(emptyR("コンクリート強度と、機器の質量・寸法（または荷重）を入力してください"));
+  const p=r.pick;
   const inner=`
-    ${readout(r.ok,Math.round(r.ratio*100),"%","組合せ判定（引張比＋せん断比 ≦ 100%でOK）")}
+    ${readout(p!=null,p?p.dia:"—","",p?`推奨アンカー（組合せ判定 ${Math.round(p.ratio*100)}% ≦100%）`:"適合サイズなし")}
     <div class="sub-readout">
-      <div class="metric"><div class="v">${f1(r.Na)}<span style="font-size:10px"> kN</span></div><div class="k">許容引張(${r.gov})</div></div>
-      <div class="metric"><div class="v">${f1(r.Qa)}<span style="font-size:10px"> kN</span></div><div class="k">許容せん断(${r.qgov})</div></div>
-      <div class="metric"><div class="v">${f1(r.Nd)}/${f1(r.Qd)}<span style="font-size:10px"> kN</span></div><div class="k">作用 引張/せん断</div></div>
+      <div class="metric"><div class="v">${f1(r.Nd)}<span style="font-size:10px"> kN</span></div><div class="k">引張/本${r.auto?"（自動）":""}</div></div>
+      <div class="metric"><div class="v">${f1(r.Qd)}<span style="font-size:10px"> kN</span></div><div class="k">せん断/本${r.auto?"（自動）":""}</div></div>
+      ${p?`<div class="metric"><div class="v">${f1(p.Na)}<span style="font-size:10px"> kN</span></div><div class="k">許容引張(${p.gov})</div></div>`:""}
     </div>
-    <div class="reason">
-      許容引張 Na = <b>${f1(r.Na)}kN</b>（鋼材 ${f1(r.Na1)} ／ コーン状破壊 ${f1(r.Na2)}${r.Na3!=null?` ／ 付着 ${f1(r.Na3)}`:""} の最小 → <b>${r.gov}が支配</b>）、
-      許容せん断 Qa = <b>${f1(r.Qa)}kN</b>。
-      判定: ${f1(r.Nd)}/${f1(r.Na)} + ${f1(r.Qd)}/${f1(r.Qa)} = <b>${Math.round(r.ratio*100)}%</b> → ${r.ok?"<b>OK</b>":"<b>NG</b>。1ランク太いアンカー・埋込みを深く・本数を増やす等を検討してください"}。
+    <div class="reason">${r.auto?`機器の重さから 引張 <b>${f1(r.Nd)}kN/本</b>・せん断 <b>${f1(r.Qd)}kN/本</b> を自動算出。`:""}${p
+      ? `<b>${p.dia}</b>（埋込み${p.le}mm）で判定 <b>${Math.round(p.ratio*100)}%</b> ≦ 100% → 両方の荷重に耐える<b>最小サイズ</b>です。`
+      : `M20でも判定100%を超えます。<b>本数を増やす・埋込みを深くする・接着系にする</b>等を検討してください。`}</div>
+    <div class="cand-wrap">
+      <div class="cap">サイズ別の判定（なぜそのサイズか学べます）${helpBtn("コーン状破壊")}</div>
+      <div class="cand">
+        ${r.cands.map(x=>`
+          <div class="cand-row ${p&&x.dia===p.dia?"pick":""}">
+            <div class="sz">${x.dia}</div>
+            <div class="det">埋込${x.le}mm / 許容 引張${f1(x.Na)}kN(${x.gov})・せん断${f1(x.Qa)}kN</div>
+            <div class="jb">
+              ${p&&x.dia===p.dia?'<span class="pick-tag">▶採用</span>':""}
+              <span class="pill ${x.ok?"y":"n"}">${Math.round(x.ratio*100)}% ${x.ok?"○":"×"}</span>
+            </div>
+          </div>`).join("")}
+      </div>
     </div>`;
   const d=disclose(
-    ["鋼材: Na1 = 235 × ネジ有効断面積 A",
+    ["（自動時）引張 Nd = (KH×W×g×H/2 − W×g×D/2) / (スパン(D−100)×引張側本数)",
+     "（自動時）せん断 Qd = KH×W×g ÷ 本数",
+     "鋼材: Na1 = 235 × ネジ有効断面積 A",
      "コーン状破壊: Na2 = 0.23×√Fc × π×le×(le+d)",
      "付着（接着系のみ）: Na3 = 10×√(Fc/21) × π×d×le",
-     "許容引張 Na = 上記の最小値",
-     "許容せん断 Qa = min( 0.7×235×A ,  0.4×√(Ec×Fc)×A )",
-     "判定: Nd/Na + Qd/Qa ≦ 1.0"],
+     "許容引張 Na = 上記の最小値 ／ 許容せん断 Qa = min(0.7×235×A, 0.4×√(Ec×Fc)×A)",
+     "判定: Nd/Na + Qd/Qa ≦ 1.0 を満たす最小サイズを推奨"],
     "あと施工アンカー設計指針（短期許容・簡易式）／ 鋼材SS400級",
     `<p><b>⚠ 注意:</b> へりあき（縁端距離）・アンカー間隔（群効果）・上向き施工・ひび割れコンクリートでは大きく低減されます。実施工は<b>メーカーの認定（評定）値</b>と施工要領で必ず確認してください。</p>`);
   return resultShell(inner,d);
