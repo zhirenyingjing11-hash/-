@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>電力設計 15大計算ツール</title>
+<title>電力設計 16大計算ツール</title>
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#16202a">
@@ -328,7 +328,7 @@ textarea:focus{border-color:var(--copper);box-shadow:0 0 0 3px rgba(181,101,29,.
       <div class="brand">
         <div class="mark"></div>
         <div>
-          <h1>電力設計 15大計算ツール</h1>
+          <h1>電力設計 16大計算ツール</h1>
           <small>初心者向け・概算検討 ＆ 学習用</small>
         </div>
       </div>
@@ -402,19 +402,19 @@ const DATA = {
   breaker:[15,20,30,40,50,60,75,100,125,150,175,200,225,250,300,350,400,500,600,800],
   rackW:[100,150,200,300,400,500,600,800,1000,1200],
   conduit:[
-    {type:"厚鋼G",nom:16,id:15.9},{type:"厚鋼G",nom:22,id:21.0},{type:"厚鋼G",nom:28,id:26.9},
-    {type:"厚鋼G",nom:36,id:35.1},{type:"厚鋼G",nom:42,id:40.9},{type:"厚鋼G",nom:54,id:53.2},
-    {type:"厚鋼G",nom:70,id:67.9},{type:"厚鋼G",nom:82,id:79.8},{type:"厚鋼G",nom:92,id:89.8},{type:"厚鋼G",nom:104,id:101.6},
-    {type:"薄鋼C",nom:19,id:16.9},{type:"薄鋼C",nom:25,id:23.0},{type:"薄鋼C",nom:31,id:29.2},
-    {type:"薄鋼C",nom:39,id:37.4},{type:"薄鋼C",nom:51,id:49.0},{type:"薄鋼C",nom:63,id:61.1},{type:"薄鋼C",nom:75,id:73.2},
+    {type:"厚鋼G",nom:16,id:16.4},{type:"厚鋼G",nom:22,id:21.9},{type:"厚鋼G",nom:28,id:28.3},
+    {type:"厚鋼G",nom:36,id:36.9},{type:"厚鋼G",nom:42,id:42.8},{type:"厚鋼G",nom:54,id:54.0},
+    {type:"厚鋼G",nom:70,id:69.6},{type:"厚鋼G",nom:82,id:82.3},{type:"厚鋼G",nom:92,id:93.7},{type:"厚鋼G",nom:104,id:106.4},
+    {type:"薄鋼C",nom:19,id:15.9},{type:"薄鋼C",nom:25,id:22.2},{type:"薄鋼C",nom:31,id:28.6},
+    {type:"薄鋼C",nom:39,id:34.9},{type:"薄鋼C",nom:51,id:47.6},{type:"薄鋼C",nom:63,id:59.5},{type:"薄鋼C",nom:75,id:72.2},
     {type:"PF",nom:16,id:16.0},{type:"PF",nom:22,id:22.0},{type:"PF",nom:28,id:28.0},{type:"PF",nom:36,id:36.0},{type:"PF",nom:42,id:42.0},
     {type:"CD",nom:16,id:16.0},{type:"CD",nom:22,id:22.0},{type:"CD",nom:28,id:28.0},{type:"CD",nom:36,id:36.0},{type:"CD",nom:42,id:42.0}
   ],
   ivWire:[
-    {size:"1.6mm",od:3.0,k:2.0},{size:"2.0mm",od:3.3,k:2.0},{size:"2.6mm",od:4.0,k:1.2},{size:"3.2mm",od:4.6,k:1.2},
-    {size:"5.5sq",od:4.5,k:1.2},{size:"8sq",od:5.3,k:1.2},{size:"14sq",od:6.6,k:1.0},{size:"22sq",od:8.2,k:1.0},
-    {size:"38sq",od:10.5,k:1.0},{size:"60sq",od:13.0,k:1.0},{size:"100sq",od:16.5,k:1.0},{size:"150sq",od:19.5,k:1.0},
-    {size:"200sq",od:22.0,k:1.0},{size:"250sq",od:24.5,k:1.0}
+    {size:"1.6mm",od:3.2,k:2.0},{size:"2.0mm",od:3.6,k:2.0},{size:"2.6mm",od:4.2,k:1.2},{size:"3.2mm",od:5.0,k:1.2},
+    {size:"5.5sq",od:5.0,k:1.2},{size:"8sq",od:6.0,k:1.2},{size:"14sq",od:7.6,k:1.0},{size:"22sq",od:9.2,k:1.0},
+    {size:"38sq",od:11.4,k:1.0},{size:"60sq",od:14.0,k:1.0},{size:"100sq",od:17.8,k:1.0},{size:"150sq",od:21.3,k:1.0},
+    {size:"200sq",od:23.8,k:1.0},{size:"250sq",od:26.7,k:1.0}
   ],
   trough:[
     {name:"70",w:70,d:65},{name:"120",w:120,d:115},{name:"150",w:150,d:145},
@@ -482,10 +482,10 @@ const DATA = {
   wires:{
     VV:{Tc:60,conds:["2心（気中）","3心（気中）","2心（管・管路内）","3心（管・管路内）"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22","38","60","100","150","200","250","325"],
       rows:{"1.6mm":[19,17,15,14],"2.0mm":[24,21,19,17],"2.6mm":[33,29,26,23],"3.2mm":[43,38,34,30],
-        "5.5":[49,43,39,34],"8":[61,52,49,42],"14":[88,75,70,60],"22":[115,98,92,78],"38":[162,138,130,110],
-        "60":[178,155,142,124],"100":[240,210,192,168],"150":[310,270,248,216],"200":[365,320,292,256],"250":[415,365,332,292],"325":[480,420,384,336]}},
-    IV:{Tc:60,conds:["がいし引き・気中"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22","38","60","100","150","200","250","325"],
-      rows:{"1.6mm":[27],"2.0mm":[35],"2.6mm":[48],"3.2mm":[62],"5.5":[49],"8":[61],"14":[88],"22":[115],"38":[162],"60":[217],"100":[298],"150":[395],"200":[469],"250":[556],"325":[650]}},
+        "5.5":[34,30,27,24],"8":[42,38,34,30],"14":[61,55,49,44],"22":[80,72,64,57],"38":[113,102,90,81],
+        "60":[152,136,121,108],"100":[208,187,166,149],"150":[276,248,221,197],"200":[328,295,262,234],"250":[389,350,311,278],"325":[455,409,364,325]}},
+    IV:{Tc:60,conds:["がいし引き・気中","管・管路内（同管3本以下）","管・管路内（同管4本）","管・管路内（同管5〜6本）"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22","38","60","100","150","200","250","325"],
+      rows:{"1.6mm":[27,19,17,15],"2.0mm":[35,24,22,19],"2.6mm":[48,33,30,27],"3.2mm":[62,43,39,34],"5.5":[49,34,31,27],"8":[61,42,38,34],"14":[88,61,55,49],"22":[115,80,72,64],"38":[162,113,102,90],"60":[217,152,136,121],"100":[298,208,187,166],"150":[395,276,248,221],"200":[469,328,295,262],"250":[556,389,350,311],"325":[650,455,409,364]}},
     DV:{Tc:60,conds:["2心","3心"],sizes:["2.0mm","2.6mm","3.2mm"],
       rows:{"2.0mm":[33,29],"2.6mm":[44,39],"3.2mm":[57,51]}},
     OW:{Tc:60,conds:["屋外・がいし引き"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","4.0mm","5.0mm"],
@@ -555,7 +555,12 @@ const GLOSSARY=[
   ["あと施工アンカー","⑭","硬化したコンクリートに後から打ち込むアンカー。金属拡張式（打込み・締付け式）と接着系（ケミカルアンカー）がある。"],
   ["コーン状破壊","⑭","アンカーを引き抜くときコンクリートが円すい状に欠け飛ぶ壊れ方。埋込みが浅いほど起きやすく、許容引張荷重を決めることが多い。"],
   ["支線","⑮","柱が電線張力で倒れないように斜めに張るワイヤ。張力の水平分力を支える。安全率は原則2.5以上（電技解釈61条）。"],
-  ["根開き","⑮","支線が地面に達する点と柱の距離。大きいほど支線が寝て（角度が浅く）張力が小さくなる。取付高さの1/2以上が目安。"]
+  ["根開き","⑮","支線が地面に達する点と柱の距離。大きいほど支線が寝て（角度が浅く）張力が小さくなる。取付高さの1/2以上が目安。"],
+  ["従量電灯","⑯","家庭など低圧の電灯契約。使用量に応じて3段階の単価（第1〜3段階）で電力量料金を計算する。"],
+  ["契約電力（デマンド）","⑯","高圧では過去12か月の30分最大需要電力（デマンド値）で契約電力が決まる実量制が一般的。基本料金に直結する。"],
+  ["力率割引・割増","⑯","高圧の基本料金は力率85%を基準に、1%上回るごとに1%割引・下回ると割増。式は 基本料金×(185−力率)/100。"],
+  ["燃料費調整額","⑯","燃料価格の変動を毎月の電気料金に反映する調整額。単価×使用量で、プラスにもマイナスにもなる。検針票で確認できる。"],
+  ["再エネ賦課金","⑯","再エネ特措法に基づき全需要家が使用量に応じて負担する賦課金。2026年度は4.18円/kWh（毎年5月に単価改定）。"]
 ];
 
 const TOOLS=[
@@ -573,9 +578,10 @@ const TOOLS=[
   {id:12,t:"接地工事（A〜D種）",sub:"種別→抵抗値の上限＋接地線の太さ",src:"電技解釈17・29条 / 内線規程1350"},
   {id:13,t:"盤基礎（耐震簡易）",sub:"配電盤・変圧器盤の基礎寸法と転倒・アンカー",src:"建築設備耐震設計 簡易法"},
   {id:14,t:"アンカー耐荷重",sub:"あと施工アンカーの許容引張・せん断と判定",src:"あと施工アンカー設計指針(簡易)"},
-  {id:15,t:"支線の張力・サイズ",sub:"電線張力→支線張力と必要より線サイズ",src:"電技解釈61条(安全率2.5)"}
+  {id:15,t:"支線の張力・サイズ",sub:"電線張力→支線張力と必要より線サイズ",src:"電技解釈61条(安全率2.5)"},
+  {id:16,t:"電気料金の概算",sub:"契約種別・使用量→月額料金の内訳（力率割引対応）",src:"各社供給約款 / 再エネ特措法"}
 ];
-const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮"];
+const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯"];
 
 /* =========================================================================
    計算ロジック（§5）— UIから分離した純関数。判定理由も返す。
@@ -815,6 +821,29 @@ function calcAncr(i){
   const pick=cands.find(x=>x.ok)||null;
   return {Nd,Qd,cands,pick,auto:i.lmode==="機器の重さから自動"};
 }
+function calcRate(i){
+  const kwh=i.useMode==="負荷から計算"?(i.loadKw||0)*(i.hpd||0)*(i.days||0):i.kwh;
+  if(!isFinite(kwh)||kwh<0) return {err:true};
+  let base=0,energy=0,tiers=null,pfk=null,eunit=null;
+  if(i.plan==="従量電灯（電灯・家庭）"){
+    if(!i.amp||!i.baseA) return {err:true};
+    base=i.amp/10*i.baseA;
+    const k1=Math.min(kwh,120),k2=Math.min(Math.max(kwh-120,0),180),k3=Math.max(kwh-300,0);
+    tiers=[["第1段（〜120kWh）",k1,i.t1],["第2段（120〜300）",k2,i.t2],["第3段（300超）",k3,i.t3]];
+    energy=k1*i.t1+k2*i.t2+k3*i.t3;
+  }else if(i.plan==="低圧電力（動力）"){
+    if(!i.kw||i.kw<=0) return {err:true};
+    base=i.kw*i.lbase; eunit=i.lunit; energy=kwh*i.lunit;
+  }else{
+    if(!i.kw||i.kw<=0) return {err:true};
+    const pf=Math.min(100,Math.max(60,i.pf||85));
+    pfk=Math.round((185-pf))/100;
+    base=i.kw*i.hbase*pfk; eunit=i.hunit; energy=kwh*i.hunit;
+  }
+  const fuel=kwh*(i.fuel||0), sai=kwh*(i.saiene||0);
+  const total=base+energy+fuel+sai;
+  return {kwh,base,energy,tiers,eunit,pfk,fuel,sai,total,perKwh:kwh>0?total/kwh:null};
+}
 function calcGuy(i){
   if(!i.P||i.P<=0||!i.h1||!i.h2||!i.L) return {err:true};
   const sin=i.L/Math.sqrt(i.L*i.L+i.h2*i.h2);
@@ -834,7 +863,7 @@ const S={
   cable:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,Vsel:200,L:40,temp:"40",k:1.0,cond:"気中 CV3心1条(三相)",kind:"CV（架橋ポリエチレン 90℃）",wcond:"2心（気中）",vmax:2},
   breaker:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,Vsel:200,cont:false,Iw:100,iwMode:"自動計算",iwKind:"CV（架橋ポリエチレン 90℃）",iwWcond:"2心（気中）",iwSize:"14",iwCond:"気中 CV3心1条(三相)",iwTemp:"40",iwK:1.0},
   rack:{rows:[{od:42,n:4}],spare:20,fill:0.6,tiers:1},
-  conduit:{ctype:"厚鋼G",fill:0.32,rows:[{od:6.6,k:1.0,n:5}]},
+  conduit:{ctype:"厚鋼G",fill:0.32,rows:[{od:7.6,k:1.0,n:5}]},
   lux:{E:500,X:7,Y:8,H:2.5,F:2800,U:0.7,M:0.8,preset:"custom",upre:"手入力",mpre:"手入力"},
   messenger:{volt:"低圧",mat:"アルミ覆鋼より線（AC）",wc:1.2,wcsel:"手入力",S:30,D:0.5,Dpre:"手入力",SF:2.5},
   trough:{rows:[{od:38,n:3}],fill:"上限なし",clr:0},
@@ -845,7 +874,10 @@ const S={
   earth:{cls:"D種",cut:"なし",brk:100,rho:300,rod:"1.5m（1本）"},
   found:{W:800,D:600,H:1900,M:300,KH:1.0,margin:100,FH:150,nb:4,ftype:"ベタ"},
   ancr:{typ:"金属拡張",lmode:"機器の重さから自動",M:300,H:1900,D:600,KH:1.0,nb:4,leMode:"目安を使う（自動）",le:50,fc:21,Nd:1.9,Qd:1.0},
-  guy:{P:5,h1:8,h2:8,L:4,SF:2.5,mat:"亜鉛めっき鋼より線（ST）"}
+  guy:{P:5,h1:8,h2:8,L:4,SF:2.5,mat:"亜鉛めっき鋼より線（ST）"},
+  rate:{plan:"従量電灯（電灯・家庭）",amp:40,baseA:311.75,t1:29.80,t2:36.40,t3:40.49,
+        kw:50,pf:95,hbase:1989.00,hunit:20.00,lbase:1122.00,lunit:26.50,
+        useMode:"使用量を直接入力",kwh:400,loadKw:1.5,hpd:8,days:25,fuel:0.00,saiene:4.18}
 };
 
 /* 入力値の保存・復元（localStorage）: モバイル/PCそれぞれで前回値を保持 */
@@ -970,6 +1002,8 @@ const KB=[
    "入力値はこの端末のブラウザ内に自動保存されます（サーバーには送信されません）。ヘッダーの↺ボタンですべて初期値に戻せます。"],
   [["印刷","PDF","提出","出力"],"印刷・PDF出力",
    "各ツールの「🖨 印刷/PDF」ボタンで、入力・結果・式・出典・免責を含めて印刷できます。スマホでは印刷画面から「PDFとして保存」も選べます。"],
+  [["料金","電気代","電気料金","燃調","燃料費","賦課金","再エネ","デマンド","力率割引"],"電気料金の概算（⑯）",
+   "⑯で契約種別（従量電灯／低圧電力／高圧）と使用量から月額を概算できます。単価は編集できるので検針票に合わせてください。高圧の基本料金は力率85%基準で×(185−力率)/100。再エネ賦課金は2026年度4.18円/kWh、燃料費調整は毎月変動します。"],
   [["AI","APIキー","api","キー","設定","claude","gemini","無料"],"AI回答の使い方・設定（無料あり）",
    "AI相談ページ下部の「⚙ AI設定」でAPIキーを登録すると、内蔵ガイドにない質問にもAIが回答します。おすすめは Google Gemini（aistudio.google.com でGoogleアカウントだけで無料発行・クレカ不要）。Anthropic Claude（console.anthropic.com・従量課金）も選べます。キーはこの端末内にのみ保存されます。"],
   [["正確","精度","信頼","責任","本当","合って"],"データの正確性について",
@@ -1376,7 +1410,49 @@ function inputCard(id){
         ${field("安全率 SF",numIn("SF",c.guy.SF,0.1),"",("安全率 SF"))}
       </div>
       <div class="field"><label>支線の材質</label>${seg("mat",["亜鉛めっき鋼より線（ST）","アルミ覆鋼より線（AC）"],c.guy.mat)}</div>
-      <div class="ref-note" style="margin-top:-4px">安全率は電技解釈61条により原則<b>2.5以上</b>（一時的な支線は1.5）。根開きLは取付高さの<b>1/2以上</b>が目安です。</div>`
+      <div class="ref-note" style="margin-top:-4px">安全率は電技解釈61条により原則<b>2.5以上</b>（一時的な支線は1.5）。根開きLは取付高さの<b>1/2以上</b>が目安です。</div>`,
+    16:()=>{
+      const r=c.rate;
+      return `
+      ${field("契約種別",selIn("plan",["従量電灯（電灯・家庭）","低圧電力（動力）","高圧（業務用など）"],r.plan),"",("従量電灯"))}
+      ${r.plan==="従量電灯（電灯・家庭）"?`
+      <div class="two">
+        ${field("契約アンペア",selIn("amp",[10,15,20,30,40,50,60],r.amp),"A")}
+        ${field("基本料金単価（10Aあたり）",numIn("baseA",r.baseA,0.01),"円")}
+      </div>
+      <div class="three">
+        ${field("〜120kWh",numIn("t1",r.t1,0.01),"円/kWh")}
+        ${field("120〜300",numIn("t2",r.t2,0.01),"円/kWh")}
+        ${field("300超",numIn("t3",r.t3,0.01),"円/kWh")}
+      </div>`
+      :r.plan==="低圧電力（動力）"?`
+      <div class="two">
+        ${field("契約電力",numIn("kw",r.kw,0.5),"kW",("契約電力（デマンド）"))}
+        ${field("基本料金単価",numIn("lbase",r.lbase,0.01),"円/kW")}
+      </div>
+      ${field("電力量料金単価",numIn("lunit",r.lunit,0.01),"円/kWh")}`
+      :`
+      <div class="two">
+        ${field("契約電力",numIn("kw",r.kw,1),"kW",("契約電力（デマンド）"))}
+        ${field("力率",numIn("pf",r.pf,1),"%",("力率割引・割増"))}
+      </div>
+      <div class="two">
+        ${field("基本料金単価",numIn("hbase",r.hbase,0.01),"円/kW")}
+        ${field("電力量料金単価",numIn("hunit",r.hunit,0.01),"円/kWh")}
+      </div>`}
+      <div class="field"><label>月間使用量の求め方</label>${seg("useMode",["使用量を直接入力","負荷から計算"],r.useMode)}</div>
+      ${r.useMode==="負荷から計算"?`
+      <div class="three">
+        ${field("平均負荷",numIn("loadKw",r.loadKw,0.1),"kW")}
+        ${field("使用時間",numIn("hpd",r.hpd,0.5),"h/日")}
+        ${field("日数",numIn("days",r.days,1),"日/月")}
+      </div>`
+      :field("月間使用量",numIn("kwh",r.kwh,1),"kWh")}
+      <div class="two">
+        ${field("燃料費調整単価（±）",numIn("fuel",r.fuel,0.01),"円/kWh",("燃料費調整額"))}
+        ${field("再エネ賦課金単価",numIn("saiene",r.saiene,0.01),"円/kWh",("再エネ賦課金"))}
+      </div>
+      <div class="ref-note" style="margin-top:-4px">単価の初期値は<b>東京電力EPの例（2026年時点・税込）</b>です。実際の契約の単価（検針票・料金表）に書き換えてください。再エネ賦課金は<b>2026年度 4.18円/kWh</b>（毎年5月改定）。燃料費調整は毎月変動し、マイナスのこともあります。</div>`;}
   }[id];
   return `<div class="card"><div class="card-h"><span class="lab">STEP 1</span><span class="t">入力</span></div><div class="card-b" id="inputBody">${body()}</div></div>`;
 }
@@ -1494,7 +1570,7 @@ function wcOpts(cur){
 
 /* ---- bind input events ---- */
 function bindInputs(id){
-  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB",12:"earth",13:"found",14:"ancr",15:"guy"}[id];
+  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB",12:"earth",13:"found",14:"ancr",15:"guy",16:"rate"}[id];
   main.querySelectorAll("[data-k]").forEach(el=>{
     el.oninput=()=>{
       let v=el.value;
@@ -1503,6 +1579,11 @@ function bindInputs(id){
         S.lux.preset=el.value;
         const p=DATA.luminaires.find(x=>x.id===el.value);
         if(p) S.lux.F=p.F;
+        render();
+        return;
+      }
+      if(el.dataset.k==="plan"){
+        S.rate.plan=el.value;
         render();
         return;
       }
@@ -1629,6 +1710,7 @@ function recalc(id){
   if(id===13) html=resultFound(calcFound(S.found));
   if(id===14) html=resultAncr(calcAncr(S.ancr));
   if(id===15) html=resultGuy(calcGuy(S.guy));
+  if(id===16) html=resultRate(calcRate(S.rate));
   persist();
   slot.innerHTML=html;
   bindHelp();
@@ -1693,7 +1775,7 @@ function resultCable(r){
     "許容電流: JCS 0168-2（CV 90℃/40℃基準）・内線規程1340相当（IV/VV/DV/OW/OE 代表値・30℃基準）／ 電圧降下: 内線規程1310-1",
     `<p><b>⚠ 注意:</b> 長距離・大電流の幹線は簡易式の降下が約20%小さく出ます。重要回路は基本式で再確認してください。</p>
      <p><b>注:</b> 地中（直埋・管路）は基底温度25℃・代表的な土壌条件の値で、周囲温度補正は気中・管内のみに適用しています。地中条件（深さ・土壌熱抵抗・離隔）で大きく変わるため最終はカタログ・電力会社基準で確認を。</p>
-     <p><b>注:</b> IV/VV/DV/OW/OE は許容温度60℃（OEは75℃）・周囲30℃基準の代表値で、温度補正は √((Tc−θ)/(Tc−30)) によります。VVの「管・管路内」は気中の約0.8掛けの代表値です。</p>`);
+     <p><b>注:</b> IV/VV/DV/OW/OE は許容温度60℃（OEは75℃）・周囲30℃基準の代表値で、温度補正は √((Tc−θ)/(Tc−30)) によります。VV・IVの管内・心数別の値は電技解釈146条の電流減少係数（3本以下0.70・4本0.63・5〜6本0.56、VV管内はさらに×0.8）を掛けた安全側の値です。</p>`);
   return resultShell(inner,d);
 }
 
@@ -2202,6 +2284,40 @@ function guySVG(g){
     <text x="${poleX+8}" y="${y2+2}" class="dim">h2=${g.h2}m</text>
     <path d="M${gx-3} ${gl} l-5 -8 h10 z" fill="#46566a"/>
   </svg></div>`;
+}
+function yen(x){return Math.round(x).toLocaleString("ja-JP");}
+function resultRate(r){
+  if(r.err) return resultShell(emptyR("契約・単価・使用量を入力してください"));
+  const i=S.rate;
+  const inner=`
+    ${readout(null,yen(r.total),"円/月","電気料金の概算（税込単価ベース）")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${yen(r.base)}<span style="font-size:10px"> 円</span></div><div class="k">基本料金</div></div>
+      <div class="metric"><div class="v">${yen(r.energy)}<span style="font-size:10px"> 円</span></div><div class="k">電力量料金</div></div>
+      <div class="metric"><div class="v">${yen(r.fuel+r.sai)}<span style="font-size:10px"> 円</span></div><div class="k">燃調＋再エネ</div></div>
+    </div>
+    <div class="reason">使用量 <b>${yen(r.kwh)} kWh/月</b>${r.pfk!=null?`、力率${i.pf}% → 基本料金 ×(185−${i.pf})/100 = <b>×${r.pfk.toFixed(2)}</b>`:""}。平均単価 <b>${r.perKwh!=null?f1(r.perKwh):"—"}円/kWh</b>。</div>
+    <div class="cand-wrap">
+      <div class="cap">内訳（検針票と同じ構成）</div>
+      <table class="ref-table" style="width:100%">
+        <tr><th style="text-align:left">項目</th><th>計算</th><th>金額</th></tr>
+        <tr><td style="text-align:left">基本料金</td><td>${i.plan==="従量電灯（電灯・家庭）"?`${i.amp}A（${i.baseA}円/10A）`:r.pfk!=null?`${i.kw}kW×${i.hbase}円×${r.pfk.toFixed(2)}`:`${i.kw}kW×${i.lbase}円`}</td><td>${yen(r.base)}円</td></tr>
+        ${r.tiers?r.tiers.map(t=>t[1]>0?`<tr><td style="text-align:left">${t[0]}</td><td>${f1(t[1])}kWh×${t[2]}円</td><td>${yen(t[1]*t[2])}円</td></tr>`:"").join("")
+                 :`<tr><td style="text-align:left">電力量料金</td><td>${f1(r.kwh)}kWh×${r.eunit}円</td><td>${yen(r.energy)}円</td></tr>`}
+        <tr><td style="text-align:left">燃料費調整</td><td>${f1(r.kwh)}kWh×${i.fuel}円</td><td>${yen(r.fuel)}円</td></tr>
+        <tr><td style="text-align:left">再エネ賦課金</td><td>${f1(r.kwh)}kWh×${i.saiene}円</td><td>${yen(r.sai)}円</td></tr>
+        <tr><td style="text-align:left"><b>合計</b></td><td></td><td><b>${yen(r.total)}円</b></td></tr>
+      </table>
+    </div>`;
+  const d=disclose(
+    ["従量電灯: 基本料金＝単価×(契約A/10)、電力量＝3段階単価×各段の使用量",
+     "低圧電力: 基本料金＝単価×契約kW、電力量＝単価×使用量",
+     "高圧: 基本料金＝単価×契約kW×(185−力率)/100（力率85%基準）",
+     "共通: 燃料費調整＝単価×使用量（毎月変動・±）／ 再エネ賦課金＝単価×使用量",
+     "合計 ＝ 基本＋電力量＋燃料費調整＋再エネ賦課金"],
+    "各社供給約款・料金表（初期値: 東京電力EP・2026年時点の税込単価）／ 再エネ特措法（2026年度賦課金 4.18円/kWh・毎年5月改定）／ 力率割引: 約款の(185−力率)方式",
+    `<p><b>⚠ 注意:</b> 概算です。実際は最低月額料金・口座振替割引・季節別/時間帯別単価・高圧の実量制（過去12か月のデマンド最大値で契約電力が決まる）・消費税の端数処理などで差が出ます。燃料費調整単価は毎月変わるため、検針票の値を入力してください。</p>`);
+  return resultShell(inner,d);
 }
 
 /* header buttons */
