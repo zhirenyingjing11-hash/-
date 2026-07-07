@@ -272,6 +272,10 @@ footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--i
 .row select{padding:8px 20px 8px 8px;font-size:12px;background-position:right 6px center}
 .kbadge{display:grid;place-items:center;font-family:var(--mono);font-size:12.5px;font-weight:700;
   background:var(--neutral-bg);border:1px solid var(--line);border-radius:8px;height:36px;color:var(--ink-2)}
+textarea{width:100%;font-family:inherit;font-size:14px;padding:10px 11px;border:1.5px solid var(--input-line);
+  background:var(--input-bg);border-radius:9px;color:var(--ink);outline:none;resize:vertical;line-height:1.6}
+textarea:focus{border-color:var(--copper);box-shadow:0 0 0 3px rgba(181,101,29,.14)}
+.ai-ans{font-size:13px;line-height:1.85;white-space:pre-wrap;word-break:break-word}
 
 /* luminaire preset card */
 .spec-box.lum{display:flex;gap:12px;align-items:center;margin-bottom:13px}
@@ -330,6 +334,7 @@ footer .srcs{font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--i
       </div>
       <div class="spacer"></div>
       <button class="icon-btn" id="resetBtn" title="すべての入力を初期値に戻す">↺</button>
+      <button class="icon-btn" id="aiBtn">🤖 AI</button>
       <button class="icon-btn" id="glossBtn">📖 用語集</button>
     </div>
     <div class="disclaimer">
@@ -435,9 +440,9 @@ const DATA = {
     c1:[6.5,7,7.8,8.6,10,11.4,13.6,16.2,19.6,23,25.8,28.6,32]
   },
   vvrOD:{
-    sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22"],
-    v2:[10,10.5,11.5,12.5,12.5,14,16.5,19.5],
-    v3:[10.5,11,12,13.5,13,15,18,21.5]
+    sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22","38","60","100"],
+    v2:[10,10.5,11.5,12.5,12.5,14,16.5,19.5,26,31,37.5],
+    v3:[10.5,11,12,13.5,13,15,18,21.5,28.5,34,41.5]
   },
   vvfOD:{
     sizes:["1.6mm-2C","2.0mm-2C","2.6mm-2C","1.6mm-3C","2.0mm-3C","2.6mm-3C"],
@@ -475,8 +480,10 @@ const DATA = {
     "OE屋外用ポリエチレン電線（75℃）":"OE"
   },
   wires:{
-    VV:{Tc:60,conds:["2心（VVF/VVR）","3心（VVF/VVR）"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22","38"],
-      rows:{"1.6mm":[19,17],"2.0mm":[24,21],"2.6mm":[33,29],"3.2mm":[43,38],"5.5":[49,43],"8":[61,52],"14":[88,75],"22":[115,98],"38":[162,138]}},
+    VV:{Tc:60,conds:["2心（気中）","3心（気中）","2心（管・管路内）","3心（管・管路内）"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22","38","60","100","150","200","250","325"],
+      rows:{"1.6mm":[19,17,15,14],"2.0mm":[24,21,19,17],"2.6mm":[33,29,26,23],"3.2mm":[43,38,34,30],
+        "5.5":[49,43,39,34],"8":[61,52,49,42],"14":[88,75,70,60],"22":[115,98,92,78],"38":[162,138,130,110],
+        "60":[178,155,142,124],"100":[240,210,192,168],"150":[310,270,248,216],"200":[365,320,292,256],"250":[415,365,332,292],"325":[480,420,384,336]}},
     IV:{Tc:60,conds:["がいし引き・気中"],sizes:["1.6mm","2.0mm","2.6mm","3.2mm","5.5","8","14","22","38","60","100","150","200","250","325"],
       rows:{"1.6mm":[27],"2.0mm":[35],"2.6mm":[48],"3.2mm":[62],"5.5":[49],"8":[61],"14":[88],"22":[115],"38":[162],"60":[217],"100":[298],"150":[395],"200":[469],"250":[556],"325":[650]}},
     DV:{Tc:60,conds:["2心","3心"],sizes:["2.0mm","2.6mm","3.2mm"],
@@ -824,8 +831,8 @@ function calcGuy(i){
    ========================================================================= */
 let view="home";
 const S={
-  cable:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,Vsel:200,L:40,temp:"40",k:1.0,cond:"気中 CV3心1条(三相)",kind:"CV（架橋ポリエチレン 90℃）",wcond:"2心（VVF/VVR）",vmax:2},
-  breaker:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,Vsel:200,cont:false,Iw:100,iwMode:"自動計算",iwKind:"CV（架橋ポリエチレン 90℃）",iwWcond:"2心（VVF/VVR）",iwSize:"14",iwCond:"気中 CV3心1条(三相)",iwTemp:"40",iwK:1.0},
+  cable:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,Vsel:200,L:40,temp:"40",k:1.0,cond:"気中 CV3心1条(三相)",kind:"CV（架橋ポリエチレン 90℃）",wcond:"2心（気中）",vmax:2},
+  breaker:{method:"三相3線式",unit:"kW",P:15,cos:0.8,V:200,Vsel:200,cont:false,Iw:100,iwMode:"自動計算",iwKind:"CV（架橋ポリエチレン 90℃）",iwWcond:"2心（気中）",iwSize:"14",iwCond:"気中 CV3心1条(三相)",iwTemp:"40",iwK:1.0},
   rack:{rows:[{od:42,n:4}],spare:20,fill:0.6,tiers:1},
   conduit:{ctype:"厚鋼G",fill:0.32,rows:[{od:6.6,k:1.0,n:5}]},
   lux:{E:500,X:7,Y:8,H:2.5,F:2800,U:0.7,M:0.8,preset:"custom",upre:"手入力",mpre:"手入力"},
@@ -877,6 +884,7 @@ $("#popX").onclick=hidePop; scrim.onclick=hidePop;
 function render(){
   if(view==="home") renderHome();
   else if(view==="glossary") renderGlossary();
+  else if(view==="assist") renderAssist();
   else renderTool(view);
   window.scrollTo(0,0);
   bindHelp();
@@ -904,9 +912,13 @@ function renderHome(){
        <span class="gicon">📖</span>
        <span><span class="ttl">用語集（${GLOSSARY.length}語）</span><br><span class="sub">専門用語をやさしく解説。各入力の ? からも開けます。</span></span>
      </button>
+     <button class="tool-card glos" data-go="assist" style="background:#4a331f;border-color:#4a331f">
+       <span class="gicon">🤖</span>
+       <span><span class="ttl">AI相談（質問・使い方・特殊ケース）</span><br><span class="sub">プルダウンにない設備、想定外の値、使い方の疑問に回答します。</span></span>
+     </button>
    </div>`;
   main.querySelectorAll("[data-tool]").forEach(b=>b.onclick=()=>{view=parseInt(b.dataset.tool);render();});
-  main.querySelector("[data-go]").onclick=()=>{view="glossary";render();};
+  main.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{view=b.dataset.go;render();});
 }
 
 function renderGlossary(){
@@ -924,6 +936,149 @@ function renderGlossary(){
   draw("");
   $("#gsearch").oninput=e=>draw(e.target.value.trim());
   bindCrumb();
+}
+
+/* =========================================================================
+   AI相談（内蔵ガイド検索 ＋ 任意でAnthropic APIによる生成AI回答）
+   ========================================================================= */
+const AI_KEY="denryoku-ai-key", AI_MODEL="denryoku-ai-model";
+function aiModel(){try{return localStorage.getItem(AI_MODEL)||"claude-opus-4-8";}catch(e){return "claude-opus-4-8";}}
+function aiKey(){try{return localStorage.getItem(AI_KEY)||"";}catch(e){return "";}}
+
+const KB=[
+  [["プルダウン","一覧にない","サイズがない","種類がない","選べない","リストにない"],"プルダウンに欲しいサイズ・種類がないとき",
+   "③④⑦のケーブル行は「手入力」を選ぶと外径を自由に入力できます（カタログの仕上外径を転記）。①②の電圧は「その他」で手入力、⑭の埋込み長も「手入力」に切替できます。⑦の占積率は「上限なし」も選べます。それでも足りない場合はAI回答で聞いてください。"],
+  [["特殊","モーター","電動機","溶接","医療","エレベーター","ポンプ","始動"],"特殊な設備（電動機・溶接機など）の計算",
+   "本ツールは一般負荷向けの概算です。電動機は始動電流（定格の6〜7倍）を考慮した専用の選定（内線規程3705など）、溶接機は使用率換算が必要です。①②の結果をそのまま使わず、⑩の短絡・⑭のアンカーも機器仕様書の値で確認してください。"],
+  [["想定外","範囲外","大きすぎ","小さすぎ","超え","入らない"],"想定外の数値を入れたいとき",
+   "数値欄は基本的に任意の値を受け付けます。プルダウン項目は「手入力」「その他」で自由入力に切替できます。結果が「範囲を超えています」と出る場合は標準品の範囲外なので、分割・並列・特注・上位規格の検討が必要です。"],
+  [["使い方","操作","はじめて","初心者","どうやって"],"基本的な使い方",
+   "ホームで計算を選ぶ → STEP1に入力すると、その場でSTEP2に結果が出ます。入力欄の「?」で用語解説、結果下部の「式・採用根拠・出典をみる」で計算式と出典を確認できます。入力値は自動保存、ヘッダーの↺で初期値に戻せます。"],
+  [["根拠","出典","式","なぜ","理由","計算式"],"結果の根拠・出典を確認する",
+   "各結果カード下部の「式・採用根拠・出典をみる」を開くと、使用した計算式と出典（JIS・内線規程・電技解釈など）が表示されます。①⑭はサイズ候補の一覧で、各サイズがOK/NGの理由も見られます。"],
+  [["電圧降下","降下が大きい","下げたい"],"電圧降下が大きいときの対処",
+   "①で (1)こう長を短くできないか (2)サイズアップ (3)幹線と分岐で許容降下を配分し直す、の順で検討します。単相3線式は係数が単相2線式の半分で有利です。長距離・大電流は簡易式より約20%大きく出ることがあるので基本式でも確認を。"],
+  [["オフライン","ホーム画面","アプリ","インストール","圏外"],"オフライン・アプリとして使う",
+   "スマホでこのページを開き、共有メニューから「ホーム画面に追加」すると全画面アプリになり、オフラインでも使えます。更新はオンライン時の再読み込みで自動反映されます。※AI回答のみ通信が必要です。"],
+  [["保存","リセット","消えた","初期値","戻す"],"入力値の保存とリセット",
+   "入力値はこの端末のブラウザ内に自動保存されます（サーバーには送信されません）。ヘッダーの↺ボタンですべて初期値に戻せます。"],
+  [["印刷","PDF","提出","出力"],"印刷・PDF出力",
+   "各ツールの「🖨 印刷/PDF」ボタンで、入力・結果・式・出典・免責を含めて印刷できます。スマホでは印刷画面から「PDFとして保存」も選べます。"],
+  [["AI","APIキー","api","キー","設定","claude"],"AI回答の使い方・設定",
+   "AI相談ページ下部の「⚙ AI設定」でAnthropic APIキー（console.anthropic.com で取得・従量課金）を登録すると、内蔵ガイドにない質問にもAIが回答します。キーはこの端末内にのみ保存され、質問時にAnthropicへ直接送信されます。"],
+  [["正確","精度","信頼","責任","本当","合って"],"データの正確性について",
+   "収録データは規格・規程に基づく代表値です。学習・概算用のため、実設計・申請は最新の内線規程・電技解釈・JIS・メーカーカタログ・所轄/電力会社協議で必ず確認してください。"],
+  [["接地","種別","A種","B種","C種","D種","アース"],"接地の種別の選び方",
+   "高圧機器＝A種、変圧器の中性点＝B種（⑪で計算）、300Vを超える低圧機器＝C種、300V以下＝D種です。⑫で種別を選ぶと抵抗値上限・接地線太さ・接地棒の概算本数と平面図が出ます。"],
+  [["管路","電線管","入る","通る","CVT","収容"],"電線管・管路への収容",
+   "④で管種と電線・ケーブルを選ぶと占積率から管サイズが出ます。プルダウンにはIV・CV・VVR・VVFがあり、ケーブルは係数1.0で計算します。①の布設条件でも「管内」「地中管路」を選ぶと許容電流が管内条件になります。"]
+];
+
+function kbSearch(q){
+  return KB.map(e=>({e,score:e[0].filter(k=>q.toLowerCase().includes(k.toLowerCase())).length}))
+    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3).map(x=>x.e);
+}
+
+function aiContext(){
+  return `あなたは「電力設計 計算ツール」(電気設備設計の概算・学習用Webアプリ)に組み込まれたアシスタントです。
+このアプリのツール一覧: ${TOOLS.map(t=>NUM[t.id]+t.t+"("+t.sub+"/根拠:"+t.src+")").join(" ")}
+主な機能: 各ツールはSTEP1入力→STEP2自動計算。プルダウンにない値は「手入力」「その他」を選べば任意値を入力可能(③④⑦の外径手入力、①②の電圧その他、②Iw手入力、⑦占積率上限なし、⑬⑭荷重直接入力、⑭埋込み長手入力など)。参照データは規格・規程に基づく代表値。
+回答ルール: 日本語で簡潔に。このアプリで解決できる操作があれば具体的なツール番号(①〜⑮)と手順を示す。工学的な質問には概算式や目安を示してよいが、必ず「概算・学習用であり、実設計・申請は内線規程・電技解釈・JIS・メーカーカタログ・電力会社協議で確認」する旨を添える。活線作業など危険な作業手順の詳細は避け、有資格者・専門家への相談を促す。わからないことは正直に伝える。`;
+}
+
+async function askAI(q){
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{
+      "content-type":"application/json",
+      "x-api-key":aiKey(),
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true"
+    },
+    body:JSON.stringify({
+      model:aiModel(),
+      max_tokens:2048,
+      system:aiContext(),
+      messages:[{role:"user",content:q}]
+    })
+  });
+  if(!res.ok){
+    if(res.status===401) throw new Error("APIキーが正しくありません（401）。⚙AI設定を確認してください。");
+    if(res.status===429) throw new Error("利用上限に達しました（429）。しばらく待ってから再試行してください。");
+    let msg="HTTP "+res.status;
+    try{const j=await res.json(); if(j.error&&j.error.message) msg=j.error.message;}catch(e2){}
+    throw new Error(msg);
+  }
+  const data=await res.json();
+  if(data.stop_reason==="refusal") throw new Error("この質問には回答できませんでした。表現を変えてお試しください。");
+  const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+  if(!text) throw new Error("回答が空でした。もう一度お試しください。");
+  return text;
+}
+
+function kbBlock(hits){
+  if(!hits.length) return `<div class="term" style="margin-top:10px"><div class="w">📚 内蔵ガイド</div><div class="d">該当する項目が見つかりませんでした。${aiKey()?"下のAI回答を参照してください。":"「⚙ AI設定」でAPIキーを登録するとAIが回答します。用語なら📖用語集の検索もお試しください。"}</div></div>`;
+  return `<div class="gloss" style="margin-top:10px">${hits.map(h=>`
+    <div class="term"><div class="w">📚 ${esc(h[1])}</div><div class="d">${esc(h[2])}</div></div>`).join("")}</div>`;
+}
+
+function renderAssist(){
+  const has=!!aiKey();
+  main.innerHTML=`
+    ${crumb("AI相談")}
+    <div class="tool-head"><h2>🤖 AI相談</h2><div class="desc">使い方・特殊な設備・想定外の値など、なんでも質問してください。まず内蔵ガイドを検索し、APIキー登録済みならAIも回答します。</div></div>
+    <div class="chips" style="flex-wrap:wrap;overflow:visible">
+      ${["プルダウンに欲しいサイズがない","特殊な設備はどう計算する？","想定外の値を入れたい","結果の根拠・出典は？","オフラインで使うには？"].map(q=>`<button class="chip" data-q="${esc(q)}" style="font-family:var(--sans)">${esc(q)}</button>`).join("")}
+    </div>
+    <div class="card"><div class="card-b">
+      <div class="field"><label>質問</label>
+        <textarea id="aiQ" rows="3" placeholder="例: 440Vの特殊なポンプ用ケーブルを選びたい／電線管にCVTは入れられる？"></textarea></div>
+      <button class="btn primary" id="aiAsk" style="width:100%">${has?"🤖 質問する（ガイド＋AI回答）":"📚 内蔵ガイドで調べる"}</button>
+      <div class="ref-note" style="margin-top:8px">${has
+        ?"AI回答時のみ通信します（質問文とツール情報をAnthropic APIへ直接送信）。計算の入力値は送信されません。"
+        :"現在は内蔵ガイド検索のみ。下の「⚙ AI設定」でAPIキーを登録すると、生成AIが個別の質問に回答します。"}</div>
+    </div></div>
+    <div id="aiOut"></div>
+    <details class="ref" style="margin-top:12px"><summary>⚙ AI設定（Anthropic APIキー）<span class="chev">▾</span></summary>
+      <div class="ref-b">
+        <div class="ref-note" style="margin:8px 0">AI回答には <b>Anthropic APIキー</b>が必要です（<b>console.anthropic.com</b> で取得・従量課金）。キーは<b>この端末のブラウザ内にのみ保存</b>され、質問時にAnthropicへ直接送信されます。ほかのサーバーには送られません。共有端末では保存しないでください。</div>
+        <div class="field"><label>APIキー</label><input type="password" id="aiKeyIn" placeholder="sk-ant-..." value="${esc(aiKey())}"></div>
+        <div class="field"><label>モデル</label><select id="aiModelIn">
+          <option value="claude-opus-4-8" ${aiModel()==="claude-opus-4-8"?"selected":""}>claude-opus-4-8（高品質・標準）</option>
+          <option value="claude-haiku-4-5" ${aiModel()==="claude-haiku-4-5"?"selected":""}>claude-haiku-4-5（高速・低コスト）</option>
+        </select></div>
+        <div class="output-row" style="margin-top:4px">
+          <button class="btn primary" id="aiSave">保存</button>
+          <button class="btn" id="aiDel">キーを削除</button>
+        </div>
+      </div></details>`;
+  bindCrumb();
+  const doAsk=async()=>{
+    const q=$("#aiQ").value.trim(); if(!q) return;
+    const out=$("#aiOut");
+    out.innerHTML=kbBlock(kbSearch(q))+(aiKey()?`<div class="card" style="margin-top:10px"><div class="card-b" id="aiWait" style="color:var(--ink-2);font-size:13px">🤖 AIが回答を作成中…（数秒〜十数秒）</div></div>`:"");
+    if(aiKey()){
+      try{
+        const text=await askAI(q);
+        const w=$("#aiWait");
+        if(w) w.innerHTML=`<div style="font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--copper);margin-bottom:7px">🤖 AI回答（参考。最終判断は規程・カタログで）</div><div class="ai-ans">${esc(text)}</div>`;
+      }catch(e){
+        const w=$("#aiWait");
+        if(w) w.innerHTML=`<div style="color:var(--ng);font-size:12.5px"><b>AI回答に失敗:</b> ${esc(e.message)}<br><span style="color:var(--ink-mut)">通信環境とAPIキーを確認してください。上の内蔵ガイドの結果もご参照ください。</span></div>`;
+      }
+    }
+  };
+  $("#aiAsk").onclick=doAsk;
+  main.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{$("#aiQ").value=b.dataset.q;doAsk();});
+  $("#aiSave").onclick=()=>{
+    try{
+      const v=$("#aiKeyIn").value.trim();
+      if(v) localStorage.setItem(AI_KEY,v); else localStorage.removeItem(AI_KEY);
+      localStorage.setItem(AI_MODEL,$("#aiModelIn").value);
+    }catch(e){}
+    render();
+  };
+  $("#aiDel").onclick=()=>{try{localStorage.removeItem(AI_KEY);}catch(e){}render();};
 }
 
 function crumb(label){
@@ -1491,7 +1646,7 @@ function resultCable(r){
     "許容電流: JCS 0168-2（CV 90℃/40℃基準）・内線規程1340相当（IV/VV/DV/OW/OE 代表値・30℃基準）／ 電圧降下: 内線規程1310-1",
     `<p><b>⚠ 注意:</b> 長距離・大電流の幹線は簡易式の降下が約20%小さく出ます。重要回路は基本式で再確認してください。</p>
      <p><b>注:</b> 地中（直埋・管路）は基底温度25℃・代表的な土壌条件の値で、周囲温度補正は気中・管内のみに適用しています。地中条件（深さ・土壌熱抵抗・離隔）で大きく変わるため最終はカタログ・電力会社基準で確認を。</p>
-     <p><b>注:</b> IV/VV/DV/OW/OE は許容温度60℃（OEは75℃）・周囲30℃基準の代表値で、温度補正は √((Tc−θ)/(Tc−30)) によります。</p>`);
+     <p><b>注:</b> IV/VV/DV/OW/OE は許容温度60℃（OEは75℃）・周囲30℃基準の代表値で、温度補正は √((Tc−θ)/(Tc−30)) によります。VVの「管・管路内」は気中の約0.8掛けの代表値です。</p>`);
   return resultShell(inner,d);
 }
 
@@ -2004,6 +2159,7 @@ function guySVG(g){
 
 /* header buttons */
 $("#glossBtn").onclick=()=>{view="glossary";render();};
+$("#aiBtn").onclick=()=>{view="assist";render();};
 $("#resetBtn").onclick=()=>{
   if(confirm("すべての入力を初期値に戻しますか？")){
     try{localStorage.removeItem(LS_KEY);}catch(e){}
