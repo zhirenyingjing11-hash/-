@@ -941,9 +941,15 @@ function renderGlossary(){
 /* =========================================================================
    AI相談（内蔵ガイド検索 ＋ 任意でAnthropic APIによる生成AI回答）
    ========================================================================= */
-const AI_KEY="denryoku-ai-key", AI_MODEL="denryoku-ai-model";
-function aiModel(){try{return localStorage.getItem(AI_MODEL)||"claude-opus-4-8";}catch(e){return "claude-opus-4-8";}}
-function aiKey(){try{return localStorage.getItem(AI_KEY)||"";}catch(e){return "";}}
+const AI_PROV="denryoku-ai-prov", AI_KEY="denryoku-ai-key", AI_MODEL="denryoku-ai-model",
+      AI_GKEY="denryoku-ai-gkey", AI_GMODEL="denryoku-ai-gmodel";
+function lsGet(k,d){try{return localStorage.getItem(k)||d;}catch(e){return d;}}
+function lsSet(k,v){try{if(v)localStorage.setItem(k,v);else localStorage.removeItem(k);}catch(e){}}
+function aiProv(){return lsGet(AI_PROV,"gemini");}
+function aiModel(){return lsGet(AI_MODEL,"claude-opus-4-8");}
+function gModel(){return lsGet(AI_GMODEL,"gemini-2.5-flash");}
+function aiKey(){return aiProv()==="anthropic"?lsGet(AI_KEY,""):lsGet(AI_GKEY,"");}
+function provName(){return aiProv()==="anthropic"?"Claude（Anthropic）":"Gemini（Google）";}
 
 const KB=[
   [["プルダウン","一覧にない","サイズがない","種類がない","選べない","リストにない"],"プルダウンに欲しいサイズ・種類がないとき",
@@ -964,8 +970,8 @@ const KB=[
    "入力値はこの端末のブラウザ内に自動保存されます（サーバーには送信されません）。ヘッダーの↺ボタンですべて初期値に戻せます。"],
   [["印刷","PDF","提出","出力"],"印刷・PDF出力",
    "各ツールの「🖨 印刷/PDF」ボタンで、入力・結果・式・出典・免責を含めて印刷できます。スマホでは印刷画面から「PDFとして保存」も選べます。"],
-  [["AI","APIキー","api","キー","設定","claude"],"AI回答の使い方・設定",
-   "AI相談ページ下部の「⚙ AI設定」でAnthropic APIキー（console.anthropic.com で取得・従量課金）を登録すると、内蔵ガイドにない質問にもAIが回答します。キーはこの端末内にのみ保存され、質問時にAnthropicへ直接送信されます。"],
+  [["AI","APIキー","api","キー","設定","claude","gemini","無料"],"AI回答の使い方・設定（無料あり）",
+   "AI相談ページ下部の「⚙ AI設定」でAPIキーを登録すると、内蔵ガイドにない質問にもAIが回答します。おすすめは Google Gemini（aistudio.google.com でGoogleアカウントだけで無料発行・クレカ不要）。Anthropic Claude（console.anthropic.com・従量課金）も選べます。キーはこの端末内にのみ保存されます。"],
   [["正確","精度","信頼","責任","本当","合って"],"データの正確性について",
    "収録データは規格・規程に基づく代表値です。学習・概算用のため、実設計・申請は最新の内線規程・電技解釈・JIS・メーカーカタログ・所轄/電力会社協議で必ず確認してください。"],
   [["接地","種別","A種","B種","C種","D種","アース"],"接地の種別の選び方",
@@ -987,6 +993,35 @@ function aiContext(){
 }
 
 async function askAI(q){
+  return aiProv()==="anthropic"?askClaude(q):askGemini(q);
+}
+async function askGemini(q){
+  const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(gModel())+":generateContent",{
+    method:"POST",
+    headers:{"content-type":"application/json","x-goog-api-key":lsGet(AI_GKEY,"")},
+    body:JSON.stringify({
+      system_instruction:{parts:[{text:aiContext()}]},
+      contents:[{role:"user",parts:[{text:q}]}],
+      generationConfig:{maxOutputTokens:2048}
+    })
+  });
+  if(!res.ok){
+    let msg="HTTP "+res.status;
+    try{const j=await res.json(); if(j.error&&j.error.message) msg=j.error.message;}catch(e2){}
+    if(res.status===400&&/API key/i.test(msg)) throw new Error("Gemini APIキーが正しくありません。⚙AI設定を確認してください。");
+    if(res.status===429) throw new Error("無料枠の上限に達しました（429）。数分〜翌日に再試行するか、flash-liteモデルをお試しください。");
+    throw new Error(msg);
+  }
+  const data=await res.json();
+  const cand=(data.candidates||[])[0];
+  const text=cand&&cand.content&&cand.content.parts?cand.content.parts.map(p=>p.text||"").join("").trim():"";
+  if(!text){
+    if(cand&&cand.finishReason&&cand.finishReason!=="STOP") throw new Error("回答が生成されませんでした（"+cand.finishReason+"）。表現を変えてお試しください。");
+    throw new Error("回答が空でした。もう一度お試しください。");
+  }
+  return text;
+}
+async function askClaude(q){
   const res=await fetch("https://api.anthropic.com/v1/messages",{
     method:"POST",
     headers:{
@@ -1017,7 +1052,7 @@ async function askAI(q){
 }
 
 function kbBlock(hits){
-  if(!hits.length) return `<div class="term" style="margin-top:10px"><div class="w">📚 内蔵ガイド</div><div class="d">該当する項目が見つかりませんでした。${aiKey()?"下のAI回答を参照してください。":"「⚙ AI設定」でAPIキーを登録するとAIが回答します。用語なら📖用語集の検索もお試しください。"}</div></div>`;
+  if(!hits.length) return `<div class="term" style="margin-top:10px"><div class="w">📚 内蔵ガイド</div><div class="d">該当する項目が見つかりませんでした。${aiKey()?"下のAI回答を参照してください。":"「⚙ AI設定」で無料のGeminiキー等を登録するとAIが回答します。用語なら📖用語集の検索もお試しください。"}</div></div>`;
   return `<div class="gloss" style="margin-top:10px">${hits.map(h=>`
     <div class="term"><div class="w">📚 ${esc(h[1])}</div><div class="d">${esc(h[2])}</div></div>`).join("")}</div>`;
 }
@@ -1035,22 +1070,35 @@ function renderAssist(){
         <textarea id="aiQ" rows="3" placeholder="例: 440Vの特殊なポンプ用ケーブルを選びたい／電線管にCVTは入れられる？"></textarea></div>
       <button class="btn primary" id="aiAsk" style="width:100%">${has?"🤖 質問する（ガイド＋AI回答）":"📚 内蔵ガイドで調べる"}</button>
       <div class="ref-note" style="margin-top:8px">${has
-        ?"AI回答時のみ通信します（質問文とツール情報をAnthropic APIへ直接送信）。計算の入力値は送信されません。"
-        :"現在は内蔵ガイド検索のみ。下の「⚙ AI設定」でAPIキーを登録すると、生成AIが個別の質問に回答します。"}</div>
+        ?`AI回答時のみ通信します（質問文とツール情報を ${provName()} へ直接送信）。計算の入力値は送信されません。`
+        :"現在は内蔵ガイド検索のみ。下の「⚙ AI設定」で<b>無料のGeminiキー</b>等を登録すると、生成AIが個別の質問に回答します。"}</div>
     </div></div>
     <div id="aiOut"></div>
-    <details class="ref" style="margin-top:12px"><summary>⚙ AI設定（Anthropic APIキー）<span class="chev">▾</span></summary>
+    <details class="ref" style="margin-top:12px"${has?"":" open"}><summary>⚙ AI設定（APIキー・プロバイダ）<span class="chev">▾</span></summary>
       <div class="ref-b">
-        <div class="ref-note" style="margin:8px 0">AI回答には <b>Anthropic APIキー</b>が必要です（<b>console.anthropic.com</b> で取得・従量課金）。キーは<b>この端末のブラウザ内にのみ保存</b>され、質問時にAnthropicへ直接送信されます。ほかのサーバーには送られません。共有端末では保存しないでください。</div>
-        <div class="field"><label>APIキー</label><input type="password" id="aiKeyIn" placeholder="sk-ant-..." value="${esc(aiKey())}"></div>
+        <div class="field" style="margin-top:8px"><label>AIプロバイダ</label><select id="aiProvIn">
+          <option value="gemini" ${aiProv()==="gemini"?"selected":""}>Google Gemini（無料枠あり・おすすめ）</option>
+          <option value="anthropic" ${aiProv()==="anthropic"?"selected":""}>Anthropic Claude（有料・高品質）</option>
+        </select></div>
+        ${aiProv()==="gemini"?`
+        <div class="ref-note" style="margin-bottom:10px"><b>無料での使い方:</b> Googleアカウントで <b>aistudio.google.com</b> を開き「Get API key」を押すだけで発行できます（クレジットカード不要）。<br>⚠ 無料枠では入力内容がGoogleのモデル改善に使われる規約です。機密情報は質問に含めないでください。</div>
+        <div class="field"><label>Gemini APIキー</label><input type="password" id="aiKeyIn" placeholder="AIzaSy..." value="${esc(lsGet(AI_GKEY,""))}"></div>
+        <div class="field"><label>モデル</label><select id="aiModelIn">
+          <option value="gemini-2.5-flash" ${gModel()==="gemini-2.5-flash"?"selected":""}>gemini-2.5-flash（標準・無料枠）</option>
+          <option value="gemini-2.5-flash-lite" ${gModel()==="gemini-2.5-flash-lite"?"selected":""}>gemini-2.5-flash-lite（軽量・無料枠が多め）</option>
+          <option value="gemini-2.5-pro" ${gModel()==="gemini-2.5-pro"?"selected":""}>gemini-2.5-pro（高品質・無料枠は少なめ）</option>
+        </select></div>`:`
+        <div class="ref-note" style="margin-bottom:10px"><b>console.anthropic.com</b> で取得（従量課金・クレジット購入制）。高品質な回答が必要な場合に。</div>
+        <div class="field"><label>Anthropic APIキー</label><input type="password" id="aiKeyIn" placeholder="sk-ant-..." value="${esc(lsGet(AI_KEY,""))}"></div>
         <div class="field"><label>モデル</label><select id="aiModelIn">
           <option value="claude-opus-4-8" ${aiModel()==="claude-opus-4-8"?"selected":""}>claude-opus-4-8（高品質・標準）</option>
           <option value="claude-haiku-4-5" ${aiModel()==="claude-haiku-4-5"?"selected":""}>claude-haiku-4-5（高速・低コスト）</option>
-        </select></div>
+        </select></div>`}
         <div class="output-row" style="margin-top:4px">
           <button class="btn primary" id="aiSave">保存</button>
           <button class="btn" id="aiDel">キーを削除</button>
         </div>
+        <div class="ref-note" style="margin-top:8px">キーはこの端末のブラウザ内にのみ保存され、質問時に選択したプロバイダへ直接送信されます。ほかのサーバーには送られません。共有端末では保存しないでください。</div>
       </div></details>`;
   bindCrumb();
   const doAsk=async()=>{
@@ -1061,7 +1109,7 @@ function renderAssist(){
       try{
         const text=await askAI(q);
         const w=$("#aiWait");
-        if(w) w.innerHTML=`<div style="font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--copper);margin-bottom:7px">🤖 AI回答（参考。最終判断は規程・カタログで）</div><div class="ai-ans">${esc(text)}</div>`;
+        if(w) w.innerHTML=`<div style="font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--copper);margin-bottom:7px">🤖 AI回答（${provName()}・参考。最終判断は規程・カタログで）</div><div class="ai-ans">${esc(text)}</div>`;
       }catch(e){
         const w=$("#aiWait");
         if(w) w.innerHTML=`<div style="color:var(--ng);font-size:12.5px"><b>AI回答に失敗:</b> ${esc(e.message)}<br><span style="color:var(--ink-mut)">通信環境とAPIキーを確認してください。上の内蔵ガイドの結果もご参照ください。</span></div>`;
@@ -1070,15 +1118,14 @@ function renderAssist(){
   };
   $("#aiAsk").onclick=doAsk;
   main.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{$("#aiQ").value=b.dataset.q;doAsk();});
+  $("#aiProvIn").onchange=()=>{lsSet(AI_PROV,$("#aiProvIn").value);render();};
   $("#aiSave").onclick=()=>{
-    try{
-      const v=$("#aiKeyIn").value.trim();
-      if(v) localStorage.setItem(AI_KEY,v); else localStorage.removeItem(AI_KEY);
-      localStorage.setItem(AI_MODEL,$("#aiModelIn").value);
-    }catch(e){}
+    const v=$("#aiKeyIn").value.trim();
+    if(aiProv()==="anthropic"){lsSet(AI_KEY,v);lsSet(AI_MODEL,$("#aiModelIn").value);}
+    else{lsSet(AI_GKEY,v);lsSet(AI_GMODEL,$("#aiModelIn").value);}
     render();
   };
-  $("#aiDel").onclick=()=>{try{localStorage.removeItem(AI_KEY);}catch(e){}render();};
+  $("#aiDel").onclick=()=>{lsSet(aiProv()==="anthropic"?AI_KEY:AI_GKEY,"");render();};
 }
 
 function crumb(label){
