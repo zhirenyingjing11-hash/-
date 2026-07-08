@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>電力設計 16大計算ツール</title>
+<title>電力設計 17大計算ツール</title>
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#16202a">
@@ -328,7 +328,7 @@ textarea:focus{border-color:var(--copper);box-shadow:0 0 0 3px rgba(181,101,29,.
       <div class="brand">
         <div class="mark"></div>
         <div>
-          <h1>電力設計 16大計算ツール</h1>
+          <h1>電力設計 17大計算ツール</h1>
           <small>初心者向け・概算検討 ＆ 学習用</small>
         </div>
       </div>
@@ -544,7 +544,7 @@ const GLOSSARY=[
   ["混触","⑪","変圧器内部などで高圧側と低圧側が接触する事故。低圧側に高電圧がかかる危険があり、B種接地で電位上昇を抑える。"],
   ["接地工事の種別","⑫","A種=高圧機器(10Ω)、B種=変圧器の中性点等、C種=300V超の低圧(10Ω)、D種=300V以下(100Ω)。C/D種は0.5秒以内動作の漏電遮断器があれば500Ωに緩和。"],
   ["接地線","⑫","接地極と機器を結ぶ電線。太さは回路の過電流遮断器（ブレーカ）の定格で決まる（内線規程1350-3）。"],
-  ["設計水平震度 KH","⑬","地震時の水平力を機器重量の何倍と見込むかの係数。一般機器1.0、重要機器1.5、屋上・上層階は割増しが目安。"],
+  ["設計水平震度 KH","⑬⑭","地震時の水平力を機器重量の何倍と見込むかの係数。建築設備耐震設計・施工指針の標準震度: 地階・1階=0.4/0.6/1.0、中間階=0.6/1.0/1.5、屋上・上層階=1.0/1.5/2.0（一般B/重要A/特に重要S）。入力欄の目安プルダウンから選べる。"],
   ["転倒モーメント","⑬","地震の水平力が機器を倒そうとする回転力。安定モーメント（自重×腕の長さ）がこれを上回れば転倒しない。"],
   ["アンカーボルト","⑬","盤を基礎・床に固定するボルト。地震時の引抜き力・せん断力に耐える太さが必要。"],
   ["直埋設・管路布設","①","地中に直接埋める／地中管路に通す布設方法。基底温度25℃・土壌条件が前提で、気中とは許容電流が異なる。"],
@@ -560,7 +560,12 @@ const GLOSSARY=[
   ["契約電力（デマンド）","⑯","高圧では過去12か月の30分最大需要電力（デマンド値）で契約電力が決まる実量制が一般的。基本料金に直結する。"],
   ["力率割引・割増","⑯","高圧の基本料金は力率85%を基準に、1%上回るごとに1%割引・下回ると割増。式は 基本料金×(185−力率)/100。"],
   ["燃料費調整額","⑯","燃料価格の変動を毎月の電気料金に反映する調整額。単価×使用量で、プラスにもマイナスにもなる。検針票で確認できる。"],
-  ["再エネ賦課金","⑯","再エネ特措法に基づき全需要家が使用量に応じて負担する賦課金。2026年度は4.18円/kWh（毎年5月に単価改定）。"]
+  ["再エネ賦課金","⑯","再エネ特措法に基づき全需要家が使用量に応じて負担する賦課金。2026年度は4.18円/kWh（毎年5月に単価改定）。"],
+  ["風圧荷重（甲・乙・丙種）","⑬⑰","風が設備を押す力（電技解釈58条）。甲種=風速40m/s相当（電線980Pa・丸いコンクリート柱780Pa）。乙種=氷雪が付く地域の冬（甲種×0.5を氷雪付き外径に）。丙種=甲種×0.5（低風速の市街地など）。"],
+  ["設計荷重（コンクリート柱）","⑰","柱の呼び強度（例: 5.0kN柱）。JIS A5373では柱の先端から0.25mの点に水平に加える荷重で表す。地際の許容モーメント＝設計荷重×(地上高−0.25m)。"],
+  ["根入れ","⑰","柱を地中に埋める深さ。A種コンクリート柱は全長15m以下なら全長の1/6以上（電技解釈59条）。例: 12m柱→2m。"],
+  ["引留柱・通り柱","⑰","通り柱=電線が両側へ通り抜け張力が釣り合う柱（風圧が主な荷重）。引留柱・末端柱=電線を引き留め張力が片側に働く柱（原則、支線で受ける）。"],
+  ["電線の水平張力 P","⑮⑰","支線の設計で使う、柱を引き倒そうとする電線張力の水平合計。引留・末端柱では電線の想定最大張力×条数。⑰配電柱の計算から⑮へ自動で引き継げる。"]
 ];
 
 const TOOLS=[
@@ -579,9 +584,10 @@ const TOOLS=[
   {id:13,t:"盤基礎（耐震簡易）",sub:"配電盤・変圧器盤の基礎寸法と転倒・アンカー",src:"建築設備耐震設計 簡易法"},
   {id:14,t:"アンカー耐荷重",sub:"あと施工アンカーの許容引張・せん断と判定",src:"あと施工アンカー設計指針(簡易)"},
   {id:15,t:"支線の張力・サイズ",sub:"電線張力→支線張力と必要より線サイズ",src:"電技解釈61条(安全率2.5)"},
-  {id:16,t:"電気料金の概算",sub:"契約種別・使用量→月額料金の内訳（力率割引対応）",src:"各社供給約款 / 再エネ特措法"}
+  {id:16,t:"電気料金の概算",sub:"契約種別・使用量→月額料金の内訳（力率割引対応）",src:"各社供給約款 / 再エネ特措法"},
+  {id:17,t:"配電柱（コンクリート柱）強度",sub:"風圧・電線張力→地際モーメント判定と支線要否",src:"電技解釈58・59条 / JIS A5373"}
 ];
-const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯"];
+const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯","⑰"];
 
 /* =========================================================================
    計算ロジック（§5）— UIから分離した純関数。判定理由も返す。
@@ -779,16 +785,19 @@ function calcFound(i){
   }
   const Wf=Vol*2300;                         // 基礎重量 kg（無筋2.3t/m³）
   const hg=(i.H/2+FH)/1000;                  // 基礎底からの盤重心高さ m（重心=H/2仮定）
-  const Mo=i.KH*i.M*g*hg;                    // 転倒モーメント N·m
+  const Fs=i.KH*i.M*g;                       // 地震の水平力 N
+  const Fw=(i.loc==="屋外（風圧あり）")?(i.q||0)*(i.W/1000)*(i.H/1000):0; // 風圧 N（受風面=W×H）
+  const Fh=Math.max(Fs,Fw), gov=Fw>Fs?"風圧":"地震";
+  const Mo=Fh*hg;                            // 転倒モーメント N·m
   const Ms=(i.M+Wf)*g*(FD/2000);             // 安定モーメント N·m（置き基礎）
   const okT=Ms>=Mo;
   const L=Math.max(0.05,(i.D-100)/1000);     // アンカースパン m（盤奥行-100mm）
   const nt=Math.max(1,i.nb/2);               // 引張側本数
-  const T=(i.KH*i.M*g*(i.H/2000)-i.M*g*(i.D/2000))/(L*nt);
+  const T=(Fh*(i.H/2000)-i.M*g*(i.D/2000))/(L*nt);
   const TkN=Math.max(0,T/1000);
   const pick=TkN===0?null:(DATA.anchors.find(a=>a[1]>=TkN)||null);
   const okA=TkN===0||pick!=null;
-  return {FW,FD,FH,Wf,Mo,Ms,okT,TkN,pick,okA,ratio:Mo>0?Ms/Mo:null};
+  return {FW,FD,FH,Wf,Fs,Fw,Fh,gov,Mo,Ms,okT,TkN,pick,okA,ratio:Mo>0?Ms/Mo:null};
 }
 function calcAncr(i){
   if(!i.fc) return {err:true};
@@ -820,6 +829,33 @@ function calcAncr(i){
   });
   const pick=cands.find(x=>x.ok)||null;
   return {Nd,Qd,cands,pick,auto:i.lmode==="機器の重さから自動"};
+}
+function calcPole(i){
+  if(!i.Lp||i.Lp<6||!i.load||!i.dtop||!i.qw||!i.qp) return {err:true};
+  const ne=i.Lp<=15?i.Lp/6:2.5;              // 根入れ（解釈59条: 15m以下は全長の1/6）
+  const h=i.Lp-ne;                           // 地上高 m
+  if(h<=1) return {err:true};
+  const dg=i.dtop+h*100/75;                  // 地際径 cm（テーパ1/75）
+  const Ap=(i.dtop+dg)/2/100*h;              // 柱の受風面積 m²（台形）
+  const Fp=i.qp*Ap;                          // 柱体の風圧 N
+  const hc=h/3*(2*i.dtop+dg)/(i.dtop+dg);    // 台形の図心高さ m（地際から）
+  let Mw=Fp*hc/1000, hTop=0;                 // 風圧モーメント kN·m
+  const rows=i.rows.map(r=>{
+    const hh=Math.min(Math.max(0,r.h||0),h);
+    const F=i.qw*((r.od||0)/1000)*(i.S||0)*(r.n||0); // 電線の風圧 N
+    Mw+=F*hh/1000;
+    hTop=Math.max(hTop,hh);
+    return {od:r.od,h:hh,n:r.n,T:r.T,F};
+  });
+  const Ma=i.load*(h-0.25);                  // 許容地際モーメント kN·m（荷重点=先端0.25m）
+  const anchor=i.mode!=="通り柱（風圧のみ）";
+  let Mt=0;
+  if(anchor) for(const r of rows) Mt+=(r.T||0)*(r.n||0)*r.h;
+  const okW=Mw<=Ma, okT=!anchor||Mt<=Ma;
+  const Pguy=anchor&&hTop>0?Mt/hTop:0;               // 張力を全量支線で受ける場合の水平力
+  const PguyW=!okW&&hTop>0?(Mw-Ma)/hTop:0;           // 風圧の不足分を支線で受ける場合
+  const Pset=Math.max(Pguy,PguyW);
+  return {ne,h,dg,Fp,hc,Mw,Ma,Mt,anchor,okW,okT,hTop,Pguy,PguyW,Pset,rows};
 }
 function calcRate(i){
   const kwh=i.useMode==="負荷から計算"?(i.loadKw||0)*(i.hpd||0)*(i.days||0):i.kwh;
@@ -872,12 +908,14 @@ const S={
   short:{method:"三相",kva:300,z:4,V:210,Vsel:210,icu:10},
   earthB:{mode:"直接入力",Ig:5,kv:6.6,L:0,Lc:0.5,cut:"なし"},
   earth:{cls:"D種",cut:"なし",brk:100,rho:300,rod:"1.5m（1本）"},
-  found:{W:800,D:600,H:1900,M:300,KH:1.0,margin:100,FH:150,nb:4,ftype:"ベタ"},
-  ancr:{typ:"金属拡張",lmode:"機器の重さから自動",M:300,H:1900,D:600,KH:1.0,nb:4,leMode:"目安を使う（自動）",le:50,fc:21,Nd:1.9,Qd:1.0},
+  found:{W:800,D:600,H:1900,M:300,KH:1.0,KHpre:"目安から選ぶ…",loc:"屋内",qpre:"甲種相当 980Pa（風速40m/s・屋外標準）",q:980,margin:100,FH:150,nb:4,ftype:"ベタ"},
+  ancr:{typ:"金属拡張",lmode:"機器の重さから自動",M:300,H:1900,D:600,KH:1.0,KHpre:"目安から選ぶ…",nb:4,leMode:"目安を使う（自動）",le:50,fc:21,Nd:1.9,Qd:1.0},
   guy:{P:5,h1:8,h2:8,L:4,SF:2.5,mat:"亜鉛めっき鋼より線（ST）"},
   rate:{plan:"従量電灯（電灯・家庭）",amp:40,baseA:311.75,t1:29.80,t2:36.40,t3:40.49,
         kw:50,pf:95,hbase:1989.00,hunit:20.00,lbase:1122.00,lunit:26.50,
-        useMode:"使用量を直接入力",kwh:400,loadKw:1.5,hpd:8,days:25,fuel:0.00,saiene:4.18}
+        useMode:"使用量を直接入力",kwh:400,loadKw:1.5,hpd:8,days:25,fuel:0.00,saiene:4.18},
+  pole:{Lp:12,dtop:19,load:5.0,qpre:"甲種（電線980・柱780Pa／風速40m/s相当）",qw:980,qp:780,S:30,
+        mode:"通り柱（風圧のみ）",rows:[{od:11,h:9.8,n:3,T:4.0},{od:17,h:8.5,n:1,T:2.0}]}
 };
 
 /* 入力値の保存・復元（localStorage）: モバイル/PCそれぞれで前回値を保持 */
@@ -1002,6 +1040,8 @@ const KB=[
    "入力値はこの端末のブラウザ内に自動保存されます（サーバーには送信されません）。ヘッダーの↺ボタンですべて初期値に戻せます。"],
   [["印刷","PDF","提出","出力"],"印刷・PDF出力",
    "各ツールの「🖨 印刷/PDF」ボタンで、入力・結果・式・出典・免責を含めて印刷できます。スマホでは印刷画面から「PDFとして保存」も選べます。"],
+  [["電柱","コンクリート柱","ポール","風圧","装柱","引留","根入れ"],"配電柱・支線の計算（⑰⑮）",
+   "⑰で柱の全長・電線の外径/径間/条数から風圧・張力モーメントを計算し、柱の設計荷重（JIS A5373）と比較します。NGなら支線に必要な水平張力Pを⑮へ自動で引き継げます。風圧は電技解釈58条（甲種: 電線980Pa・丸い柱780Pa、丙種=×0.5）。根入れは全長の1/6（解釈59条）。"],
   [["料金","電気代","電気料金","燃調","燃料費","賦課金","再エネ","デマンド","力率割引"],"電気料金の概算（⑯）",
    "⑯で契約種別（従量電灯／低圧電力／高圧）と使用量から月額を概算できます。単価は編集できるので検針票に合わせてください。高圧の基本料金は力率85%基準で×(185−力率)/100。再エネ賦課金は2026年度4.18円/kWh、燃料費調整は毎月変動します。"],
   [["AI","APIキー","api","キー","設定","claude","gemini","無料"],"AI回答の使い方・設定（無料あり）",
@@ -1203,6 +1243,35 @@ function field(label,inner,unit,help){
 function numIn(key,val,step,attr=""){return `<input type="number" data-k="${key}" value="${val}" step="${step||"any"}" ${attr}>`;}
 function selIn(key,opts,val){return `<select data-k="${key}">${opts.map(o=>`<option ${o===val?"selected":""}>${o}</option>`).join("")}</select>`;}
 function seg(key,opts,val){return `<div class="seg">${opts.map(o=>`<button data-seg="${key}" data-v="${o}" class="${o===val?"on":""}">${o}</button>`).join("")}</div>`;}
+const KH_GUIDE=["目安から選ぶ…",
+  "地階・1階｜一般B → 0.4","地階・1階｜重要A → 0.6","地階・1階｜特に重要S → 1.0",
+  "中間階｜一般B → 0.6","中間階｜重要A → 1.0","中間階｜特に重要S → 1.5",
+  "屋上・上層階｜一般B → 1.0","屋上・上層階｜重要A → 1.5","屋上・上層階｜特に重要S → 2.0"];
+function poleRows(){
+  const p=S.pole, anchor=p.mode!=="通り柱（風圧のみ）";
+  const cols=anchor?"56px 56px 44px 62px 34px":"minmax(0,1fr) minmax(0,1fr) 60px 34px";
+  const head=anchor
+    ?`<div class="row-head" style="grid-template-columns:${cols}"><span>外径mm</span><span>高さm</span><span>条数</span><span>張力kN/条</span><span></span></div>`
+    :`<div class="row-head" style="grid-template-columns:${cols}"><span>外径mm</span><span>取付高さm</span><span>条数</span><span></span></div>`;
+  const rows=p.rows.map((r,idx)=>`<div class="row" style="grid-template-columns:${cols}">
+      <input type="number" data-row="pole" data-idx="${idx}" data-f="od" value="${r.od}" step="0.5">
+      <input type="number" data-row="pole" data-idx="${idx}" data-f="h" value="${r.h}" step="0.1">
+      <input type="number" data-row="pole" data-idx="${idx}" data-f="n" value="${r.n}" step="1">
+      ${anchor?`<input type="number" data-row="pole" data-idx="${idx}" data-f="T" value="${r.T}" step="0.1">`:""}
+      <button class="del" data-delrow="pole" data-idx="${idx}">−</button>
+    </div>`).join("");
+  return `<div class="field"><label>架渉する電線（回線ごと）${helpBtn("風圧荷重（甲・乙・丙種）")}<span class="unit-tag">最大4行</span></label>
+    <div class="rows">${head}${rows}</div>
+    ${p.rows.length<4?`<button class="addrow" data-addrow="pole">＋ 行を追加</button>`:""}
+    <div class="ref-note" style="margin:6px 0 0">外径の目安: 高圧絶縁電線38sq≒11mm・60sq≒13mm ／ 低圧OW 3.2mm≒5mm ／ DV3心22sq≒17mm ／ 通信線≒10mm（メーカー表で確認）。${anchor?"<b>張力kN/条</b>は電線の想定最大張力（ちょう度計算値または引張強さ/2.2）。":""}</div></div>`;
+}
+function khRow(mk){
+  const st=S[mk];
+  return `<div class="two">
+    ${field("震度の目安（設置階×重要度）",selIn("KHpre",KH_GUIDE,st.KHpre),"",("設計水平震度 KH"))}
+    ${field("設計水平震度 KH",numIn("KH",st.KH,0.1),"",("設計水平震度 KH"))}
+  </div>`;
+}
 function voltRow(mapKey,label){
   const st=S[mapKey];
   return `<div class="two">
@@ -1361,10 +1430,15 @@ function inputCard(id){
         ${field("奥行 D",numIn("D",c.found.D,10),"mm")}
         ${field("高さ H",numIn("H",c.found.H,10),"mm")}
       </div>
+      ${field("盤の質量",numIn("M",c.found.M,10),"kg")}
+      ${khRow("found")}
+      <div class="field"><label>設置場所（風圧の考慮）${helpBtn("風圧荷重（甲・乙・丙種）")}</label>${seg("loc",["屋内","屋外（風圧あり）"],c.found.loc)}</div>
+      ${c.found.loc==="屋外（風圧あり）"?`
       <div class="two">
-        ${field("盤の質量",numIn("M",c.found.M,10),"kg")}
-        ${field("設計水平震度 KH",selIn("KH",[0.6,1.0,1.5,2.0],c.found.KH),"",("設計水平震度 KH"))}
+        ${field("風圧の目安",selIn("qpre",["甲種相当 980Pa（風速40m/s・屋外標準）","丙種相当 490Pa（甲種×0.5）","手入力"],c.found.qpre),"",("風圧荷重（甲・乙・丙種）"))}
+        ${field("設計風圧 q",numIn("q",c.found.q,10),"Pa")}
       </div>
+      <div class="ref-note" style="margin-top:-4px">受風面積は<b>幅W×高さH</b>（正面）。地震の水平力（KH×重量）と比べて<b>大きい方</b>で転倒・アンカーを判定します。</div>`:""}
       <div class="three">
         ${field("基礎の出代（片側）",numIn("margin",c.found.margin,10),"mm")}
         ${field("基礎高さ",numIn("FH",c.found.FH,10),"mm")}
@@ -1386,10 +1460,8 @@ function inputCard(id){
         ${field("高さ H",numIn("H",c.ancr.H,10),"mm")}
         ${field("奥行 D",numIn("D",c.ancr.D,10),"mm")}
       </div>
-      <div class="two">
-        ${field("設計水平震度 KH",selIn("KH",[0.6,1.0,1.5,2.0],c.ancr.KH),"",("設計水平震度 KH"))}
-        ${field("アンカー本数",selIn("nb",[4,6,8],c.ancr.nb),"本",("アンカーボルト"))}
-      </div>`:`
+      ${khRow("ancr")}
+      ${field("アンカー本数",selIn("nb",[4,6,8],c.ancr.nb),"本",("アンカーボルト"))}`:`
       <div class="two">
         ${field("引張荷重 Nd（1本あたり）",numIn("Nd",c.ancr.Nd,0.1),"kN")}
         ${field("せん断荷重 Qd（1本あたり）",numIn("Qd",c.ancr.Qd,0.1),"kN")}
@@ -1400,7 +1472,8 @@ function inputCard(id){
         : `<div class="ref-note" style="margin-top:-4px">埋込み長の目安（カタログ標準）: M8=40 / M10=40 / M12=50 / M16=60 / M20=80 mm をサイズごとに自動適用します。</div>`}
       <div class="ref-note">「機器の重さから自動」は⑬盤基礎と同じ簡易式（重心=H/2・ボルトスパン=D−100mm）で1本あたりの引張・せん断を自動算出します。</div>`,
     15:()=>`
-      ${field("電線の水平張力 P（引張り合計）",numIn("P",c.guy.P,0.1),"kN",("支線"))}
+      ${field("電線の水平張力 P（引張り合計）",numIn("P",c.guy.P,0.1),"kN",("電線の水平張力 P"))}
+      <div class="ref-note" style="margin-top:-4px"><b>Pとは:</b> 支線の位置で引き留めている<b>電線が柱を引く力の合計（水平成分）</b>です。引留柱・末端柱では「電線の想定最大張力×条数」。わからない場合は ⑰ で電線の太さ・径間から自動計算できます。<button class="btn" data-chip="17" style="margin-top:6px">⑰ 配電柱の計算から求める →</button></div>
       <div class="two">
         ${field("電線の取付高さ h1",numIn("h1",c.guy.h1,0.1),"m")}
         ${field("支線の取付高さ h2",numIn("h2",c.guy.h2,0.1),"m")}
@@ -1411,6 +1484,24 @@ function inputCard(id){
       </div>
       <div class="field"><label>支線の材質</label>${seg("mat",["亜鉛めっき鋼より線（ST）","アルミ覆鋼より線（AC）"],c.guy.mat)}</div>
       <div class="ref-note" style="margin-top:-4px">安全率は電技解釈61条により原則<b>2.5以上</b>（一時的な支線は1.5）。根開きLは取付高さの<b>1/2以上</b>が目安です。</div>`,
+    17:()=>{
+      const r=c.pole;
+      return `
+      <div class="two">
+        ${field("柱の全長",selIn("Lp",[8,9,10,12,14,15,16],r.Lp),"m",("根入れ"))}
+        ${field("末口径（柱先端の直径）",numIn("dtop",r.dtop,0.5),"cm")}
+      </div>
+      ${field("柱の設計荷重（呼び strength）",selIn("load",[2.0,3.5,5.0,7.0],r.load),"kN",("設計荷重（コンクリート柱）"))}
+      ${field("風圧荷重の種別",selIn("qpre",["甲種（電線980・柱780Pa／風速40m/s相当）","丙種（甲種×0.5／低風速の市街地等）","手入力"],r.qpre),"",("風圧荷重（甲・乙・丙種）"))}
+      ${r.qpre==="手入力"?`
+      <div class="two">
+        ${field("電線への風圧",numIn("qw",r.qw,10),"Pa")}
+        ${field("柱体への風圧",numIn("qp",r.qp,10),"Pa")}
+      </div>`:""}
+      ${field("平均径間 S（両側径間の平均）",numIn("S",r.S,1),"m",("径間 S"))}
+      <div class="field"><label>柱の種類${helpBtn("引留柱・通り柱")}</label>${seg("mode",["通り柱（風圧のみ）","引留柱・末端（張力も検討）"],r.mode)}</div>
+      ${poleRows()}
+      <div class="ref-note" style="margin-top:-4px">根入れは自動（全長15m以下→全長の1/6、超→2.5m・解釈59条）。着雪地域（乙種）は氷雪付き外径での別途検討が必要です。</div>`;},
     16:()=>{
       const r=c.rate;
       return `
@@ -1570,7 +1661,7 @@ function wcOpts(cur){
 
 /* ---- bind input events ---- */
 function bindInputs(id){
-  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB",12:"earth",13:"found",14:"ancr",15:"guy",16:"rate"}[id];
+  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB",12:"earth",13:"found",14:"ancr",15:"guy",16:"rate",17:"pole"}[id];
   main.querySelectorAll("[data-k]").forEach(el=>{
     el.oninput=()=>{
       let v=el.value;
@@ -1579,6 +1670,25 @@ function bindInputs(id){
         S.lux.preset=el.value;
         const p=DATA.luminaires.find(x=>x.id===el.value);
         if(p) S.lux.F=p.F;
+        render();
+        return;
+      }
+      if(el.dataset.k==="KHpre"){
+        S[map].KHpre=el.value;
+        const m2=el.value.match(/→ ([0-9.]+)/);
+        if(m2) S[map].KH=parseFloat(m2[1]);
+        render();
+        return;
+      }
+      if(el.dataset.k==="qpre"){
+        S[map].qpre=el.value;
+        if(map==="found"){
+          const qv={"甲種相当 980Pa（風速40m/s・屋外標準）":980,"丙種相当 490Pa（甲種×0.5）":490}[el.value];
+          if(qv) S.found.q=qv;
+        }else if(map==="pole"){
+          const pv={"甲種（電線980・柱780Pa／風速40m/s相当）":[980,780],"丙種（甲種×0.5／低風速の市街地等）":[490,390]}[el.value];
+          if(pv){S.pole.qw=pv[0];S.pole.qp=pv[1];}
+        }
         render();
         return;
       }
@@ -1653,6 +1763,9 @@ function bindInputs(id){
       if(STR.includes(el.dataset.k)) v=el.value;
       S[map][el.dataset.k]=v;
       if(el.dataset.k==="U") S.lux.upre="手入力";
+      if(el.dataset.k==="KH") S[map].KHpre="目安から選ぶ…";
+      if(el.dataset.k==="q"&&map==="found") S.found.qpre="手入力";
+      if((el.dataset.k==="qw"||el.dataset.k==="qp")&&map==="pole") S.pole.qpre="手入力";
       if(el.dataset.k==="M") S.lux.mpre="手入力";
       if(el.dataset.k==="wc") S.messenger.wcsel="手入力";
       if(el.dataset.k==="D") S.messenger.Dpre="手入力";
@@ -1687,7 +1800,7 @@ function bindInputs(id){
   });
   main.querySelectorAll("[data-addrow]").forEach(b=>b.onclick=()=>{
     const k=b.dataset.addrow;
-    S[k].rows.push(k==="conduit"?{sel:"manual",od:5.5,k:1.2,n:1}:{sel:"manual",od:27,n:1});render();
+    S[k].rows.push(k==="conduit"?{sel:"manual",od:5.5,k:1.2,n:1}:k==="pole"?{od:10,h:8,n:1,T:1.0}:{sel:"manual",od:27,n:1});render();
   });
 }
 
@@ -1711,10 +1824,18 @@ function recalc(id){
   if(id===14) html=resultAncr(calcAncr(S.ancr));
   if(id===15) html=resultGuy(calcGuy(S.guy));
   if(id===16) html=resultRate(calcRate(S.rate));
+  if(id===17) html=resultPole(calcPole(S.pole));
   persist();
   slot.innerHTML=html;
   bindHelp();
   slot.querySelectorAll("[data-goto]").forEach(b=>b.onclick=()=>{view=parseInt(b.dataset.goto);render();});
+  slot.querySelectorAll("[data-setguy]").forEach(b=>b.onclick=()=>{
+    const pv=parseFloat(b.dataset.setguy);
+    if(isFinite(pv)&&pv>0) S.guy.P=Math.round(pv*10)/10;
+    const hv=parseFloat(b.dataset.h1||"");
+    if(isFinite(hv)&&hv>0){ S.guy.h1=hv; if(S.guy.h2>hv) S.guy.h2=hv; }
+    view=15; render();
+  });
 }
 function resultShell(inner,disclose){
   return `<div class="card result"><div class="card-h"><span class="lab">STEP 2</span><span class="t">自動計算 → 結果</span></div>
@@ -2113,6 +2234,7 @@ function resultFound(r){
       <div class="metric"><div class="v">${r.okT?"OK":"NG"}</div><div class="k">置き基礎の転倒</div></div>
     </div>
     <div class="reason">
+      ${S.found.loc==="屋外（風圧あり）"?`水平力: 地震 <b>${Math.round(r.Fs)}N</b>（KH=${S.found.KH}） / 風圧 <b>${Math.round(r.Fw)}N</b>（q=${S.found.q}Pa×受風面） → <b>${r.gov}が支配</b>。<br>`:""}
       アンカー固定時: 1本あたり引抜き <b>${f1(r.TkN)}kN</b>${r.TkN===0?"（自重で打ち消し）":` → <b>${r.pick?r.pick[0]:"M20超・個別検討"}</b>`}。
       置き基礎（固定なし）の場合: 安定 <b>${f1(r.Ms)}N·m</b> ${r.okT?"≧":"＜"} 転倒 <b>${f1(r.Mo)}N·m</b>${r.okT?" → 転倒しません。":" → <b>転倒NG</b>。出代・基礎高さを増やすか、床スラブへのアンカー固定としてください。"}
       <div style="margin-top:9px"><button class="btn" data-goto="14">⑭ アンカー耐荷重でくわしく検算 →</button></div>
@@ -2126,77 +2248,136 @@ function resultFound(r){
   const d=disclose(
     ["基礎寸法 = 盤寸法 + 出代×2（高さは入力値）",
      "基礎重量 = 形式別の体積 × 2.3t/m³（ボイド壁厚・ゲタ幅は150mm仮定）",
-     "転倒モーメント Mo = KH × 盤質量 × g × 重心高さ（H/2+基礎高さ）",
+     "水平力 Fh = max( KH×盤質量×g ,  風圧q×受風面W×H ) ※屋外のみ風圧比較",
+     "転倒モーメント Mo = Fh × 重心高さ（H/2+基礎高さ）",
      "安定モーメント Ms = (盤+基礎質量) × g × 基礎奥行/2",
-     "引抜力 T = (KH×W×g×H/2 − W×g×D/2) / (スパン(D−100mm) × 引張側本数)",
+     "引抜力 T = (Fh×H/2 − W×g×D/2) / (スパン(D−100mm) × 引張側本数)",
      "推奨アンカー = 短期許容引張（M10:5.8 / M12:8.4 / M16:15.7 / M20:24.5 kN）"],
-    "建築設備耐震設計・施工指針の簡易法（重心=H/2仮定・鉛直震度無視）",
-    `<p><b>⚠ 注意:</b> 概算用の簡易法です。設計水平震度は地域・設置階・機器重要度で異なります（一般1.0、重要機器1.5、屋上等は割増し）。アンカーの埋込み長・コーン破壊・せん断、基礎配筋は構造担当と個別に検討してください。</p>`);
+    "建築設備耐震設計・施工指針の簡易法（重心=H/2仮定・鉛直震度無視）／ 風圧: 電技解釈58条の風圧荷重を準用",
+    `<p><b>⚠ 注意:</b> 概算用の簡易法です。設計水平震度は入力欄の目安表（地階・1階 0.4〜1.0／中間階 0.6〜1.5／屋上 1.0〜2.0、一般B/重要A/特に重要S）から設置条件に合わせて選んでください。風圧は受風面を正面(W×H)とした簡易計算です。アンカーの埋込み長・コーン破壊・せん断、基礎配筋は構造担当と個別に検討してください。</p>`);
   return resultShell(inner,d);
+}
+function cHatch(pid){
+  return `<defs>
+    <pattern id="${pid}" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#e9eef3"/><line x1="0" y1="0" x2="0" y2="8" stroke="#c3cfda" stroke-width="1.1"/>
+    </pattern>
+    <pattern id="${pid}g" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+      <rect width="6" height="6" fill="#f3f0ea"/><line x1="0" y1="0" x2="0" y2="6" stroke="#cfc6b5" stroke-width="1"/>
+    </pattern>
+  </defs>`;
+}
+function boltMark(x,y){
+  return `<circle cx="${x}" cy="${y}" r="4.5" fill="#fff" stroke="#b5651d" stroke-width="1.6"/>
+    <line x1="${x-7}" y1="${y}" x2="${x+7}" y2="${y}" stroke="#b5651d" stroke-width="1.4"/>
+    <line x1="${x}" y1="${y-7}" x2="${x}" y2="${y+7}" stroke="#b5651d" stroke-width="1.4"/>`;
 }
 function foundSVG(r){
   const f=S.found;
-  const sc=Math.min(250/r.FW,220/r.FD), pad=42;
+  const sc=Math.min(250/r.FW,220/r.FD), pad=44;
   const FW=r.FW*sc, FD=r.FD*sc, W=f.W*sc, D=f.D*sc;
   const ox=pad, oy=pad;
   const px=ox+(FW-W)/2, py=oy+(FD-D)/2;
-  const tw=Math.max(10,150*sc);
-  let body;
-  if(f.ftype==="ゲタ（2条）"){
-    body=`<rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="none" stroke="#9aa6b2" stroke-width="1" stroke-dasharray="3 3"/>
-      <rect x="${ox}" y="${oy}" width="${tw}" height="${FD}" fill="#e8eef4" stroke="#46566a" stroke-width="2.5"/>
-      <rect x="${ox+FW-tw}" y="${oy}" width="${tw}" height="${FD}" fill="#e8eef4" stroke="#46566a" stroke-width="2.5"/>
-      <text x="${ox+FW/2}" y="${oy+FD-10}" text-anchor="middle" class="dim">ゲタ2条（幅150）</text>`;
-  }else if(f.ftype==="ボイド"){
-    const vx=ox+tw, vy=oy+tw, vw=Math.max(8,FW-2*tw), vh=Math.max(8,FD-2*tw);
-    body=`<rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="#e8eef4" stroke="#46566a" stroke-width="2.5"/>
-      <rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="#fff" stroke="#46566a" stroke-width="1.5"/>
-      <line x1="${vx}" y1="${vy}" x2="${vx+vw}" y2="${vy+vh}" stroke="#9aa6b2" stroke-width="1"/>
-      <line x1="${vx+vw}" y1="${vy}" x2="${vx}" y2="${vy+vh}" stroke="#9aa6b2" stroke-width="1"/>
-      <text x="${vx+vw/2}" y="${vy+vh/2+20}" text-anchor="middle" class="dim">開口（ボイド）</text>`;
-  }else{
-    body=`<rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="#fff" stroke="#46566a" stroke-width="2.5"/>`;
-  }
+  const tw=Math.max(12,150*sc);
+  // アンカー位置（盤外形−100mmの目安）
   const bw=Math.max(20,(f.W-100)*sc), bd=Math.max(20,(f.D-100)*sc);
   const bx=ox+(FW-bw)/2, by=oy+(FD-bd)/2;
   let pts=[[bx,by],[bx+bw,by],[bx,by+bd],[bx+bw,by+bd]];
   if(f.nb>=6) pts.push([bx+bw/2,by],[bx+bw/2,by+bd]);
   if(f.nb>=8) pts=[[bx,by],[bx+bw/2,by],[bx+bw,by],[bx,by+bd],[bx+bw/2,by+bd],[bx+bw,by+bd],[bx,by+bd/2],[bx+bw,by+bd/2]];
-  const bolts=pts.slice(0,f.nb).map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="none" stroke="#b5651d" stroke-width="1.6"/><line x1="${p[0]-7}" y1="${p[1]}" x2="${p[0]+7}" y2="${p[1]}" stroke="#b5651d" stroke-width="1.4"/><line x1="${p[0]}" y1="${p[1]-7}" x2="${p[0]}" y2="${p[1]+7}" stroke="#b5651d" stroke-width="1.4"/>`).join("");
+  let body;
+  if(f.ftype==="ゲタ（2条）"){
+    // 2条の梁はアンカー通り芯の直下に配置（実際の据付と同じ）
+    const s1=bx-tw/2, s2=bx+bw-tw/2;
+    body=`<rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="none" stroke="#9aa6b2" stroke-width="1" stroke-dasharray="3 3"/>
+      <rect x="${s1}" y="${oy}" width="${tw}" height="${FD}" fill="url(#hp1)" stroke="#46566a" stroke-width="2.2"/>
+      <rect x="${s2}" y="${oy}" width="${tw}" height="${FD}" fill="url(#hp1)" stroke="#46566a" stroke-width="2.2"/>
+      <text x="${ox+FW/2}" y="${oy+FD/2-6}" text-anchor="middle" class="dim">配線スペース</text>
+      <text x="${ox+FW/2}" y="${oy+FD/2+8}" text-anchor="middle" class="dim">（基礎間・盤下）</text>
+      <text x="${s1+tw/2}" y="${oy-8}" text-anchor="middle" class="dim">ゲタ基礎 w150</text>
+      <line x1="${s1+tw/2}" y1="${oy}" x2="${s1+tw/2}" y2="${oy+FD}" stroke="#b5651d" stroke-width="0.8" stroke-dasharray="8 4" opacity="0.6"/>
+      <line x1="${s2+tw/2}" y1="${oy}" x2="${s2+tw/2}" y2="${oy+FD}" stroke="#b5651d" stroke-width="0.8" stroke-dasharray="8 4" opacity="0.6"/>`;
+  }else if(f.ftype==="ボイド"){
+    const vx=ox+tw, vy=oy+tw, vw=Math.max(10,FW-2*tw), vh=Math.max(10,FD-2*tw);
+    const c1x=vx+vw/2, c1y=vy+vh/2;
+    body=`<rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="url(#hp1)" stroke="#46566a" stroke-width="2.5"/>
+      <rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="#fff" stroke="#46566a" stroke-width="1.6"/>
+      <line x1="${vx}" y1="${vy}" x2="${vx+vw}" y2="${vy+vh}" stroke="#c3cfda" stroke-width="1"/>
+      <line x1="${vx+vw}" y1="${vy}" x2="${vx}" y2="${vy+vh}" stroke="#c3cfda" stroke-width="1"/>
+      <circle cx="${c1x-10}" cy="${c1y}" r="5" fill="none" stroke="#b5651d" stroke-width="1.6"/>
+      <circle cx="${c1x+6}" cy="${c1y+6}" r="4" fill="none" stroke="#b5651d" stroke-width="1.4"/>
+      <circle cx="${c1x+9}" cy="${c1y-8}" r="3.2" fill="none" stroke="#b5651d" stroke-width="1.2"/>
+      <text x="${c1x}" y="${vy+14}" text-anchor="middle" class="dim">開口（ボイド）ケーブル立上げ</text>
+      <line x1="${ox}" y1="${oy+tw/2}" x2="${vx}" y2="${oy+tw/2}" stroke="#46566a" stroke-width="0.8"/>
+      <text x="${ox+tw/2}" y="${oy+tw/2-4}" text-anchor="middle" class="dim">150</text>`;
+  }else{
+    body=`<rect x="${ox}" y="${oy}" width="${FW}" height="${FD}" fill="url(#hp1)" stroke="#46566a" stroke-width="2.5"/>
+      <text x="${ox+FW/2}" y="${oy+14}" text-anchor="middle" class="dim">ベタ基礎（全面コンクリート）</text>`;
+  }
+  const bolts=pts.slice(0,f.nb).map(p=>boltMark(p[0],p[1])).join("");
   return `<div class="plan-wrap"><svg viewBox="0 0 ${FW+pad*2} ${FD+pad*2+8}" class="plan" role="img" aria-label="盤基礎の平面図">
+    ${cHatch("hp1")}
     ${body}
-    <rect x="${px}" y="${py}" width="${W}" height="${D}" fill="none" stroke="#9aa6b2" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <rect x="${px}" y="${py}" width="${W}" height="${D}" fill="none" stroke="#5b6b7d" stroke-width="1.6" stroke-dasharray="7 4"/>
     ${bolts}
-    <text x="${ox+FW/2}" y="${oy+FD+26}" text-anchor="middle" class="dim">${r.FW} mm</text>
+    <line x1="${ox}" y1="${oy+FD+14}" x2="${ox+FW}" y2="${oy+FD+14}" stroke="#46566a" stroke-width="1"/>
+    <line x1="${ox}" y1="${oy+FD+10}" x2="${ox}" y2="${oy+FD+18}" stroke="#46566a" stroke-width="1"/>
+    <line x1="${ox+FW}" y1="${oy+FD+10}" x2="${ox+FW}" y2="${oy+FD+18}" stroke="#46566a" stroke-width="1"/>
+    <text x="${ox+FW/2}" y="${oy+FD+30}" text-anchor="middle" class="dim">${r.FW} mm</text>
     <text x="${ox-18}" y="${oy+FD/2}" text-anchor="middle" class="dim" transform="rotate(-90 ${ox-18} ${oy+FD/2})">${r.FD} mm</text>
-    <text x="${px+W/2}" y="${py+16}" text-anchor="middle" class="dim">盤</text>
+    <text x="${px+W/2}" y="${py-5}" text-anchor="middle" class="dim">盤（据付範囲・破線）</text>
   </svg></div>`;
 }
 function sideSVG(r){
   const f=S.found;
   const totH=f.H+r.FH;
-  const sc=Math.min(230/r.FW,170/totH), pad=44;
-  const FW=r.FW*sc, FH=Math.max(6,r.FH*sc), W=f.W*sc, H=f.H*sc;
+  const sc=Math.min(230/r.FW,170/totH), pad=48;
+  const FW=r.FW*sc, FH=Math.max(10,r.FH*sc), W=f.W*sc, H=f.H*sc;
   const ox=pad, topY=pad, fTop=topY+H, gl=fTop+FH;
   const px=ox+(FW-W)/2;
-  const tw=Math.max(8,150*sc);
+  const tw=Math.max(12,150*sc);
+  const chan=Math.min(14,Math.max(6,H*0.05)); // チャンネルベース
+  // アンカー通り芯（盤端から50mm内側）
+  const ax1=px+Math.max(8,50*sc), ax2=px+W-Math.max(8,50*sc);
   let base;
   if(f.ftype==="ゲタ（2条）"){
-    base=`<rect x="${ox}" y="${fTop}" width="${tw}" height="${FH}" fill="#e8eef4" stroke="#46566a" stroke-width="2"/>
-          <rect x="${ox+FW-tw}" y="${fTop}" width="${tw}" height="${FH}" fill="#e8eef4" stroke="#46566a" stroke-width="2"/>`;
+    const s1=ax1-tw/2, s2=ax2-tw/2;
+    base=`<rect x="${s1}" y="${fTop}" width="${tw}" height="${FH}" fill="url(#hs1)" stroke="#46566a" stroke-width="2"/>
+      <rect x="${s2}" y="${fTop}" width="${tw}" height="${FH}" fill="url(#hs1)" stroke="#46566a" stroke-width="2"/>
+      <path d="M${(s1+s2)/2+tw/2-16} ${gl-2} q6 -${FH*0.7} 14 -${FH+chan+4}" fill="none" stroke="#b5651d" stroke-width="1.8"/>
+      <path d="M${(s1+s2)/2+tw/2-6} ${gl-2} q4 -${FH*0.6} 10 -${FH+chan+4}" fill="none" stroke="#b5651d" stroke-width="1.5"/>
+      <text x="${(s1+s2)/2+tw/2}" y="${fTop+FH/2+4}" text-anchor="middle" class="dim">配線</text>`;
   }else{
-    base=`<rect x="${ox}" y="${fTop}" width="${FW}" height="${FH}" fill="#e8eef4" stroke="#46566a" stroke-width="2"/>`;
-    if(f.ftype==="ボイド") base+=`<rect x="${ox+tw}" y="${fTop+2}" width="${Math.max(4,FW-2*tw)}" height="${Math.max(2,FH-4)}" fill="none" stroke="#9aa6b2" stroke-width="1.2" stroke-dasharray="5 3"/>`;
+    base=`<rect x="${ox}" y="${fTop}" width="${FW}" height="${FH}" fill="url(#hs1)" stroke="#46566a" stroke-width="2"/>`;
+    if(f.ftype==="ボイド"){
+      const vw=Math.max(8,FW-2*tw);
+      base+=`<rect x="${ox+tw}" y="${fTop+1.5}" width="${vw}" height="${Math.max(3,FH-3)}" fill="#fff" stroke="#9aa6b2" stroke-width="1.2" stroke-dasharray="5 3"/>
+      <path d="M${ox+FW/2-8} ${gl+10} q2 -${FH} 8 -${FH+chan+10}" fill="none" stroke="#b5651d" stroke-width="1.8"/>
+      <path d="M${ox+FW/2+4} ${gl+10} q2 -${FH*0.9} 6 -${FH+chan+10}" fill="none" stroke="#b5651d" stroke-width="1.5"/>
+      <text x="${ox+FW/2}" y="${topY+H-chan-6}" text-anchor="middle" class="dim">↑ボイドから配線立上げ</text>`;
+    }
   }
-  const anchors=[px+16,px+W-16].map(x2=>`<line x1="${x2}" y1="${fTop-8}" x2="${x2}" y2="${fTop+Math.min(FH-2,16)}" stroke="#b5651d" stroke-width="2.5"/>`).join("");
-  return `<div class="plan-wrap"><svg viewBox="0 0 ${FW+pad*2} ${gl-topY+pad*1.6}" class="plan" role="img" aria-label="盤基礎の側面図">
-    <rect x="${px}" y="${topY}" width="${W}" height="${H}" fill="#fff" stroke="#46566a" stroke-width="2"/>
-    <text x="${px+W/2}" y="${topY+H/2+4}" text-anchor="middle" class="dim">盤 H=${f.H}</text>
+  // アンカーボルト: ナット＋ベースを貫通してコンクリートへ
+  const anchors=[ax1,ax2].map(x2=>`
+    <line x1="${x2}" y1="${fTop-chan-4}" x2="${x2}" y2="${fTop+Math.min(FH-3,18)}" stroke="#b5651d" stroke-width="2.4"/>
+    <rect x="${x2-4.5}" y="${fTop-chan-7}" width="9" height="4" fill="#b5651d"/>
+    <line x1="${x2-6}" y1="${fTop-chan-2.5}" x2="${x2+6}" y2="${fTop-chan-2.5}" stroke="#b5651d" stroke-width="1.6"/>
+    <path d="M${x2} ${fTop+Math.min(FH-3,18)} h6" stroke="#b5651d" stroke-width="2.2" fill="none"/>`).join("");
+  return `<div class="plan-wrap"><svg viewBox="0 0 ${FW+pad*2} ${gl-topY+pad*1.7}" class="plan" role="img" aria-label="盤基礎の側面図">
+    ${cHatch("hs1")}
+    <rect x="${px}" y="${topY}" width="${W}" height="${H-chan}" fill="#fff" stroke="#46566a" stroke-width="2"/>
+    <line x1="${px+W*0.5}" y1="${topY+6}" x2="${px+W*0.5}" y2="${topY+H-chan-6}" stroke="#9aa6b2" stroke-width="0.8"/>
+    <circle cx="${px+W*0.44}" cy="${topY+(H-chan)/2}" r="2.2" fill="none" stroke="#46566a" stroke-width="1.2"/>
+    <rect x="${px+W*0.12}" y="${topY+H*0.72-chan}" width="${W*0.24}" height="${H*0.1}" fill="none" stroke="#c3cfda" stroke-width="1"/>
+    <text x="${px+W/2}" y="${topY+16}" text-anchor="middle" class="dim">盤 H=${f.H}</text>
+    <rect x="${px}" y="${topY+H-chan}" width="${W}" height="${chan}" fill="#d7dee6" stroke="#46566a" stroke-width="1.6"/>
+    <text x="${px-6}" y="${topY+H-chan/2+3}" text-anchor="end" class="dim">ﾁｬﾝﾈﾙﾍﾞｰｽ</text>
     ${base}
     ${anchors}
-    <line x1="${ox-20}" y1="${gl}" x2="${ox+FW+20}" y2="${gl}" stroke="#46566a" stroke-width="2.5"/>
-    <text x="${ox+FW+22}" y="${gl+4}" class="dim">FL</text>
-    <text x="${ox+FW/2}" y="${gl+22}" text-anchor="middle" class="dim">${r.FW} mm</text>
+    <line x1="${ox-26}" y1="${gl}" x2="${ox+FW+26}" y2="${gl}" stroke="#46566a" stroke-width="2.5"/>
+    <rect x="${ox-26}" y="${gl}" width="${FW+52}" height="12" fill="url(#hs1g)" opacity="0.8"/>
+    <text x="${ox+FW+28}" y="${gl+4}" class="dim">FL</text>
+    <text x="${ox+FW/2}" y="${gl+30}" text-anchor="middle" class="dim">${r.FW} mm</text>
     <text x="${ox-8}" y="${fTop+FH/2+3}" text-anchor="end" class="dim">${r.FH}</text>
   </svg></div>`;
 }
@@ -2283,6 +2464,70 @@ function guySVG(g){
     <text x="${(poleX+gx)/2}" y="${gl+18}" text-anchor="middle" class="dim">L=${g.L}m</text>
     <text x="${poleX+8}" y="${y2+2}" class="dim">h2=${g.h2}m</text>
     <path d="M${gx-3} ${gl} l-5 -8 h10 z" fill="#46566a"/>
+  </svg></div>`;
+}
+function resultPole(r){
+  if(r.err) return resultShell(emptyR("柱の全長・設計荷重・末口径・風圧を入力してください"));
+  const ok=r.okW&&r.okT;
+  const inner=`
+    ${readout(ok,ok?"OK":"支線検討","",ok?"柱の強度内に収まっています":"柱の設計荷重を超過 → 支線または上位サイズの柱")}
+    <div class="sub-readout">
+      <div class="metric"><div class="v">${f1(r.Mw)}<span style="font-size:10px"> kN·m</span></div><div class="k">風圧M（直角方向）</div></div>
+      ${r.anchor?`<div class="metric"><div class="v">${f1(r.Mt)}<span style="font-size:10px"> kN·m</span></div><div class="k">張力M（線路方向）</div></div>`:""}
+      <div class="metric"><div class="v">${f1(r.Ma)}<span style="font-size:10px"> kN·m</span></div><div class="k">柱の許容M</div></div>
+    </div>
+    <div class="reason">
+      地上高 <b>${f1(r.h)}m</b>（根入れ ${f1(r.ne)}m = 全長の1/6・解釈59条）、地際径 約${f1(r.dg)}cm（テーパ1/75）。<br>
+      風圧: ${lamp(r.okW)} <b>${f1(r.Mw)}</b> ${r.okW?"≦":"＞"} 許容 <b>${f1(r.Ma)} kN·m</b>
+      ${r.anchor?`<br>引留張力: ${lamp(r.okT)} <b>${f1(r.Mt)}</b> ${r.okT?"≦":"＞"} 許容 <b>${f1(r.Ma)} kN·m</b>`:""}
+      ${!ok?`<br><b>支線で受ける場合の水平張力 P ≒ ${f1(r.Pset)} kN</b>（取付高さ ${f1(r.hTop||r.h)}m・${r.anchor&&r.Pguy>=r.PguyW?"引留張力の全量":"風圧の不足分"}）
+      <div style="margin-top:9px"><button class="btn primary" data-setguy="${r.Pset.toFixed(1)}" data-h1="${(r.hTop||r.h).toFixed(1)}">⑮ 支線計算へ P=${f1(r.Pset)}kN を引き継ぐ →</button></div>`
+      :`<br>引留・末端で使う場合は「引留柱・末端」を選んで張力も確認してください。`}
+    </div>
+    <div class="cand-wrap">
+      <div class="cap">柱の立面イメージ</div>
+      ${poleSVG(S.pole,r)}
+      <div class="ref-note">電線の風圧 = q×外径×平均径間×条数（980Pa=甲種）。柱体の風圧は台形の受風面に一様（図心に作用）。がいし装置・腕金の風圧（1370/1570Pa）は省略した簡易計算です。</div>
+    </div>`;
+  const d=disclose(
+    ["根入れ = 全長×1/6（15m以下）／ 2.5m（15m超）　…解釈59条",
+     "地際径 = 末口径 + 地上高×(1/75)　…テーパ1/75（代表値）",
+     "風圧M = Σ(q_電線×d×S×n×h) + q_柱×受風面×図心高さ",
+     "許容M = 設計荷重 × (地上高 − 0.25m)　…JIS A5373の荷重点",
+     "張力M（引留） = Σ(想定最大張力×条数×取付高さ)",
+     "判定: 風圧M・張力M ≦ 許容M（別方向なので個別判定）",
+     "支線P = 張力M ÷ 支線取付高さ（全量負担）"],
+    "電技解釈58条（甲種風圧: 電線980Pa・丸形支持物780Pa、丙種=甲種×0.5）／ 59条（A種柱の根入れ・強度）／ JIS A5373（コンクリートポール）",
+    `<p><b>⚠ 注意:</b> 概算です。着雪地域は乙種風圧（氷雪6mm付き外径×490Pa）での検討、不平衡張力・水平角のある柱は合成力の検討が別途必要です。B種柱・特別高圧、開閉器などの装柱重量は対象外。電力会社管理の柱（共架）は各社の装柱設計基準によります。</p>`);
+  return resultShell(inner,d);
+}
+function poleSVG(p,r){
+  const sc=150/p.Lp, pad=40, cx=120;
+  const gl=pad+r.h*sc, bot=gl+r.ne*sc;
+  const wT=Math.max(2.5,p.dtop*0.38), wG=Math.max(3.5,r.dg*0.38), wB=Math.max(wG,(p.dtop+p.Lp*100/75)*0.38);
+  const wires=r.rows.map((w,ix)=>{
+    const y=gl-w.h*sc;
+    return `<line x1="${cx-58}" y1="${y}" x2="${cx+58}" y2="${y}" stroke="#b5651d" stroke-width="${Math.min(3.5,1+w.od/8)}"/>
+      <text x="${cx+62}" y="${y+3}" class="dim">φ${w.od}×${w.n}条 (h=${w.h}m)</text>`;
+  }).join("");
+  const winds=[0.3,0.55,0.8].map(t=>{
+    const y=pad+(gl-pad)*t;
+    return `<line x1="${cx-92}" y1="${y}" x2="${cx-66}" y2="${y}" stroke="#5b8bd0" stroke-width="1.8"/><path d="M${cx-66} ${y} l-7 -4 v8 z" fill="#5b8bd0"/>`;
+  }).join("");
+  return `<div class="plan-wrap"><svg viewBox="0 0 300 ${bot+pad}" class="plan" role="img" aria-label="配電柱の立面図">
+    ${cHatch("hpo1")}
+    <polygon points="${cx-wT},${pad} ${cx+wT},${pad} ${cx+wB},${bot} ${cx-wB},${bot}" fill="#eef2f6" stroke="#46566a" stroke-width="2"/>
+    <ellipse cx="${cx}" cy="${pad}" rx="${wT}" ry="2.2" fill="#fff" stroke="#46566a" stroke-width="1.4"/>
+    ${wires}
+    ${winds}
+    <text x="${cx-92}" y="${pad+(gl-pad)*0.3-8}" class="dim">風圧→</text>
+    <line x1="30" y1="${gl}" x2="270" y2="${gl}" stroke="#46566a" stroke-width="2.5"/>
+    <rect x="30" y="${gl}" width="240" height="${bot-gl}" fill="url(#hpo1g)" opacity="0.5"/>
+    <text x="272" y="${gl+4}" class="dim">GL</text>
+    <line x1="${cx+wB+26}" y1="${pad}" x2="${cx+wB+26}" y2="${gl}" stroke="#46566a" stroke-width="1"/>
+    <text x="${cx+wB+30}" y="${(pad+gl)/2}" class="dim">地上 ${f1(r.h)}m</text>
+    <line x1="${cx+wB+26}" y1="${gl}" x2="${cx+wB+26}" y2="${bot}" stroke="#46566a" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="${cx+wB+30}" y="${(gl+bot)/2+3}" class="dim">根入れ ${f1(r.ne)}m</text>
   </svg></div>`;
 }
 function yen(x){return Math.round(x).toLocaleString("ja-JP");}
