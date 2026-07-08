@@ -471,6 +471,20 @@ const DATA = {
   },
   earthWire:[[20,"1.6mm（2sq）"],[30,"1.6mm（2sq）"],[60,"2.0mm（3.5sq）"],[100,"2.6mm（5.5sq）"],[150,"8sq"],[200,"14sq"],[400,"22sq"],[600,"38sq"],[800,"60sq"],[1000,"60sq"],[1200,"100sq"]],
   anchors:[["M10",5.8],["M12",8.4],["M16",15.7],["M20",24.5]],
+  poleWires:[
+    ["高圧絶縁電線 OC/PDC 22sq",9,3.9],
+    ["高圧絶縁電線 OC/PDC 38sq",11,6.8],
+    ["高圧絶縁電線 OC/PDC 60sq",13,10.6],
+    ["低圧 OW 2.6mm",4.6,1.0],
+    ["低圧 OW 3.2mm",5.4,1.6],
+    ["低圧 DV 2.0mm 2心（引込）",8,0.5],
+    ["低圧 DV 2.0mm 3心（引込）",10,0.7],
+    ["低圧 DV 3.2mm 3心（引込）",14,1.6],
+    ["CVちょう架 14sq3心＋ST22（低圧幹線）",24,5.0],
+    ["CVちょう架 60sq3心＋ST22（低圧幹線）",35,5.0],
+    ["通信線 光ケーブル（SS/ドロップ目安）",10,1.0],
+    ["通信線 メタル（CCP等 目安）",15,2.0]
+  ],
   kindKey:{
     "CV（架橋ポリエチレン 90℃）":"CV",
     "VVケーブル（VVF/VVR 60℃）":"VV",
@@ -1247,23 +1261,32 @@ const KH_GUIDE=["目安から選ぶ…",
   "地階・1階｜一般B → 0.4","地階・1階｜重要A → 0.6","地階・1階｜特に重要S → 1.0",
   "中間階｜一般B → 0.6","中間階｜重要A → 1.0","中間階｜特に重要S → 1.5",
   "屋上・上層階｜一般B → 1.0","屋上・上層階｜重要A → 1.5","屋上・上層階｜特に重要S → 2.0"];
+function poleWireOpts(sel){
+  const cur=sel||"manual";
+  const opt=(v2,l)=>`<option value="${v2}" ${cur===v2?"selected":""}>${l}</option>`;
+  return opt("manual","手入力")+DATA.poleWires.map((w,i)=>opt("pw|"+i,w[0]+"（φ"+w[1]+"）")).join("");
+}
 function poleRows(){
   const p=S.pole, anchor=p.mode!=="通り柱（風圧のみ）";
-  const cols=anchor?"56px 56px 44px 62px 34px":"minmax(0,1fr) minmax(0,1fr) 60px 34px";
+  const cols=anchor?"1fr 1fr 0.8fr 1fr 30px":"1fr 1fr 0.8fr 30px";
   const head=anchor
-    ?`<div class="row-head" style="grid-template-columns:${cols}"><span>外径mm</span><span>高さm</span><span>条数</span><span>張力kN/条</span><span></span></div>`
+    ?`<div class="row-head" style="grid-template-columns:${cols}"><span>外径mm</span><span>取付高さm</span><span>条数</span><span>張力kN/条</span><span></span></div>`
     :`<div class="row-head" style="grid-template-columns:${cols}"><span>外径mm</span><span>取付高さm</span><span>条数</span><span></span></div>`;
-  const rows=p.rows.map((r,idx)=>`<div class="row" style="grid-template-columns:${cols}">
-      <input type="number" data-row="pole" data-idx="${idx}" data-f="od" value="${r.od}" step="0.5">
-      <input type="number" data-row="pole" data-idx="${idx}" data-f="h" value="${r.h}" step="0.1">
-      <input type="number" data-row="pole" data-idx="${idx}" data-f="n" value="${r.n}" step="1">
-      ${anchor?`<input type="number" data-row="pole" data-idx="${idx}" data-f="T" value="${r.T}" step="0.1">`:""}
-      <button class="del" data-delrow="pole" data-idx="${idx}">−</button>
+  const rows=p.rows.map((r,idx)=>`<div style="margin-bottom:10px">
+      <select data-prowsel="pole" data-idx="${idx}" style="margin-bottom:4px">${poleWireOpts(r.sel)}</select>
+      ${head}
+      <div class="row" style="grid-template-columns:${cols}">
+        <input type="number" data-row="pole" data-idx="${idx}" data-f="od" value="${r.od}" step="0.5">
+        <input type="number" data-row="pole" data-idx="${idx}" data-f="h" value="${r.h}" step="0.1">
+        <input type="number" data-row="pole" data-idx="${idx}" data-f="n" value="${r.n}" step="1">
+        ${anchor?`<input type="number" data-row="pole" data-idx="${idx}" data-f="T" value="${r.T}" step="0.1">`:""}
+        <button class="del" data-delrow="pole" data-idx="${idx}">−</button>
+      </div>
     </div>`).join("");
-  return `<div class="field"><label>架渉する電線（回線ごと）${helpBtn("風圧荷重（甲・乙・丙種）")}<span class="unit-tag">最大4行</span></label>
-    <div class="rows">${head}${rows}</div>
+  return `<div class="field"><label>架渉・添架する電線（回線ごと・種類を選ぶと自動入力）${helpBtn("風圧荷重（甲・乙・丙種）")}<span class="unit-tag">最大4行</span></label>
+    <div class="rows">${rows}</div>
     ${p.rows.length<4?`<button class="addrow" data-addrow="pole">＋ 行を追加</button>`:""}
-    <div class="ref-note" style="margin:6px 0 0">外径の目安: 高圧絶縁電線38sq≒11mm・60sq≒13mm ／ 低圧OW 3.2mm≒5mm ／ DV3心22sq≒17mm ／ 通信線≒10mm（メーカー表で確認）。${anchor?"<b>張力kN/条</b>は電線の想定最大張力（ちょう度計算値または引張強さ/2.2）。":""}</div></div>`;
+    <div class="ref-note" style="margin:6px 0 0">プルダウンで選ぶと<b>外径</b>${anchor?"と<b>想定最大張力の目安</b>（引張強さ/2.2または設計張力の代表値）":""}を自動入力します（通信・光の添架も選べます）。値は概算の代表値なので、正確にはメーカー表・ちょう度計算で確認してください。</div></div>`;
 }
 function khRow(mk){
   const st=S[mk];
@@ -1782,8 +1805,17 @@ function bindInputs(id){
   main.querySelectorAll("[data-row]").forEach(el=>el.oninput=()=>{
     const k=el.dataset.row, i=+el.dataset.idx, f=el.dataset.f;
     S[k].rows[i][f]=parseFloat(el.value)||0;
-    if(f==="od"||f==="k") S[k].rows[i].sel="manual";
+    if(f==="od"||f==="k"||(k==="pole"&&f==="T")) S[k].rows[i].sel="manual";
     recalc(id);
+  });
+  main.querySelectorAll("[data-prowsel]").forEach(el=>el.onchange=()=>{
+    const i2=+el.dataset.idx, row=S.pole.rows[i2];
+    row.sel=el.value;
+    if(el.value!=="manual"){
+      const w=DATA.poleWires[+el.value.split("|")[1]];
+      if(w){ row.od=w[1]; row.T=w[2]; }
+    }
+    render();
   });
   main.querySelectorAll("[data-rowsel]").forEach(el=>el.onchange=()=>{
     const k=el.dataset.rowsel, i=+el.dataset.idx, v=el.value, row=S[k].rows[i];
