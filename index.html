@@ -97,6 +97,20 @@ main{flex:1;padding:16px 16px 28px}
 .tool-card.glos{grid-column:1 / -1;flex-direction:row;align-items:center;gap:12px;background:#16202a;color:#e7edf3;border-color:#16202a}
 .tool-card.glos .ttl{color:#fff}.tool-card.glos .sub{color:#9fb0c0}
 .tool-card.glos .gicon{font-size:20px}
+.aff{margin-top:28px}
+.aff-h{font-size:12px;font-weight:700;color:var(--ink-mut);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.pr-badge{font-size:9.5px;border:1px solid var(--ink-mut);border-radius:4px;padding:1px 6px;letter-spacing:1.5px;color:var(--ink-mut)}
+.aff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.aff-card{display:flex;flex-direction:column;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;text-decoration:none;color:inherit;transition:border-color .15s}
+.aff-card:hover{border-color:var(--copper)}
+.aff-card .ai{font-size:20px}
+.aff-card .at{font-size:12.5px;font-weight:700;line-height:1.35}
+.aff-card .ad{font-size:10.5px;color:var(--ink-mut);line-height:1.45}
+.aff-note{font-size:10px;color:var(--ink-mut);margin-top:8px;line-height:1.6}
+.linklike{background:none;border:none;padding:0;color:var(--ink-mut);text-decoration:underline;cursor:pointer;font-size:11px}
+.policy-body{font-size:13px;line-height:1.9}
+.policy-body h3{margin:20px 0 6px;font-size:14.5px}
+.policy-body p{margin:6px 0}
 
 /* ---------- TOOL VIEW ---------- */
 .tool-head{margin:2px 2px 12px}
@@ -354,6 +368,8 @@ textarea:focus{border-color:var(--copper);box-shadow:0 0 0 3px rgba(181,101,29,.
 
   <footer>
     <div><b>このツールについて</b>　入力は最小限、判定は OK/NG/○ を色＋記号＋文言で即表示、専門用語はインライン解説、根拠データは1か所に集約。すべての結果に式・採用根拠・出典を併記しています。</div>
+    <div class="srcs" id="affDisc" style="display:none;margin-bottom:8px">Amazonのアソシエイトとして、当サイトは適格販売により収入を得ています。</div>
+    <div style="margin:6px 0 10px"><button class="linklike" id="policyBtn">運営者情報・プライバシーポリシー・広告について</button></div>
     <div class="srcs">出典: JCS 0168-2 ／ 内線規程1310-1・3110・3110-8・3165 ／ JIS C8201相当 ／ JIS Z9110(光束法) ／ 電技解釈・内線規程 ／ JIS A5372 ／ JIS C4304・C4306 ／ JIS C4902 ／ %インピーダンス法 ／ 内線規程1350 ／ 建築設備耐震設計・施工指針(簡易) ／ あと施工アンカー設計指針(簡易) ／ 電技解釈61条(支線)</div>
   </footer>
 </div>
@@ -365,6 +381,60 @@ textarea:focus{border-color:var(--copper);box-shadow:0 0 0 3px rgba(181,101,29,.
 /* =========================================================================
    §6 参照データ（出典つき・引き継ぎ書と同一。改変しない）
    ========================================================================= */
+/* =========================================================================
+   広告設定（Amazonアソシエイト）
+   トラッキングIDを取得したら下の "" の中に入れてください（例: "abcde-22"）。
+   入れると全リンクに tag が付与され、規約の表示文言も自動で出ます。
+   ========================================================================= */
+const AMZN_TAG="amazonnaoto-22";
+const AFF=[
+  // 測定器・電気工具
+  ["🔋","デジタルテスタ","三和・HIOKIの定番機","デジタルマルチメータ 三和 HIOKI"],
+  ["⚡","クランプメータ","活線のまま電流測定","クランプメータ HIOKI"],
+  ["🚨","検電器","低圧・高圧用ペン型","検電器 HIOKI 低圧"],
+  ["🔍","絶縁抵抗計（メガー）","竣工試験・年次点検に","絶縁抵抗計 メガー"],
+  ["💡","照度計","照度計算の実測確認に","照度計 デジタル"],
+  ["📏","レーザー距離計","こう長・部屋寸法の採寸に","レーザー距離計 ボッシュ"],
+  ["🧰","技能試験 工具セット","HOZAN 電気工事士セット","HOZAN 電気工事士 技能試験 工具セット"],
+  ["🔌","圧着工具","リングスリーブ用 JIS適合","圧着工具 リングスリーブ ロブテックス"],
+  ["🔧","電動ドライバー","盤の増し締め・端子作業に","ベッセル 電ドラボール"],
+  ["🪛","インパクトドライバー","現場の定番 18V","マキタ インパクトドライバー 18V"],
+  ["✂️","ケーブルストリッパー","VVF・CVの皮むきに","VVF ストリッパー HOZAN"],
+  ["🗜️","ニッパー・ペンチ","クニペックス等の定番","クニペックス ニッパー"],
+  ["🧤","絶縁・作業手袋","低圧作業・雑作業用","絶縁手袋 低圧 作業"],
+  ["👜","腰袋・工具差し","電工ポケット","電工 腰袋 工具差し"],
+  // ケーブル・電材
+  ["🎗️","VVFケーブル","1.6/2.0mm 100m巻","VVFケーブル 2.0mm 100m"],
+  ["🛞","CVケーブル・より線","切り売り・小巻","CVケーブル 切り売り"],
+  ["🪢","結束バンド","屋外用・耐候タイプ","結束バンド 耐候 黒"],
+  ["🛤️","配線モール・ダクト","露出配線をきれいに","配線モール ダクト"],
+  ["🏷️","マークチューブ・端子","ケーブル表示・圧着端子","圧着端子 セット"],
+  ["🔩","アンカー・ビス類","あと施工アンカー各種","オールアンカー コンクリート"],
+  // デスク・ガジェット
+  ["🖥️","モニターアーム","CAD・図面作業が捗る","モニターアーム デュアル"],
+  ["⌨️","メカニカルキーボード","長時間の設計作業に","メカニカルキーボード 静音"],
+  ["🔌","電源タップ","雷サージ・USB付き","電源タップ 雷サージ USB"],
+  ["🔌","急速充電器","Anker USB-C GaN","Anker 充電器 USB-C 65W"],
+  ["💺","デスクライト","目に優しいLED","デスクライト LED 目に優しい"],
+  ["🎧","ワイヤレスイヤホン","移動・現場の行き帰りに","ワイヤレスイヤホン ノイズキャンセリング"]
+];
+function affPick(n){
+  const a=AFF.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a.slice(0,n);
+}
+function amzn(q){return "https://www.amazon.co.jp/s?k="+encodeURIComponent(q)+(AMZN_TAG?"&tag="+encodeURIComponent(AMZN_TAG):"");}
+function affSection(){
+  return `<div class="aff">
+    <div class="aff-h"><span class="pr-badge">PR</span>現場・デスクのおすすめ（Amazon・開くたびに入れ替わります）</div>
+    <div class="aff-grid">
+      ${affPick(8).map(a=>`<a class="aff-card" href="${amzn(a[3])}" target="_blank" rel="nofollow sponsored noopener">
+        <span class="ai">${a[0]}</span><span class="at">${a[1]}</span><span class="ad">${a[2]}</span></a>`).join("")}
+    </div>
+    <div class="aff-note">${AMZN_TAG?"Amazonのアソシエイトとして、当サイトは適格販売により収入を得ています。":""}リンク先はAmazon.co.jpの検索結果ページです（広告リンクを含みます）。</div>
+  </div>`;
+}
+
 const DATA = {
   allowable:{
     source:"JCS 0168-2 (90C/40C base)",
@@ -969,6 +1039,7 @@ function render(){
   if(view==="home") renderHome();
   else if(view==="glossary") renderGlossary();
   else if(view==="assist") renderAssist();
+  else if(view==="policy") renderPolicy();
   else renderTool(view);
   window.scrollTo(0,0);
   bindHelp();
@@ -980,7 +1051,7 @@ function bindHelp(){
 function renderHome(){
   main.innerHTML=`
    <div class="hero">
-     <div class="eyebrow">15 calculation tools</div>
+     <div class="eyebrow">${TOOLS.length} calculation tools</div>
      <h2>どの計算をしますか？</h2>
      <p>使いたい計算をひとつ選んでください。各ツールは「STEP1 入力 → STEP2 自動計算」で結果が出ます。</p>
    </div>
@@ -1000,11 +1071,34 @@ function renderHome(){
        <span class="gicon">🤖</span>
        <span><span class="ttl">AI相談（質問・使い方・特殊ケース）</span><br><span class="sub">プルダウンにない設備、想定外の値、使い方の疑問に回答します。</span></span>
      </button>
-   </div>`;
+   </div>
+   ${affSection()}`;
   main.querySelectorAll("[data-tool]").forEach(b=>b.onclick=()=>{view=parseInt(b.dataset.tool);render();});
   main.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{view=b.dataset.go;render();});
 }
 
+function renderPolicy(){
+  main.innerHTML=`
+    ${crumb("運営者情報・プライバシーポリシー")}
+    <div class="tool-head"><h2>運営者情報・プライバシーポリシー</h2></div>
+    <div class="card"><div class="card-b policy-body">
+      <h3>運営者情報</h3>
+      <p>本サイト「電力設計 計算ツール」は、電気設備設計の概算検討・学習を目的とした個人運営の無料ツールです。<br>
+      連絡先: <a href="https://github.com/zhirenyingjing11-hash/-/issues" target="_blank" rel="noopener">GitHubリポジトリのIssue</a> からお願いします。</p>
+      <h3>プライバシーポリシー</h3>
+      <p>・計算の入力値・設定は<b>お使いの端末のブラウザ内（localStorage）にのみ保存</b>され、当サイトのサーバーへ送信されることはありません（そもそも当サイトはサーバーを持たない静的ページです）。</p>
+      <p>・「AI相談」で生成AI回答を利用する場合のみ、<b>質問文とツール情報</b>がお客様自身が設定したAPIキーで選択先（Google または Anthropic）へ直接送信されます。キーも端末内にのみ保存されます。</p>
+      <p>・当サイトはアクセス解析・Cookie による追跡を行っていません。</p>
+      <h3>広告について</h3>
+      <p>・当サイトには「PR」表記のある広告リンク（Amazon.co.jp）が含まれます。リンクを経由して商品が購入された場合、当サイトに紹介料が支払われることがあります。${AMZN_TAG?"<br>・Amazonのアソシエイトとして、当サイトは適格販売により収入を得ています。":""}</p>
+      <p>・商品の販売・配送・返品等はリンク先の各ストアの責任で行われ、当サイトは関与しません。</p>
+      <h3>免責事項</h3>
+      <p>・本ツールの計算結果は概算・学習用です。正確性・最新性は保証されず、実設計・申請は最新の内線規程・電技解釈・JIS・メーカーカタログ・所轄/電力会社協議で必ず確認してください。本ツールの利用により生じたいかなる損害についても、運営者は責任を負いません。</p>
+    </div></div>
+    <div class="output-row"><button class="btn" data-home2>← ホームへ戻る</button></div>`;
+  bindCrumb();
+  main.querySelector("[data-home2]").onclick=()=>{view="home";render();};
+}
 function renderGlossary(){
   main.innerHTML=`
     ${crumb("用語集")}
@@ -2599,6 +2693,8 @@ function resultRate(r){
 
 /* header buttons */
 $("#glossBtn").onclick=()=>{view="glossary";render();};
+$("#policyBtn").onclick=()=>{view="policy";render();};
+if(AMZN_TAG) $("#affDisc").style.display="";
 $("#aiBtn").onclick=()=>{view="assist";render();};
 $("#resetBtn").onclick=()=>{
   if(confirm("すべての入力を初期値に戻しますか？")){
