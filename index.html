@@ -1578,7 +1578,7 @@ function inputCard(id){
         ${field("奥行 D",numIn("D",c.ancr.D,10),"mm")}
       </div>
       ${khRow("ancr")}
-      ${field("アンカー本数",selIn("nb",[4,6,8],c.ancr.nb),"本",("アンカーボルト"))}`:`
+      ${field("アンカー本数",selIn("nb",[2,4,6,8],c.ancr.nb),"本",("アンカーボルト"))}`:`
       <div class="two">
         ${field("引張荷重 Nd（1本あたり）",numIn("Nd",c.ancr.Nd,0.1),"kN")}
         ${field("せん断荷重 Qd（1本あたり）",numIn("Qd",c.ancr.Qd,0.1),"kN")}
@@ -1587,7 +1587,7 @@ function inputCard(id){
       ${c.ancr.leMode==="手入力"
         ? field("有効埋込み長 le（全サイズ共通で判定）",numIn("le",c.ancr.le,5),"mm")
         : `<div class="ref-note" style="margin-top:-4px">埋込み長の目安（カタログ標準）: M8=40 / M10=40 / M12=50 / M16=60 / M20=80 mm をサイズごとに自動適用します。</div>`}
-      <div class="ref-note">「機器の重さから自動」は⑬盤基礎と同じ簡易式（重心=H/2・ボルトスパン=D−100mm）で1本あたりの引張・せん断を自動算出します。</div>`,
+      <div class="ref-note">「機器の重さから自動」は⑬盤基礎と同じ簡易式（重心=H/2・ボルトスパン=D−100mm）で1本あたりの引張・せん断を自動算出します。<b>2本</b>を選んだ場合は前後1本ずつ（引張側1本）の小型機器・ブラケットを想定した配置です。</div>`,
     15:()=>`
       ${field("電線の水平張力 P（引張り合計）",numIn("P",c.guy.P,0.1),"kN",("電線の水平張力 P"))}
       <div class="ref-note" style="margin-top:-4px"><b>Pとは:</b> 支線の位置で引き留めている<b>電線が柱を引く力の合計（水平成分）</b>です。引留柱・末端柱では「電線の想定最大張力×条数」。わからない場合は ⑰ で電線の太さ・径間から自動計算できます。<button class="btn" data-chip="17" style="margin-top:6px">⑰ 配電柱の計算から求める →</button></div>
