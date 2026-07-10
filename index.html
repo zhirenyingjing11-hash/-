@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>電力設計 17大計算ツール</title>
+<title>電力設計 18大計算ツール</title>
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#16202a">
@@ -342,7 +342,7 @@ textarea:focus{border-color:var(--copper);box-shadow:0 0 0 3px rgba(181,101,29,.
       <div class="brand">
         <div class="mark"></div>
         <div>
-          <h1>電力設計 17大計算ツール</h1>
+          <h1>電力設計 18大計算ツール</h1>
           <small>初心者向け・概算検討 ＆ 学習用</small>
         </div>
       </div>
@@ -541,6 +541,28 @@ const DATA = {
   },
   earthWire:[[20,"1.6mm（2sq）"],[30,"1.6mm（2sq）"],[60,"2.0mm（3.5sq）"],[100,"2.6mm（5.5sq）"],[150,"8sq"],[200,"14sq"],[400,"22sq"],[600,"38sq"],[800,"60sq"],[1000,"60sq"],[1200,"100sq"]],
   anchors:[["M10",5.8],["M12",8.4],["M16",15.7],["M20",24.5]],
+  steel:{
+    E:205000,
+    mats:{"SS400・長期（普通はこれ）":156,"SS400・短期（地震時など）":235,"SUS304・長期":137},
+    types:{
+      "等辺山形鋼（Lアングル）":[
+        ["L-30×30×3",1.36,0.66,1.42],["L-40×40×3",1.83,1.21,3.53],["L-40×40×5",2.95,1.91,5.45],
+        ["L-50×50×4",3.06,2.49,9.06],["L-50×50×6",4.43,3.55,12.6],["L-65×65×6",5.91,6.26,29.4],
+        ["L-75×75×6",6.85,8.47,46.1],["L-90×90×7",9.59,14.2,93.0],["L-100×100×10",14.9,24.4,175]],
+      "リップ溝形鋼（Cチャン）":[
+        ["C-60×30×10×2.3",2.25,5.1,15.3],["C-75×45×15×2.3",3.25,9.9,37.1],["C-100×50×20×2.3",4.06,16.1,80.7],
+        ["C-100×50×20×3.2",5.50,21.3,107],["C-120×60×20×3.2",6.51,31.0,186],["C-150×65×20×3.2",7.51,41.1,308]],
+      "みぞ形鋼（チャンネル）":[
+        ["[-75×40×5×7",6.92,20.1,75.3],["[-100×50×5×7.5",9.36,37.6,188],
+        ["[-125×65×6×8",13.4,67.8,424],["[-150×75×6.5×10",18.6,115,861]],
+      "H形鋼":[
+        ["H-100×100×6×8",17.2,76.5,383],["H-125×125×6.5×9",23.8,136,847],["H-150×150×7×10",31.5,219,1640],
+        ["H-200×100×5.5×8",21.3,184,1840],["H-200×200×8×12",49.9,472,4720]],
+      "角形鋼管（角パイプ）":[
+        ["□-40×40×2.3",2.62,3.9,7.7],["□-50×50×2.3",3.34,6.3,15.9],["□-60×60×2.3",4.06,9.4,28.3],
+        ["□-75×75×3.2",7.01,17.2,64.4],["□-100×100×3.2",9.52,32.6,163],["□-100×100×4.5",13.1,42.8,214]]
+    }
+  },
   poleWires:[
     ["高圧絶縁電線 OC/PDC 22sq",9,3.9],
     ["高圧絶縁電線 OC/PDC 38sq",11,6.8],
@@ -649,7 +671,15 @@ const GLOSSARY=[
   ["設計荷重（コンクリート柱）","⑰","柱の呼び強度（例: 5.0kN柱）。JIS A5373では柱の先端から0.25mの点に水平に加える荷重で表す。地際の許容モーメント＝設計荷重×(地上高−0.25m)。"],
   ["根入れ","⑰","柱を地中に埋める深さ。A種コンクリート柱は全長15m以下なら全長の1/6以上（電技解釈59条）。例: 12m柱→2m。"],
   ["引留柱・通り柱","⑰","通り柱=電線が両側へ通り抜け張力が釣り合う柱（風圧が主な荷重）。引留柱・末端柱=電線を引き留め張力が片側に働く柱（原則、支線で受ける）。"],
-  ["電線の水平張力 P","⑮⑰","支線の設計で使う、柱を引き倒そうとする電線張力の水平合計。引留・末端柱では電線の想定最大張力×条数。⑰配電柱の計算から⑮へ自動で引き継げる。"]
+  ["電線の水平張力 P","⑮⑰","支線の設計で使う、柱を引き倒そうとする電線張力の水平合計。引留・末端柱では電線の想定最大張力×条数。⑰配電柱の計算から⑮へ自動で引き継げる。"],
+  ["断面係数 Z","⑱","梁の曲げ強さを表す断面の性能値[cm³]。曲げ応力度 σ=M/Z。大きいほど曲げに強い。"],
+  ["断面二次モーメント I","⑱","梁の曲がりにくさ（たわみにくさ）を表す値[cm⁴]。たわみ計算に使う。"],
+  ["許容応力度","⑱","材料に許してよい応力の上限。SS400の長期許容曲げは156N/mm²、短期（地震時など）は235N/mm²（鋼構造設計規準）。"],
+  ["たわみ制限","⑱","見た目・振動・仕上げ材保護のためのたわみ上限。一般にスパンの1/300以下が目安。"],
+  ["横座屈","⑱","H形鋼などを強軸曲げで使うとき、圧縮側フランジが横に逃げて耐力が落ちる現象。長スパンでは横補剛が必要。"],
+  ["余掘り","⑬","基礎の外形より一回り広く掘る余裕分。型枠・作業スペースのため片側100〜150mmが目安。"],
+  ["土量変化率（ほぐし率）","⑬","地山を掘るとほぐれて体積が増える率L（砂質1.2・粘性土1.25〜1.3が目安）。ダンプ手配は「ほぐし土量」で行う。"],
+  ["捨てコンクリート","⑬","墨出し・型枠のために基礎の下に打つ薄いコンクリート（厚50mm程度）。強度は期待しない。"]
 ];
 
 const TOOLS=[
@@ -669,9 +699,10 @@ const TOOLS=[
   {id:14,t:"アンカー耐荷重",sub:"あと施工アンカーの許容引張・せん断と判定",src:"あと施工アンカー設計指針(簡易)"},
   {id:15,t:"支線の張力・サイズ",sub:"電線張力→支線張力と必要より線サイズ",src:"電技解釈61条(安全率2.5)"},
   {id:16,t:"電気料金の概算",sub:"契約種別・使用量→月額料金の内訳（力率割引対応）",src:"各社供給約款 / 再エネ特措法"},
-  {id:17,t:"配電柱（コンクリート柱）強度",sub:"風圧・電線張力→地際モーメント判定と支線要否",src:"電技解釈58・59条 / JIS A5373"}
+  {id:17,t:"配電柱（コンクリート柱）強度",sub:"風圧・電線張力→地際モーメント判定と支線要否",src:"電技解釈58・59条 / JIS A5373"},
+  {id:18,t:"鋼材（架台・支持材）選定",sub:"耐荷重→鋼材の種類・サイズ・質量を自動選定",src:"JIS G3192/G3350 / 鋼構造設計規準"}
 ];
-const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯","⑰"];
+const NUM=["","①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯","⑰","⑱"];
 
 /* =========================================================================
    計算ロジック（§5）— UIから分離した純関数。判定理由も返す。
@@ -881,7 +912,23 @@ function calcFound(i){
   const TkN=Math.max(0,T/1000);
   const pick=TkN===0?null:(DATA.anchors.find(a=>a[1]>=TkN)||null);
   const okA=TkN===0||pick!=null;
-  return {FW,FD,FH,Wf,Fs,Fw,Fh,gov,Mo,Ms,okT,TkN,pick,okA,ratio:Mo>0?Ms/Mo:null};
+  let dig=null;
+  if(i.dig==="計算する"){
+    const Ax=((FW+2*(i.over||0))/1000)*((FD+2*(i.over||0))/1000);   // 掘削平面 m²
+    const dcut=((i.dEmb||0)+(i.grav||0)+(i.lean||0))/1000;          // 掘削深さ m
+    const Vd=Ax*dcut;                                               // 掘削土量（地山）m³
+    const de=Math.min(i.dEmb||0,FH);                                // 地中に入る基礎の高さ
+    let Ve;
+    if(i.ftype==="ボイド"){const iw2=Math.max(0,FW-2*tw), idp2=Math.max(0,FD-2*tw); Ve=(FW*FD-iw2*idp2)*de*1e-9;}
+    else if(i.ftype==="ゲタ（2条）"){Ve=2*(FD*tw*de)*1e-9;}
+    else {Ve=FW*FD*de*1e-9;}
+    const Vgr=Ax*(i.grav||0)/1000, Vlc=Ax*(i.lean||0)/1000;
+    const Vs=Ve+Vgr+Vlc;                                            // 地中に残る構造物・砕石・捨てコン
+    const Vb=Math.max(0,Vd-Vs);                                     // 埋戻し（地山換算）
+    const LL=i.looseL||1.25;
+    dig={Ax,dcut,Vd,VdL:Vd*LL,Vgr,Vlc,Vs,Vb,Vz:Math.max(0,Vd-Vb)*LL,LL};
+  }
+  return {FW,FD,FH,Wf,Fs,Fw,Fh,gov,Mo,Ms,okT,TkN,pick,okA,ratio:Mo>0?Ms/Mo:null,dig};
 }
 function calcAncr(i){
   if(!i.fc) return {err:true};
@@ -941,6 +988,28 @@ function calcPole(i){
   const Pset=Math.max(Pguy,PguyW);
   return {ne,h,dg,Fp,hc,Mw,Ma,Mt,anchor,okW,okT,hTop,Pguy,PguyW,Pset,rows};
 }
+function calcSteel(i){
+  const list=DATA.steel.types[i.styp]||[];
+  const Pn=(i.P||0)*9.8, Lmm=(i.L||0)*1000, n=Math.max(1,i.n||1);
+  if(Pn<=0||Lmm<=0||!i.fa||i.fa<=0||!list.length) return {err:true};
+  const mCoef={"単純支持・中央集中":0.25,"単純支持・等分布":0.125,"片持ち・先端集中":1,"片持ち・等分布":0.5}[i.sup];
+  const dCoef={"単純支持・中央集中":1/48,"単純支持・等分布":5/384,"片持ち・先端集中":1/3,"片持ち・等分布":1/8}[i.sup];
+  if(mCoef==null) return {err:true};
+  const Pm=Pn/n;                            // 1本あたり荷重 N
+  const M=mCoef*Pm*Lmm;                     // 曲げモーメント N·mm
+  const dLim=i.dlim==="制限なし"?null:Lmm/parseFloat(String(i.dlim).replace("L/",""));
+  const E=DATA.steel.E;
+  const cands=list.map(s2=>{
+    const Z=s2[2]*1000, I2=s2[3]*10000;     // cm³→mm³ / cm⁴→mm⁴
+    const sig=M/Z;
+    const del=dCoef*Pm*Math.pow(Lmm,3)/(E*I2);
+    const okS=sig<=i.fa, okD=dLim==null||del<=dLim;
+    return {name:s2[0],wkg:s2[1],Z:s2[2],I:s2[3],sig,del,okS,okD,ok:okS&&okD,use:sig/i.fa};
+  });
+  const pick=cands.find(c2=>c2.ok)||null;
+  const Zreq=M/i.fa/1000;                   // 必要断面係数 cm³
+  return {Pn,Pm,M,Zreq,dLim,cands,pick,total:pick?pick.wkg*i.L*n:null,n};
+}
 function calcRate(i){
   const kwh=i.useMode==="負荷から計算"?(i.loadKw||0)*(i.hpd||0)*(i.days||0):i.kwh;
   if(!isFinite(kwh)||kwh<0) return {err:true};
@@ -992,14 +1061,15 @@ const S={
   short:{method:"三相",kva:300,z:4,V:210,Vsel:210,icu:10},
   earthB:{mode:"直接入力",Ig:5,kv:6.6,L:0,Lc:0.5,cut:"なし"},
   earth:{cls:"D種",cut:"なし",brk:100,rho:300,rod:"1.5m（1本）"},
-  found:{W:800,D:600,H:1900,M:300,KH:1.0,KHpre:"目安から選ぶ…",loc:"屋内",qpre:"甲種相当 980Pa（風速40m/s・屋外標準）",q:980,margin:100,FH:150,nb:4,ftype:"ベタ"},
+  found:{W:800,D:600,H:1900,M:300,KH:1.0,KHpre:"目安から選ぶ…",loc:"屋内",qpre:"甲種相当 980Pa（風速40m/s・屋外標準）",q:980,margin:100,FH:150,nb:4,ftype:"ベタ",dig:"計算しない",dEmb:300,over:150,grav:100,lean:50,looseL:1.25},
   ancr:{typ:"金属拡張",lmode:"機器の重さから自動",M:300,H:1900,D:600,KH:1.0,KHpre:"目安から選ぶ…",nb:4,leMode:"目安を使う（自動）",le:50,fc:21,Nd:1.9,Qd:1.0},
   guy:{P:5,h1:8,h2:8,L:4,SF:2.5,mat:"亜鉛めっき鋼より線（ST）"},
   rate:{plan:"従量電灯（電灯・家庭）",amp:40,baseA:311.75,t1:29.80,t2:36.40,t3:40.49,
         kw:50,pf:95,hbase:1989.00,hunit:20.00,lbase:1122.00,lunit:26.50,
         useMode:"使用量を直接入力",kwh:400,loadKw:1.5,hpd:8,days:25,fuel:0.00,saiene:4.18},
   pole:{Lp:12,dtop:19,load:5.0,qpre:"甲種（電線980・柱780Pa／風速40m/s相当）",qw:980,qp:780,S:30,
-        mode:"通り柱（風圧のみ）",rows:[{od:11,h:9.8,n:3,T:4.0},{od:17,h:8.5,n:1,T:2.0}]}
+        mode:"通り柱（風圧のみ）",rows:[{od:11,h:9.8,n:3,T:4.0},{od:17,h:8.5,n:1,T:2.0}]},
+  steel:{styp:"等辺山形鋼（Lアングル）",fapre:"SS400・長期（普通はこれ）",fa:156,sup:"単純支持・中央集中",L:1.0,P:100,n:2,dlim:"L/300（標準）"}
 };
 
 /* 入力値の保存・復元（localStorage）: モバイル/PCそれぞれで前回値を保持 */
@@ -1148,6 +1218,8 @@ const KB=[
    "入力値はこの端末のブラウザ内に自動保存されます（サーバーには送信されません）。ヘッダーの↺ボタンですべて初期値に戻せます。"],
   [["印刷","PDF","提出","出力"],"印刷・PDF出力",
    "各ツールの「🖨 印刷/PDF」ボタンで、入力・結果・式・出典・免責を含めて印刷できます。スマホでは印刷画面から「PDFとして保存」も選べます。"],
+  [["鋼材","アングル","チャンネル","H鋼","Cチャン","角パイプ","架台","支持材","土量","掘削","残土"],"鋼材選定・土工事（⑱⑬）",
+   "⑱で耐荷重→鋼材（Lアングル/Cチャン/チャンネル/H鋼/角パイプ）のサイズと質量を自動選定します。⑬で「掘削土量を計算する」を選ぶと屋外基礎の掘削・埋戻し・残土・砕石・捨てコンの数量も出ます。"],
   [["電柱","コンクリート柱","ポール","風圧","装柱","引留","根入れ"],"配電柱・支線の計算（⑰⑮）",
    "⑰で柱の全長・電線の外径/径間/条数から風圧・張力モーメントを計算し、柱の設計荷重（JIS A5373）と比較します。NGなら支線に必要な水平張力Pを⑮へ自動で引き継げます。風圧は電技解釈58条（甲種: 電線980Pa・丸い柱780Pa、丙種=×0.5）。根入れは全長の1/6（解釈59条）。"],
   [["料金","電気代","電気料金","燃調","燃料費","賦課金","再エネ","デマンド","力率割引"],"電気料金の概算（⑯）",
@@ -1560,7 +1632,19 @@ function inputCard(id){
         ${field("基礎の出代（片側）",numIn("margin",c.found.margin,10),"mm")}
         ${field("基礎高さ",numIn("FH",c.found.FH,10),"mm")}
         ${field("アンカー本数",selIn("nb",[4,6,8],c.found.nb),"本",("アンカーボルト"))}
-      </div>`,
+      </div>
+      <div class="field"><label>掘削土量（屋外基礎の土工事）${helpBtn("土量変化率（ほぐし率）")}</label>${seg("dig",["計算しない","計算する"],c.found.dig)}</div>
+      ${c.found.dig==="計算する"?`
+      <div class="two">
+        ${field("基礎の埋込み深さ（GLより下）",numIn("dEmb",c.found.dEmb,10),"mm")}
+        ${field("余掘り（片側）",numIn("over",c.found.over,10),"mm",("余掘り"))}
+      </div>
+      <div class="three">
+        ${field("砕石厚",numIn("grav",c.found.grav,10),"mm")}
+        ${field("捨てコン厚",numIn("lean",c.found.lean,10),"mm",("捨てコンクリート"))}
+        ${field("ほぐし率 L",numIn("looseL",c.found.looseL,0.05),"",("土量変化率（ほぐし率）"))}
+      </div>
+      <div class="ref-note" style="margin-top:-4px">掘削平面＝基礎外形＋余掘り×2、掘削深さ＝埋込み＋砕石＋捨てコン。埋込み深さは基礎高さ以下にしてください。</div>`:""}`,
     14:()=>`
       <div class="field"><label>アンカーの種類${helpBtn("あと施工アンカー")}</label>${seg("typ",["金属拡張","接着系"],c.ancr.typ)}</div>
       <div class="field"><label>コンクリート強度 Fc（用途の目安から選択）${helpBtn("コーン状破壊")}<span class="unit-tag">N/mm²</span></label>
@@ -1619,6 +1703,20 @@ function inputCard(id){
       <div class="field"><label>柱の種類${helpBtn("引留柱・通り柱")}</label>${seg("mode",["通り柱（風圧のみ）","引留柱・末端（張力も検討）"],r.mode)}</div>
       ${poleRows()}
       <div class="ref-note" style="margin-top:-4px">根入れは自動（全長15m以下→全長の1/6、超→2.5m・解釈59条）。着雪地域（乙種）は氷雪付き外径での別途検討が必要です。</div>`;},
+    18:()=>`
+      ${field("鋼材の種類",selIn("styp",Object.keys(DATA.steel.types),c.steel.styp))}
+      <div class="two">
+        ${field("材質・状態（目安から選択）",selIn("fapre",[...Object.keys(DATA.steel.mats),"手入力"],c.steel.fapre),"",("許容応力度"))}
+        ${field("許容曲げ応力度 fb",numIn("fa",c.steel.fa,1),"N/mm²",("許容応力度"))}
+      </div>
+      ${field("支持条件・荷重のかかり方",selIn("sup",["単純支持・中央集中","単純支持・等分布","片持ち・先端集中","片持ち・等分布"],c.steel.sup),"",("断面係数 Z"))}
+      <div class="three">
+        ${field("スパン（支点間・突き出し長）",numIn("L",c.steel.L,0.1),"m")}
+        ${field("耐荷重（合計）",numIn("P",c.steel.P,10),"kg")}
+        ${field("並べる本数",numIn("n",c.steel.n,1),"本")}
+      </div>
+      ${field("たわみ制限",selIn("dlim",["L/300（標準）","L/250","L/180","制限なし"],c.steel.dlim),"",("たわみ制限"))}
+      <div class="ref-note" style="margin-top:-4px">荷重は本数で等分される想定です（2本の架台に機器を載せる等）。<b>鋼材の自重・横座屈は未考慮</b>のため、H形鋼の長スパンや重量物は構造担当に確認してください。</div>`,
     16:()=>{
       const r=c.rate;
       return `
@@ -1778,15 +1876,22 @@ function wcOpts(cur){
 
 /* ---- bind input events ---- */
 function bindInputs(id){
-  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB",12:"earth",13:"found",14:"ancr",15:"guy",16:"rate",17:"pole"}[id];
+  const map={1:"cable",2:"breaker",3:"rack",4:"conduit",5:"lux",6:"messenger",7:"trough",8:"tfr",9:"cap",10:"short",11:"earthB",12:"earth",13:"found",14:"ancr",15:"guy",16:"rate",17:"pole",18:"steel"}[id];
   main.querySelectorAll("[data-k]").forEach(el=>{
     el.oninput=()=>{
       let v=el.value;
-      const STR=["method","unit","cond","ctype","temp","preset","iwCond","iwSize","iwTemp","kind","wcond","rod","iwKind","iwWcond","upre","mpre","wcsel","Dpre","ftype"];
+      const STR=["method","unit","cond","ctype","temp","preset","iwCond","iwSize","iwTemp","kind","wcond","rod","iwKind","iwWcond","upre","mpre","wcsel","Dpre","ftype","styp","sup","dlim"];
       if(el.dataset.k==="preset"){
         S.lux.preset=el.value;
         const p=DATA.luminaires.find(x=>x.id===el.value);
         if(p) S.lux.F=p.F;
+        render();
+        return;
+      }
+      if(el.dataset.k==="fapre"){
+        S.steel.fapre=el.value;
+        const fv=DATA.steel.mats[el.value];
+        if(fv) S.steel.fa=fv;
         render();
         return;
       }
@@ -1881,6 +1986,7 @@ function bindInputs(id){
       S[map][el.dataset.k]=v;
       if(el.dataset.k==="U") S.lux.upre="手入力";
       if(el.dataset.k==="KH") S[map].KHpre="目安から選ぶ…";
+      if(el.dataset.k==="fa") S.steel.fapre="手入力";
       if(el.dataset.k==="q"&&map==="found") S.found.qpre="手入力";
       if((el.dataset.k==="qw"||el.dataset.k==="qp")&&map==="pole") S.pole.qpre="手入力";
       if(el.dataset.k==="M") S.lux.mpre="手入力";
@@ -1951,6 +2057,7 @@ function recalc(id){
   if(id===15) html=resultGuy(calcGuy(S.guy));
   if(id===16) html=resultRate(calcRate(S.rate));
   if(id===17) html=resultPole(calcPole(S.pole));
+  if(id===18) html=resultSteel(calcSteel(S.steel));
   persist();
   slot.innerHTML=html;
   bindHelp();
@@ -2370,7 +2477,21 @@ function resultFound(r){
       ${foundSVG(r)}
       ${sideSVG(r)}
       <div class="ref-note">実線: 基礎 ${r.FW}×${r.FD}×${r.FH}mm（${S.found.ftype}） ／ 破線: 盤 ${S.found.W}×${S.found.D}mm ／ ⊕: アンカーボルト ${S.found.nb}本（盤外形−100mmの目安位置）。ボイド壁厚・ゲタ幅は150mm仮定。</div>
-    </div>`;
+    </div>
+    ${r.dig?`
+    <div class="cand-wrap">
+      <div class="cap">土工事の数量（概算）${helpBtn("土量変化率（ほぐし率）")}</div>
+      <table class="ref-table" style="width:100%">
+        <tr><th style="text-align:left">項目</th><th>計算</th><th>数量</th></tr>
+        <tr><td style="text-align:left">掘削（地山）</td><td>${f2(r.dig.Ax)}m² × 深さ${f2(r.dig.dcut)}m</td><td><b>${f2(r.dig.Vd)} m³</b></td></tr>
+        <tr><td style="text-align:left">掘削（ほぐし・ダンプ換算）</td><td>× L=${r.dig.LL}</td><td>${f2(r.dig.VdL)} m³</td></tr>
+        <tr><td style="text-align:left">砕石</td><td>${f2(r.dig.Ax)}m² × ${S.found.grav}mm</td><td>${f2(r.dig.Vgr)} m³</td></tr>
+        <tr><td style="text-align:left">捨てコン</td><td>${f2(r.dig.Ax)}m² × ${S.found.lean}mm</td><td>${f2(r.dig.Vlc)} m³</td></tr>
+        <tr><td style="text-align:left">埋戻し（地山換算）</td><td>掘削 − 構造物等 ${f2(r.dig.Vs)}m³</td><td>${f2(r.dig.Vb)} m³</td></tr>
+        <tr><td style="text-align:left"><b>残土処分（ほぐし）</b></td><td>構造物等の体積 × L</td><td><b>${f2(r.dig.Vz)} m³</b></td></tr>
+      </table>
+      <div class="ref-note">ほぐし率Lの目安: 砂質土1.2 ／ 粘性土1.25〜1.3。2tダンプ1台 ≒ ほぐし土1.4m³が目安。基礎コンクリートの地中部は約 ${f2(r.dig.Vs-r.dig.Vgr-r.dig.Vlc)}m³（地上部は別途）。</div>
+    </div>`:""}`;
   const d=disclose(
     ["基礎寸法 = 盤寸法 + 出代×2（高さは入力値）",
      "基礎重量 = 形式別の体積 × 2.3t/m³（ボイド壁厚・ゲタ幅は150mm仮定）",
@@ -2591,6 +2712,45 @@ function guySVG(g){
     <text x="${poleX+8}" y="${y2+2}" class="dim">h2=${g.h2}m</text>
     <path d="M${gx-3} ${gl} l-5 -8 h10 z" fill="#46566a"/>
   </svg></div>`;
+}
+function f2(x){return (Math.round(x*100)/100).toLocaleString("ja-JP",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function resultSteel(r){
+  if(r.err) return resultShell(emptyR("荷重・スパン・許容応力度を入力してください"));
+  const p=r.pick;
+  const inner=`
+    ${readout(p!=null,p?p.name:"—","",p?"推奨サイズ（"+S.steel.styp+"）":"適合サイズなし → 種類・本数・スパンを見直してください")}
+    <div class="sub-readout">
+      ${p?`<div class="metric"><div class="v">${p.wkg}<span style="font-size:10px"> kg/m</span></div><div class="k">単位質量</div></div>
+      <div class="metric"><div class="v">${f1(r.total)}<span style="font-size:10px"> kg</span></div><div class="k">総質量(${r.n}本×${S.steel.L}m)</div></div>
+      <div class="metric"><div class="v">${f1(p.del)}<span style="font-size:10px"> mm</span></div><div class="k">たわみ${r.dLim?"（許容"+f1(r.dLim)+"）":""}</div></div>`:""}
+    </div>
+    <div class="reason">${p
+      ? `1本あたり ${f1(r.Pm/9.8)}kg → 曲げM <b>${f1(r.M/1000)}kN·mm</b>、必要Z <b>${f2(r.Zreq)}cm³</b> ≦ ${p.name}のZ=<b>${p.Z}cm³</b>（応力度利用率 <b>${Math.round(p.use*100)}%</b>）。たわみ <b>${f1(p.del)}mm</b>${r.dLim?` ≦ ${f1(r.dLim)}mm`:""} → 両方OKの<b>最小サイズ</b>です。`
+      : `必要Z=<b>${f2(r.Zreq)}cm³</b> がこの種類の最大を超えるか、たわみ超過です。<b>本数を増やす・スパンを縮める・H形鋼にする</b>等を検討してください。`}</div>
+    <div class="cand-wrap">
+      <div class="cap">候補一覧（なぜそのサイズか学べます）${helpBtn("断面係数 Z")}</div>
+      <div class="cand">
+        ${r.cands.map(c2=>`
+          <div class="cand-row ${c2===p?"pick":""}">
+            <div class="sz" style="font-size:12px">${c2.name}</div>
+            <div class="det">${c2.wkg}kg/m / σ${Math.round(c2.sig)} / δ${f1(c2.del)}mm</div>
+            <div class="jb">
+              ${c2===p?'<span class="pick-tag">▶採用</span>':""}
+              <span class="pill ${c2.okS?"y":"n"}">応力${c2.okS?"○":"×"}</span>
+              <span class="pill ${c2.okD?"y":"n"}">たわみ${c2.okD?"○":"×"}</span>
+            </div>
+          </div>`).join("")}
+      </div>
+    </div>`;
+  const d=disclose(
+    ["曲げM = 係数 × P/本数 × L（中央集中1/4・等分布1/8・片持ち集中1・片持ち等分布1/2）",
+     "必要断面係数 Z = M / 許容曲げ応力度 fb",
+     "たわみ δ = 係数 × P/本数 × L³ / (E×I)　（E=205,000N/mm²）",
+     "推奨 = 応力・たわみとも満たす最小サイズ",
+     "総質量 = 単位質量 × スパン × 本数"],
+    "断面性能: JIS G3192（山形鋼・みぞ形鋼・H形鋼）・G3350（リップ溝形鋼）・G3466（角形鋼管）の代表値 ／ 許容応力度: 鋼構造設計規準（SS400 長期156・短期235 N/mm²）",
+    `<p><b>⚠ 注意:</b> 鋼材の自重・横座屈（H形鋼の長スパン）・ねじれ・支点部の局部座屈・溶接/ボルト接合部は未考慮の概算です。人が乗る架台・重量機器・スパン2m超は構造計算で確認してください。断面性能は代表値のためメーカー・JIS表で最終確認を。</p>`);
+  return resultShell(inner,d);
 }
 function resultPole(r){
   if(r.err) return resultShell(emptyR("柱の全長・設計荷重・末口径・風圧を入力してください"));
