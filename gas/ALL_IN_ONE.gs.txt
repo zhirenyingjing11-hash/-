@@ -67,14 +67,20 @@ function getConfig_() {
 /**
  * 操作対象のスプレッドシートを取得。
  *   ・SPREADSHEET_ID プロパティがあれば openById（standaloneスクリプト/タイマー実行向け＝iPhone対応）
+ *     → URLを丸ごと貼ってもOK（自動でIDを抜き出します）
  *   ・無ければ getActive（スプレッドシートに紐づくバインド型スクリプト向け）
  */
 function getSS_() {
-  const id = getConfig_().SPREADSHEET_ID;
-  if (id) return SpreadsheetApp.openById(id);
+  let id = String(getConfig_().SPREADSHEET_ID || '').trim();
+  if (id) {
+    // スプレッドシートのURL（.../d/★ID★/edit...）が貼られていてもIDを抽出
+    const m = id.match(/\/d\/([a-zA-Z0-9\-_]+)/);
+    if (m) id = m[1];
+    return SpreadsheetApp.openById(id);
+  }
   const active = SpreadsheetApp.getActive();
   if (!active) {
-    throw new Error('スプレッドシートが特定できません。スクリプトプロパティ SPREADSHEET_ID にシートのIDを設定してください。');
+    throw new Error('スプレッドシートが特定できません。スクリプトプロパティ SPREADSHEET_ID にシートのURL（またはID）を設定してください。');
   }
   return active;
 }
