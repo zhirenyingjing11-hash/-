@@ -424,6 +424,9 @@ function affPick(n){
   return a.slice(0,n);
 }
 function amzn(q){return "https://www.amazon.co.jp/s?k="+encodeURIComponent(q)+(AMZN_TAG?"&tag="+encodeURIComponent(AMZN_TAG):"");}
+function amznBtn(q,label){
+  return `<div style="margin-top:10px"><a class="btn" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none" href="${amzn(q)}" target="_blank" rel="nofollow sponsored noopener">🛒 ${label||`Amazonで「${q}」を検索`} <span class="pr-badge">PR</span></a></div>`;
+}
 function affSection(){
   return `<div class="aff">
     <div class="aff-h"><span class="pr-badge">PR</span>現場・デスクのおすすめ（Amazon・開くたびに入れ替わります）</div>
@@ -2104,7 +2107,8 @@ function resultCable(r){
       <div class="metric"><div class="v">${f1(p.drop)}<span style="font-size:10px"> %</span></div><div class="k">電圧降下</div></div>
       <div class="metric"><div class="v">${f1(r.I)}<span style="font-size:10px"> A</span></div><div class="k">負荷電流</div></div>
     </div>
-    <div class="reason">補正後許容 <b>${f1(p.Iz)}A</b> ≧ 負荷 <b>${f1(r.I)}A</b>、電圧降下 <b>${f1(p.drop)}%</b> ≦ 許容 <b>${f1(S.cable.vmax)}%</b> → 両方を満たす最小サイズ。</div>
+    <div class="reason">補正後許容 <b>${f1(p.Iz)}A</b> ≧ 負荷 <b>${f1(r.I)}A</b>、電圧降下 <b>${f1(p.drop)}%</b> ≦ 許容 <b>${f1(S.cable.vmax)}%</b> → 両方を満たす最小サイズ。
+      ${(()=>{const kb=S.cable.kind.split("（")[0];const szd=String(p.sz).indexOf("mm")>0?p.sz:p.sz+"sq";return amznBtn(kb+(["IV","DV","OW","OE"].includes(kb)?"電線 ":"ケーブル ")+szd);})()}</div>
     <div class="cand-wrap">
       <div class="cap">候補一覧（なぜそのサイズか学べます）${helpBtn("許容電流")}</div>
       <div class="cand">
@@ -2184,7 +2188,8 @@ function resultConduit(r){
       <div class="metric"><div class="v">${r.fillR!=null?f1(r.fillR):"—"}<span style="font-size:10px"> %</span></div><div class="k">実占積率</div></div>
     </div>
     <div class="reason">${r.pick!=null
-      ? `必要内断面積 <b>${f1(r.need)}mm²</b> を満たす最小の${S.conduit.ctype} → <b>呼び${r.pick.nom}</b>（実占積率 ${f1(r.fillR)}%）。`
+      ? `必要内断面積 <b>${f1(r.need)}mm²</b> を満たす最小の${S.conduit.ctype} → <b>呼び${r.pick.nom}</b>（実占積率 ${f1(r.fillR)}%）。
+        ${amznBtn(({"厚鋼G":"厚鋼電線管 G","薄鋼C":"薄鋼電線管 C","PF":"PF管 ","CD":"CD管 "}[S.conduit.ctype]||S.conduit.ctype)+r.pick.nom)}`
       : `${S.conduit.ctype}の範囲を超えています。本数や占積率上限を見直してください。`}</div>`;
   const d=disclose(
     ["Σ = Σ( π/4×外径²×補正係数×本数 )",
@@ -2423,6 +2428,7 @@ function resultEarth(r){
       <div class="cap">接地極の簡易平面図（概算 ${r.n}本）</div>
       ${rodsSVG(r.n,r.Lr)}
       <div class="ref-note">接地棒は<b>間隔2m以上</b>で並列接続。実際は接地抵抗計で測定しながら本数を調整します。</div>
+      ${amznBtn("接地棒 連結式 φ14","Amazonで「接地棒（連結式）」を検索")}
     </div>`;
   const d=disclose(
     ["A種: 10Ω以下（高圧・特別高圧機器）",
@@ -2640,7 +2646,7 @@ function resultAncr(r){
       ${p?`<div class="metric"><div class="v">${f1(p.Na)}<span style="font-size:10px"> kN</span></div><div class="k">許容引張(${p.gov})</div></div>`:""}
     </div>
     <div class="reason">${r.auto?`機器の重さから 引張 <b>${f1(r.Nd)}kN/本</b>・せん断 <b>${f1(r.Qd)}kN/本</b> を自動算出。`:""}${p
-      ? `<b>${p.dia}</b>（埋込み${p.le}mm）で判定 <b>${Math.round(p.ratio*100)}%</b> ≦ 100% → 両方の荷重に耐える<b>最小サイズ</b>です。`
+      ? `<b>${p.dia}</b>（埋込み${p.le}mm）で判定 <b>${Math.round(p.ratio*100)}%</b> ≦ 100% → 両方の荷重に耐える<b>最小サイズ</b>です。${amznBtn((S.ancr.typ==="接着系"?"ケミカルアンカー ":"オールアンカー ")+p.dia)}`
       : `M20でも判定100%を超えます。<b>本数を増やす・埋込みを深くする・接着系にする</b>等を検討してください。`}</div>
     <div class="cand-wrap">
       <div class="cap">サイズ別の判定（なぜそのサイズか学べます）${helpBtn("コーン状破壊")}</div>
@@ -2725,7 +2731,7 @@ function resultSteel(r){
       <div class="metric"><div class="v">${f1(p.del)}<span style="font-size:10px"> mm</span></div><div class="k">たわみ${r.dLim?"（許容"+f1(r.dLim)+"）":""}</div></div>`:""}
     </div>
     <div class="reason">${p
-      ? `1本あたり ${f1(r.Pm/9.8)}kg → 曲げM <b>${f1(r.M/1000)}kN·mm</b>、必要Z <b>${f2(r.Zreq)}cm³</b> ≦ ${p.name}のZ=<b>${p.Z}cm³</b>（応力度利用率 <b>${Math.round(p.use*100)}%</b>）。たわみ <b>${f1(p.del)}mm</b>${r.dLim?` ≦ ${f1(r.dLim)}mm`:""} → 両方OKの<b>最小サイズ</b>です。`
+      ? `1本あたり ${f1(r.Pm/9.8)}kg → 曲げM <b>${f1(r.M/1000)}kN·mm</b>、必要Z <b>${f2(r.Zreq)}cm³</b> ≦ ${p.name}のZ=<b>${p.Z}cm³</b>（応力度利用率 <b>${Math.round(p.use*100)}%</b>）。たわみ <b>${f1(p.del)}mm</b>${r.dLim?` ≦ ${f1(r.dLim)}mm`:""} → 両方OKの<b>最小サイズ</b>です。${amznBtn(({"等辺山形鋼（Lアングル）":"アングル鋼 ","リップ溝形鋼（Cチャン）":"リップ溝形鋼 ","みぞ形鋼（チャンネル）":"チャンネル鋼 ","H形鋼":"H鋼 ","角形鋼管（角パイプ）":"角パイプ 鉄 "}[S.steel.styp]||"")+p.name.replace(/^[^-]*-/,""))}`
       : `必要Z=<b>${f2(r.Zreq)}cm³</b> がこの種類の最大を超えるか、たわみ超過です。<b>本数を増やす・スパンを縮める・H形鋼にする</b>等を検討してください。`}</div>
     <div class="cand-wrap">
       <div class="cap">候補一覧（なぜそのサイズか学べます）${helpBtn("断面係数 Z")}</div>
