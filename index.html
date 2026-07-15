@@ -998,20 +998,24 @@ function calcSteel(i){
   const mCoef={"単純支持・中央集中":0.25,"単純支持・等分布":0.125,"片持ち・先端集中":1,"片持ち・等分布":0.5}[i.sup];
   const dCoef={"単純支持・中央集中":1/48,"単純支持・等分布":5/384,"片持ち・先端集中":1/3,"片持ち・等分布":1/8}[i.sup];
   if(mCoef==null) return {err:true};
+  const canti=i.sup.indexOf("片持ち")===0;
   const Pm=Pn/n;                            // 1本あたり荷重 N
-  const M=mCoef*Pm*Lmm;                     // 曲げモーメント N·mm
-  const dLim=i.dlim==="制限なし"?null:Lmm/parseFloat(String(i.dlim).replace("L/",""));
+  const M=mCoef*Pm*Lmm;                     // 載荷分の曲げモーメント N·mm
+  const dLim=String(i.dlim).indexOf("制限なし")===0?null:Lmm/parseFloat(String(i.dlim).replace("L/",""));
   const E=DATA.steel.E;
   const cands=list.map(s2=>{
     const Z=s2[2]*1000, I2=s2[3]*10000;     // cm³→mm³ / cm⁴→mm⁴
-    const sig=M/Z;
-    const del=dCoef*Pm*Math.pow(Lmm,3)/(E*I2);
+    const w=s2[1]*9.8/1000;                 // 自重 N/mm（等分布）
+    const Msw=(canti?0.5:0.125)*w*Lmm*Lmm;  // 自重の曲げ
+    const dsw=(canti?1/8:5/384)*w*Math.pow(Lmm,4)/(E*I2); // 自重のたわみ
+    const sig=(M+Msw)/Z;
+    const del=dCoef*Pm*Math.pow(Lmm,3)/(E*I2)+dsw;
     const okS=sig<=i.fa, okD=dLim==null||del<=dLim;
-    return {name:s2[0],wkg:s2[1],Z:s2[2],I:s2[3],sig,del,okS,okD,ok:okS&&okD,use:sig/i.fa};
+    return {name:s2[0],wkg:s2[1],Z:s2[2],I:s2[3],sig,del,swPct:Msw/(M+Msw)*100,okS,okD,ok:okS&&okD,use:sig/i.fa};
   });
   const pick=cands.find(c2=>c2.ok)||null;
-  const Zreq=M/i.fa/1000;                   // 必要断面係数 cm³
-  return {Pn,Pm,M,Zreq,dLim,cands,pick,total:pick?pick.wkg*i.L*n:null,n};
+  const Zreq=M/i.fa/1000;                   // 必要断面係数 cm³（載荷分・自重はサイズ別に加算）
+  return {Pn,Pm,M,Zreq,dLim,cands,pick,total:pick?pick.wkg*i.L*n:null,n,canti};
 }
 function calcRate(i){
   const kwh=i.useMode==="負荷から計算"?(i.loadKw||0)*(i.hpd||0)*(i.days||0):i.kwh;
@@ -1113,6 +1117,7 @@ function render(){
   else if(view==="glossary") renderGlossary();
   else if(view==="assist") renderAssist();
   else if(view==="policy") renderPolicy();
+  else if(view==="refs") renderRefs();
   else renderTool(view);
   window.scrollTo(0,0);
   bindHelp();
@@ -1140,6 +1145,10 @@ function renderHome(){
        <span class="gicon">📖</span>
        <span><span class="ttl">用語集（${GLOSSARY.length}語）</span><br><span class="sub">専門用語をやさしく解説。各入力の ? からも開けます。</span></span>
      </button>
+     <button class="tool-card glos" data-go="refs" style="background:#1f3a2e;border-color:#1f3a2e">
+       <span class="gicon">📚</span>
+       <span><span class="ttl">設計資料集（需要率・標準負荷・照度 ほか）</span><br><span class="sub">内線規程・JISでよく引く早見表。各ツールの入力の根拠に。</span></span>
+     </button>
      <button class="tool-card glos" data-go="assist" style="background:#4a331f;border-color:#4a331f">
        <span class="gicon">🤖</span>
        <span><span class="ttl">AI相談（質問・使い方・特殊ケース）</span><br><span class="sub">プルダウンにない設備、想定外の値、使い方の疑問に回答します。</span></span>
@@ -1150,6 +1159,50 @@ function renderHome(){
   main.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{view=b.dataset.go;render();});
 }
 
+function renderRefs(){
+  const T=(head,rows)=>`<table class="ref-table" style="width:100%"><tr>${head.map((h,i2)=>`<th${i2===0?' style="text-align:left"':''}>${h}</th>`).join("")}</tr>${rows.map(r=>`<tr>${r.map((c2,i2)=>`<td${i2===0?' style="text-align:left"':''}>${c2}</td>`).join("")}</tr>`).join("")}</table>`;
+  const D=(title,body,open)=>`<details class="ref"${open?" open":""}><summary>${title}<span class="chev">▾</span></summary><div class="ref-b">${body}</div></details>`;
+  main.innerHTML=`
+    ${crumb("設計資料集")}
+    <div class="tool-head"><h2>📚 設計資料集（早見表）</h2><div class="desc">内線規程・電技解釈・JISでよく引く目安値のまとめ。最終確認は必ず原本・最新版で。</div></div>
+    <div class="card"><div class="card-b">
+    ${D("需要率の目安（建物・設備別）",T(["設備・建物","需要率の目安"],[
+      ["電灯・コンセント（住宅）","50〜60%"],["電灯・コンセント（事務所）","70〜80%"],["電灯・コンセント（商店）","60〜75%"],
+      ["電灯・コンセント（病院・ホテル）","50〜70%"],["電灯・コンセント（学校）","50〜70%"],["電灯（工場）","60〜75%"],
+      ["空調動力","80〜90%"],["ポンプ・ファン動力","60〜80%"],["エレベーター","50〜60%"],["工場の一般動力","40〜60%"]
+    ])+`<div class="ref-note">設計実務の慣用値（目安）。⑧変圧器容量選定の需要率入力に使えます。実負荷が分かる場合はそちらを優先。</div>`,true)}
+    ${D("標準負荷（分岐回路数の算定・内線規程3605）",T(["建物の種類","標準負荷"],[
+      ["工場・倉庫・教会・寺院・劇場・映画館","10 VA/m²"],
+      ["学校・レストラン・ホテル/旅館の客室部分","20 VA/m²"],
+      ["事務所・銀行・商店・美容院・理髪店","30 VA/m²"],
+      ["住宅・アパート","40 VA/m²"]
+    ])+`<div class="ref-note">加算負荷: 商店のショーウィンドーは幅1mにつき300VA、住宅・アパート1戸あたり500〜1000VAを加算（内線規程3605の考え方）。</div>`)}
+    ${D("維持照度の目安（JIS Z9110 抜粋）",T(["場所","照度"],[
+      ["事務室・設計室","750 lx"],["会議室","500 lx"],["受付・ロビー","300 lx"],
+      ["電気室・機械室","200 lx"],["廊下・階段","150 lx"],["書庫・倉庫","100 lx"],["屋内駐車場","75 lx"],
+      ["工場: 精密な検査・組立","750〜1500 lx"],["工場: 一般の組立・加工","300〜500 lx"],["工場: 荷積み・荷降ろし","150 lx"]
+    ])+`<div class="ref-note">⑤照度計算の必要照度Eに使えます。作業内容・年齢層により上下します。</div>`)}
+    ${D("電圧降下の許容値（内線規程1310-1）",T(["こう長","電気事業者から低圧受電","構内の変圧器から供給"],[
+      ["60m以下（標準）","2%","3%"],["120m以下","4%","5%"],["200m以下","5%","6%"],["200m超","6%","7%"]
+    ])+`<div class="ref-note">①ケーブル選定の「許容電圧降下」に使えます。幹線・分岐の合計での管理が基本です。</div>`)}
+    ${D("電流減少係数（電技解釈146条）",T(["同一管内の電線数","減少係数"],[
+      ["3本以下","0.70"],["4本","0.63"],["5〜6本","0.56"],["7〜15本","0.49"],["16〜40本","0.43"],["41〜60本","0.39"],["61本以上","0.34"]
+    ])+`<div class="ref-note">①②の「電流減少係数k」に使えます。VVFなどケーブルの心線数にも同じ考え方を適用。中性線・接地線は数えません。</div>`)}
+    ${D("接地工事の一覧（電技解釈17・29条）",T(["種別","抵抗値","接地線（銅）","主な対象"],[
+      ["A種","10Ω以下","2.6mm以上","高圧・特別高圧の機器外箱、避雷器"],
+      ["B種","150(300/600)V ÷ 1線地絡電流","2.6mm以上（変圧器容量による）","変圧器の低圧側中性点等"],
+      ["C種","10Ω以下（0.5秒遮断で500Ω）","1.6mm以上（ブレーカ定格による）","300V超の低圧機器"],
+      ["D種","100Ω以下（0.5秒遮断で500Ω）","1.6mm以上（ブレーカ定格による）","300V以下の低圧機器"]
+    ])+`<div class="ref-note">くわしい計算は⑪⑫へ。接地線の太さは内線規程1350-3（回路のブレーカ定格から表引き）。</div>`)}
+    ${D("ブレーカ標準定格・変圧器/コンデンサ標準容量",`
+      <div class="ref-note" style="margin-top:8px"><b>配線用遮断器の標準定格[A]:</b> ${DATA.breaker.join(" / ")}</div>
+      <div class="ref-note"><b>変圧器標準容量[kVA]:</b> 単相 ${DATA.tfr.single.join("・")} ／ 三相 ${DATA.tfr.three.join("・")}</div>
+      <div class="ref-note"><b>低圧コンデンサ[kvar]:</b> ${DATA.capacitorLV.join("・")}<br><b>高圧コンデンサ[kvar]:</b> ${DATA.capacitorHV.join("・")}</div>`)}
+    </div></div>
+    <div class="output-row"><button class="btn" data-home2>← ホームへ戻る</button></div>`;
+  bindCrumb();
+  main.querySelector("[data-home2]").onclick=()=>{view="home";render();};
+}
 function renderPolicy(){
   main.innerHTML=`
     ${crumb("運営者情報・プライバシーポリシー")}
@@ -1221,6 +1274,8 @@ const KB=[
    "入力値はこの端末のブラウザ内に自動保存されます（サーバーには送信されません）。ヘッダーの↺ボタンですべて初期値に戻せます。"],
   [["印刷","PDF","提出","出力"],"印刷・PDF出力",
    "各ツールの「🖨 印刷/PDF」ボタンで、入力・結果・式・出典・免責を含めて印刷できます。スマホでは印刷画面から「PDFとして保存」も選べます。"],
+  [["需要率","標準負荷","資料","早見表","照度基準","一覧","減少係数"],"設計資料集（📚）",
+   "ホームの「📚設計資料集」に需要率の目安・標準負荷（VA/m²）・JIS照度・電圧降下の許容値（内線規程1310-1）・電流減少係数（解釈146条）・接地一覧・標準定格の早見表をまとめています。"],
   [["鋼材","アングル","チャンネル","H鋼","Cチャン","角パイプ","架台","支持材","土量","掘削","残土"],"鋼材選定・土工事（⑱⑬）",
    "⑱で耐荷重→鋼材（Lアングル/Cチャン/チャンネル/H鋼/角パイプ）のサイズと質量を自動選定します。⑬で「掘削土量を計算する」を選ぶと屋外基礎の掘削・埋戻し・残土・砕石・捨てコンの数量も出ます。"],
   [["電柱","コンクリート柱","ポール","風圧","装柱","引留","根入れ"],"配電柱・支線の計算（⑰⑮）",
@@ -1456,6 +1511,35 @@ function poleRows(){
     <div class="rows">${rows}</div>
     ${p.rows.length<4?`<button class="addrow" data-addrow="pole">＋ 行を追加</button>`:""}
     <div class="ref-note" style="margin:6px 0 0">プルダウンで選ぶと<b>外径</b>${anchor?"と<b>想定最大張力の目安</b>（引張強さ/2.2または設計張力の代表値）":""}を自動入力します（通信・光の添架も選べます）。値は概算の代表値なので、正確にはメーカー表・ちょう度計算で確認してください。</div></div>`;
+}
+function supFig(sup){
+  const canti=sup.indexOf("片持ち")===0, dist=sup.indexOf("等分布")>0;
+  const y=46, x1=30, x2=220;
+  let el="";
+  if(canti){
+    el+=`<rect x="${x1-16}" y="${y-30}" width="13" height="44" fill="#d7dee6" stroke="#46566a" stroke-width="1.5"/>
+         <line x1="${x1-3}" y1="${y}" x2="${x2}" y2="${y}" stroke="#46566a" stroke-width="4"/>
+         <text x="${x1-10}" y="${y+26}" class="dim">壁・柱</text>`;
+  }else{
+    el+=`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#46566a" stroke-width="4"/>
+         <path d="M${x1} ${y+3} l-8 12 h16 z" fill="#e8eef4" stroke="#46566a" stroke-width="1.4"/>
+         <path d="M${x2} ${y+3} l-8 12 h16 z" fill="#e8eef4" stroke="#46566a" stroke-width="1.4"/>
+         <text x="${x1}" y="${y+28}" text-anchor="middle" class="dim">支え</text>
+         <text x="${x2}" y="${y+28}" text-anchor="middle" class="dim">支え</text>`;
+  }
+  if(dist){
+    for(let x=x1+16;x<=x2-8;x+=22) el+=`<line x1="${x}" y1="${y-26}" x2="${x}" y2="${y-9}" stroke="#b5651d" stroke-width="2"/><path d="M${x} ${y-4} l-4 -6 h8 z" fill="#b5651d"/>`;
+    el+=`<text x="${(x1+x2)/2}" y="${y-32}" text-anchor="middle" class="dim">荷重P（全体に分散）</text>`;
+  }else{
+    const lx=canti?x2-10:(x1+x2)/2;
+    el+=`<line x1="${lx}" y1="${y-32}" x2="${lx}" y2="${y-10}" stroke="#b5651d" stroke-width="3"/><path d="M${lx} ${y-4} l-5 -8 h10 z" fill="#b5651d"/>
+         <text x="${lx}" y="${y-38}" text-anchor="middle" class="dim">荷重P</text>`;
+  }
+  const ex={"単純支持・中央集中":"例: 両端を架台・ラックで受けた梁の<b>真ん中に機器を1台</b>載せる（迷ったらこれ・最も安全側）",
+            "単純支持・等分布":"例: 両端で受けた梁の<b>全長にケーブルや盤がまんべんなく</b>載る",
+            "片持ち・先端集中":"例: <b>壁から突き出したブラケットの先端</b>に機器を付ける・吊る",
+            "片持ち・等分布":"例: 突き出した腕の<b>全体に均等に</b>載る（トレイの片持ち受けなど）"}[sup]||"";
+  return `<div class="ref-note" style="margin:-2px 0 12px"><svg viewBox="0 0 250 84" style="width:100%;max-width:270px;display:block;margin-bottom:4px" role="img" aria-label="支持条件の図">${el}</svg>${ex}</div>`;
 }
 function khRow(mk){
   const st=S[mk];
@@ -1712,14 +1796,16 @@ function inputCard(id){
         ${field("材質・状態（目安から選択）",selIn("fapre",[...Object.keys(DATA.steel.mats),"手入力"],c.steel.fapre),"",("許容応力度"))}
         ${field("許容曲げ応力度 fb",numIn("fa",c.steel.fa,1),"N/mm²",("許容応力度"))}
       </div>
-      ${field("支持条件・荷重のかかり方",selIn("sup",["単純支持・中央集中","単純支持・等分布","片持ち・先端集中","片持ち・等分布"],c.steel.sup),"",("断面係数 Z"))}
+      ${field("支持条件（どう支えて、どう載るか）",selIn("sup",["単純支持・中央集中","単純支持・等分布","片持ち・先端集中","片持ち・等分布"],c.steel.sup),"",("断面係数 Z"))}
+      ${supFig(c.steel.sup)}
       <div class="three">
         ${field("スパン（支点間・突き出し長）",numIn("L",c.steel.L,0.1),"m")}
-        ${field("耐荷重（合計）",numIn("P",c.steel.P,10),"kg")}
+        ${field("耐荷重（機器の合計・自重除く）",numIn("P",c.steel.P,10),"kg")}
         ${field("並べる本数",numIn("n",c.steel.n,1),"本")}
       </div>
-      ${field("たわみ制限",selIn("dlim",["L/300（標準）","L/250","L/180","制限なし"],c.steel.dlim),"",("たわみ制限"))}
-      <div class="ref-note" style="margin-top:-4px">荷重は本数で等分される想定です（2本の架台に機器を載せる等）。<b>鋼材の自重・横座屈は未考慮</b>のため、H形鋼の長スパンや重量物は構造担当に確認してください。</div>`,
+      ${field("たわみ制限（しなり量の上限）",selIn("dlim",["L/300（標準・しなりが目立たない）","L/250（少し緩め）","L/180（強度重視・見た目は許容）","制限なし（応力のみで判定）"],c.steel.dlim),"",("たわみ制限"))}
+      <div class="ref-note" style="margin-top:-4px">たわみ=荷重で梁が下にしなる量。L/300はスパン1mで約3.3mm、2mで約6.7mmまで許す基準です。<br>
+      荷重は本数で等分・<b>鋼材の自重は自動で加算済み</b>です。横座屈は未考慮のため、H形鋼の長スパン（2m超）や重量物は構造担当に確認を。</div>`,
     16:()=>{
       const r=c.rate;
       return `
@@ -1888,6 +1974,11 @@ function bindInputs(id){
         S.lux.preset=el.value;
         const p=DATA.luminaires.find(x=>x.id===el.value);
         if(p) S.lux.F=p.F;
+        render();
+        return;
+      }
+      if(el.dataset.k==="sup"){
+        S.steel.sup=el.value;
         render();
         return;
       }
@@ -2731,7 +2822,7 @@ function resultSteel(r){
       <div class="metric"><div class="v">${f1(p.del)}<span style="font-size:10px"> mm</span></div><div class="k">たわみ${r.dLim?"（許容"+f1(r.dLim)+"）":""}</div></div>`:""}
     </div>
     <div class="reason">${p
-      ? `1本あたり ${f1(r.Pm/9.8)}kg → 曲げM <b>${f1(r.M/1000)}kN·mm</b>、必要Z <b>${f2(r.Zreq)}cm³</b> ≦ ${p.name}のZ=<b>${p.Z}cm³</b>（応力度利用率 <b>${Math.round(p.use*100)}%</b>）。たわみ <b>${f1(p.del)}mm</b>${r.dLim?` ≦ ${f1(r.dLim)}mm`:""} → 両方OKの<b>最小サイズ</b>です。${amznBtn(({"等辺山形鋼（Lアングル）":"アングル鋼 ","リップ溝形鋼（Cチャン）":"リップ溝形鋼 ","みぞ形鋼（チャンネル）":"チャンネル鋼 ","H形鋼":"H鋼 ","角形鋼管（角パイプ）":"角パイプ 鉄 "}[S.steel.styp]||"")+p.name.replace(/^[^-]*-/,""))}`
+      ? `1本あたり ${f1(r.Pm/9.8)}kg＋<b>自重（応力の${Math.round(p.swPct)}%）込み</b>で判定: 応力度利用率 <b>${Math.round(p.use*100)}%</b> ≦ 100%、たわみ <b>${f1(p.del)}mm</b>${r.dLim?` ≦ 許容 ${f1(r.dLim)}mm`:""} → 両方OKの<b>最小サイズ</b>です（必要Z ${f2(r.Zreq)}cm³＋自重分 ≦ Z=${p.Z}cm³）。${amznBtn(({"等辺山形鋼（Lアングル）":"アングル鋼 ","リップ溝形鋼（Cチャン）":"リップ溝形鋼 ","みぞ形鋼（チャンネル）":"チャンネル鋼 ","H形鋼":"H鋼 ","角形鋼管（角パイプ）":"角パイプ 鉄 "}[S.steel.styp]||"")+p.name.replace(/^[^-]*-/,""))}`
       : `必要Z=<b>${f2(r.Zreq)}cm³</b> がこの種類の最大を超えるか、たわみ超過です。<b>本数を増やす・スパンを縮める・H形鋼にする</b>等を検討してください。`}</div>
     <div class="cand-wrap">
       <div class="cap">候補一覧（なぜそのサイズか学べます）${helpBtn("断面係数 Z")}</div>
@@ -2750,12 +2841,12 @@ function resultSteel(r){
     </div>`;
   const d=disclose(
     ["曲げM = 係数 × P/本数 × L（中央集中1/4・等分布1/8・片持ち集中1・片持ち等分布1/2）",
-     "必要断面係数 Z = M / 許容曲げ応力度 fb",
-     "たわみ δ = 係数 × P/本数 × L³ / (E×I)　（E=205,000N/mm²）",
-     "推奨 = 応力・たわみとも満たす最小サイズ",
-     "総質量 = 単位質量 × スパン × 本数"],
+     "自重分: M += w×L²/8（片持ちはL²/2）　※w=単位質量×g・断面ごとに自動加算",
+     "応力度 σ = (M＋自重M) / Z ≦ 許容曲げ応力度 fb",
+     "たわみ δ = 係数×P/本数×L³/(E×I) ＋ 自重分（5wL⁴/384EI等）　E=205,000N/mm²",
+     "推奨 = 応力・たわみとも満たす最小サイズ ／ 総質量 = 単位質量×スパン×本数"],
     "断面性能: JIS G3192（山形鋼・みぞ形鋼・H形鋼）・G3350（リップ溝形鋼）・G3466（角形鋼管）の代表値 ／ 許容応力度: 鋼構造設計規準（SS400 長期156・短期235 N/mm²）",
-    `<p><b>⚠ 注意:</b> 鋼材の自重・横座屈（H形鋼の長スパン）・ねじれ・支点部の局部座屈・溶接/ボルト接合部は未考慮の概算です。人が乗る架台・重量機器・スパン2m超は構造計算で確認してください。断面性能は代表値のためメーカー・JIS表で最終確認を。</p>`);
+    `<p><b>⚠ 注意:</b> 鋼材の自重は自動加算済みです。横座屈（H形鋼の長スパン）・ねじれ・支点部の局部座屈・溶接/ボルト接合部は未考慮の概算です。人が乗る架台・重量機器・スパン2m超は構造計算で確認してください。断面性能は代表値のためメーカー・JIS表で最終確認を。</p>`);
   return resultShell(inner,d);
 }
 function resultPole(r){
